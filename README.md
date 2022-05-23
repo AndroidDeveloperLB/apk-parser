@@ -6,4 +6,5 @@ https://github.com/hsiafan/apk-parser
 
 To use:
 
-https://jitpack.io/#AndroidDeveloperLB/apk-parser
+https://jitpack.io/#AndroidDeveloperLB/apk_parser/
+
