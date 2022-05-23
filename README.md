@@ -6,5 +6,5 @@ https://github.com/hsiafan/apk-parser
 
 To use in gradle file:
 
-https://jitpack.io/#AndroidDeveloperLB/apk_parser/
+https://jitpack.io/#AndroidDeveloperLB/apk-parser/
 
