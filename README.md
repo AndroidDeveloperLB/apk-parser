@@ -13,3 +13,4 @@ Known issues and notes:
 - The sample app shows that you can't get the app-icon of some APK files. Sometimes it's some invalid "bmp" file. Sometimes it's some XML file. And other weird cases. I hope that some day it could be fixed.
 - The entire code is in Java. I personally prefer Kotlin. I hope one day the whole library would be in Kotlin. At the very least, we should have a clear understanding for everything, if it's nullable or not.
 - In some cases the library might take a huge amount of memory, causing it not to be able to parse (OOM). I think a better optimization is needed. Maybe some sort of way to tell exactly what we want to get out of it, it would minimize such memory usage.
+- Memory issues are more important, of course, but it could be nice to see if it's possible to make it faster, too. The reason is that somehow the built-in APK-parsing seems much faster. That's despite the fact that it seems this library was based on the framework's code.
