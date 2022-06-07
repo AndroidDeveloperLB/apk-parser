@@ -2,9 +2,10 @@ package net.dongliu.apk.parser.struct.resource;
 
 import net.dongliu.apk.parser.struct.ResourceValue;
 
-import org.jetbrains.annotations.Nullable;
-
 import java.util.Locale;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 /**
  * A Resource entry specifies the key (name) of the Resource.
@@ -35,9 +36,8 @@ public class ResourceEntry {
 
     /**
      * get value as string
-     *
-     * @return
      */
+    @Nullable
     public String toStringValue(final ResourceTable resourceTable, final Locale locale) {
         if (this.value != null) {
             return this.value.toStringValue(resourceTable, locale);
@@ -79,6 +79,7 @@ public class ResourceEntry {
         this.value = value;
     }
 
+    @NonNull
     @Override
     public String toString() {
         return "ResourceEntry{" +

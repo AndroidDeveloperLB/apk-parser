@@ -7,6 +7,8 @@ import net.dongliu.apk.parser.utils.ResourceLoader;
 import java.util.Locale;
 import java.util.Map;
 
+import androidx.annotation.NonNull;
+
 /**
  * xml node attribute
  *
@@ -92,6 +94,7 @@ public class Attribute {
         this.value = value;
     }
 
+    @NonNull
     @Override
     public String toString() {
         return "Attribute{" +

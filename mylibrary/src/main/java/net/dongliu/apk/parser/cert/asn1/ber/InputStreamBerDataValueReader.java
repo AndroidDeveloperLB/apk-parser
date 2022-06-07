@@ -16,12 +16,14 @@
 
 package net.dongliu.apk.parser.cert.asn1.ber;
 
-import org.jetbrains.annotations.NotNull;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 /**
  * {@link BerDataValueReader} which reads from an {@link InputStream} returning BER-encoded data
@@ -47,6 +49,7 @@ public class InputStreamBerDataValueReader implements BerDataValueReader {
      *
      * @throws BerDataValueFormatException if the value being read is malformed.
      */
+    @Nullable
     private static BerDataValue readDataValue(final InputStream input)
             throws BerDataValueFormatException {
         final RecordingInputStream in = new RecordingInputStream(input);
@@ -195,7 +198,6 @@ public class InputStreamBerDataValueReader implements BerDataValueReader {
                     return bytesRead - 2;
                 }
                 prevZeroByte = true;
-                continue;
             } else {
                 prevZeroByte = false;
             }
@@ -257,7 +259,7 @@ public class InputStreamBerDataValueReader implements BerDataValueReader {
         }
 
         @Override
-        public int read(@NotNull final byte[] b) throws IOException {
+        public int read(@NonNull final byte[] b) throws IOException {
             final int len = this.mIn.read(b);
             if (len > 0) {
                 this.mBuf.write(b, 0, len);
@@ -266,7 +268,7 @@ public class InputStreamBerDataValueReader implements BerDataValueReader {
         }
 
         @Override
-        public int read(@NotNull final byte[] b, final int off, int len) throws IOException {
+        public int read(@NonNull final byte[] b, final int off, int len) throws IOException {
             len = this.mIn.read(b, off, len);
             if (len > 0) {
                 this.mBuf.write(b, off, len);
@@ -277,7 +279,7 @@ public class InputStreamBerDataValueReader implements BerDataValueReader {
         @Override
         public long skip(final long n) throws IOException {
             if (n <= 0) {
-                return this.mIn.skip(n);
+                return 0;
             }
 
             final byte[] buf = new byte[4096];

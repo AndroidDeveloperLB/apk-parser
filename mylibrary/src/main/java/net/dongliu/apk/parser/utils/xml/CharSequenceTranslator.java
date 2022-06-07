@@ -21,6 +21,8 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.util.Locale;
 
+import androidx.annotation.Nullable;
+
 /**
  * An API for translating text.
  * Its core use is to escape and unescape text. Because escaping and unescaping
@@ -48,6 +50,7 @@ abstract class CharSequenceTranslator {
      * @param input CharSequence to be translated
      * @return String output of translation
      */
+    @Nullable
     public final String translate(final CharSequence input) {
         if (input == null) {
             return null;

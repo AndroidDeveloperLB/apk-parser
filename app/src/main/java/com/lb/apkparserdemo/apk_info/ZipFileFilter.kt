@@ -27,12 +27,12 @@ class ZipFileFilter(private val zipFile: ZipFile) : AbstractZipFilter(), Closeab
             val totalItemsCount = mandatoryEntriesNames.size + (extraEntriesNames?.size ?: 0)
             val result = HashMap<String, ByteArray>(totalItemsCount)
             for (name in mandatoryEntriesNames) {
-                val entry: ZipEntry? = zipFile.getEntry(name) ?: return null
+                val entry: ZipEntry = zipFile.getEntry(name) ?: return null
                 result[name] = zipFile.getInputStream(entry).readBytes()
             }
             if (extraEntriesNames != null)
                 for (name in extraEntriesNames) {
-                    val entry: ZipEntry? = zipFile.getEntry(name) ?: continue
+                    val entry: ZipEntry = zipFile.getEntry(name) ?: continue
                     result[name] = zipFile.getInputStream(entry).readBytes()
                 }
             return result

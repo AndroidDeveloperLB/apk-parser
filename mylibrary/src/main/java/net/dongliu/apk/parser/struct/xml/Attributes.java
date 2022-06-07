@@ -1,6 +1,7 @@
 package net.dongliu.apk.parser.struct.xml;
 
-import org.jetbrains.annotations.Nullable;
+
+import androidx.annotation.Nullable;
 
 /**
  * xml node attributes

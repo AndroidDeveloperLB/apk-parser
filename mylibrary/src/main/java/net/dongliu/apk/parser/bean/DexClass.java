@@ -2,7 +2,8 @@ package net.dongliu.apk.parser.bean;
 
 import net.dongliu.apk.parser.struct.dex.DexClassStruct;
 
-import org.jetbrains.annotations.Nullable;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 /**
  * @author dongliu
@@ -72,8 +73,9 @@ public class DexClass {
         return (this.accessFlags & DexClassStruct.ACC_STATIC) != 0;
     }
 
+    @NonNull
     @Override
     public String toString() {
-        return this.classType;
+        return "" + this.classType;
     }
 }

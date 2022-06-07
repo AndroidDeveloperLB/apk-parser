@@ -29,6 +29,7 @@ import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -194,7 +195,7 @@ public final class Asn1BerParser {
             throws Asn1DecodingException {
         final List<AnnotatedField> fields = Asn1BerParser.getAnnotatedFields(containerClass);
         Collections.sort(
-                fields, (f1, f2) -> f1.getAnnotation().index() - f2.getAnnotation().index());
+                fields, Comparator.comparingInt(f -> f.getAnnotation().index()));
         // Check that there are no fields with the same index
         if (fields.size() > 1) {
             AnnotatedField lastField = null;
@@ -245,7 +246,6 @@ public final class Asn1BerParser {
                         } catch (final Asn1UnexpectedTagException e) {
                             // This field is not present, attempt to use this data value for the
                             // next / iteration of the loop
-                            continue;
                         }
                     } else {
                         // Mandatory field -- if we can't set its value from this data value, then
@@ -337,7 +337,6 @@ public final class Asn1BerParser {
         private final Field mField;
         private final Asn1Field mAnnotation;
         private final Asn1Type mDataType;
-        private final Asn1TagClass mTagClass;
         private final int mBerTagClass;
         private final int mBerTagNumber;
         private final Asn1Tagging mTagging;
@@ -356,8 +355,7 @@ public final class Asn1BerParser {
                     tagClass = Asn1TagClass.UNIVERSAL;
                 }
             }
-            this.mTagClass = tagClass;
-            this.mBerTagClass = BerEncoding.getTagClass(this.mTagClass);
+            this.mBerTagClass = BerEncoding.getTagClass(tagClass);
 
             final int tagNumber;
             if (annotation.tagNumber() != -1) {
@@ -449,7 +447,7 @@ public final class Asn1BerParser {
         // First component encodes the first two nodes, X.Y, as X * 40 + Y, with 0 <= X <= 2
         final long firstComponent = Asn1BerParser.decodeBase128UnsignedLong(encodedOid);
         final int firstNode = (int) Math.min(firstComponent / 40, 2);
-        final long secondNode = firstComponent - firstNode * 40;
+        final long secondNode = firstComponent - firstNode * 40L;
         final StringBuilder result = new StringBuilder();
         result.append(Long.toString(firstNode)).append('.')
                 .append(secondNode);

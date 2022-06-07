@@ -1,6 +1,9 @@
 package net.dongliu.apk.parser.bean;
 
+
 import java.io.Serializable;
+
+import androidx.annotation.NonNull;
 
 /**
  * Android adaptive icon, from android 8.0
@@ -30,6 +33,7 @@ public class AdaptiveIcon implements IconFace, Serializable {
         return this.background;
     }
 
+    @NonNull
     @Override
     public String toString() {
         return "AdaptiveIcon{" +

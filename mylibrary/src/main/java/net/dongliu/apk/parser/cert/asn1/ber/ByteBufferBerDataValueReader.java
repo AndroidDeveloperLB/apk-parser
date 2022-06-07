@@ -18,6 +18,8 @@ package net.dongliu.apk.parser.cert.asn1.ber;
 
 import java.nio.ByteBuffer;
 
+import androidx.annotation.Nullable;
+
 /**
  * {@link BerDataValueReader} which reads from a {@link ByteBuffer} containing BER-encoded data
  * values. See {@code X.690} for the encoding.
@@ -32,6 +34,7 @@ public class ByteBufferBerDataValueReader implements BerDataValueReader {
         this.mBuf = buf;
     }
 
+    @Nullable
     @Override
     public BerDataValue readDataValue() throws BerDataValueFormatException {
         final int startPosition = this.mBuf.position();

@@ -47,13 +47,9 @@ class ApkInfo(
             val byteArrayForEntries =
                 zipFilter.getByteArrayForEntries(mandatoryFilesToCheck, extraFilesToCheck)
                     ?: return null
-            val manifestBytes: ByteArray? = byteArrayForEntries[AndroidConstants.MANIFEST_FILE]
+            val manifestBytes: ByteArray = byteArrayForEntries[AndroidConstants.MANIFEST_FILE]
                 ?: return null
             val resourcesBytes: ByteArray? = byteArrayForEntries[AndroidConstants.RESOURCE_FILE]
-            if (manifestBytes == null) {
-//            Log.e("AppLog", "could not find manifest file for $apkFilePath")
-                return null
-            }
             val xmlTranslator = XmlTranslator()
             val resourceTable: ResourceTable =
                 if (resourcesBytes == null)

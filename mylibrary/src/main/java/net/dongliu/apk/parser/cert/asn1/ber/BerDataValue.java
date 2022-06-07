@@ -18,6 +18,8 @@ package net.dongliu.apk.parser.cert.asn1.ber;
 
 import java.nio.ByteBuffer;
 
+import androidx.annotation.Nullable;
+
 /**
  * ASN.1 Basic Encoding Rules (BER) data value -- see {@code X.690}.
  */
@@ -103,8 +105,9 @@ public class BerDataValue {
             this.mValue = value;
         }
 
+        @Nullable
         @Override
-        public BerDataValue readDataValue() throws BerDataValueFormatException {
+        public BerDataValue readDataValue() {
             if (this.mValueOutput) {
                 return null;
             }

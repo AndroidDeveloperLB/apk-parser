@@ -1,11 +1,11 @@
 package net.dongliu.apk.parser.bean;
 
-import net.dongliu.apk.parser.AbstractApkFile;
-
-import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 /**
  * Apk meta info
@@ -174,17 +174,6 @@ public class ApkMeta {
     }
 
     /**
-     * the icon file path in apk
-     *
-     * @return null if not found
-     * @deprecated use {@link AbstractApkFile#getAllIcons()} instead.
-     */
-    @Deprecated
-    public String getIcon() {
-        return this.icon;
-    }
-
-    /**
      * alias for getLabel
      */
     public String getName() {
@@ -242,7 +231,7 @@ public class ApkMeta {
         return this.permissions;
     }
 
-
+    @NonNull
     @Override
     public String toString() {
         return "packageName: \t" + this.packageName + "\n"

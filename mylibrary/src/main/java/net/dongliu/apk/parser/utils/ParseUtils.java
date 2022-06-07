@@ -7,11 +7,11 @@ import net.dongliu.apk.parser.struct.ResourceValue;
 import net.dongliu.apk.parser.struct.StringPool;
 import net.dongliu.apk.parser.struct.StringPoolHeader;
 
-import org.jetbrains.annotations.Nullable;
-
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+
+import androidx.annotation.Nullable;
 
 /**
  * @author dongliu

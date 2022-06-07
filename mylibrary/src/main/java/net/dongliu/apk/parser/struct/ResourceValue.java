@@ -10,6 +10,9 @@ import net.dongliu.apk.parser.utils.Locales;
 import java.util.List;
 import java.util.Locale;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 /**
  * Resource entity, contains the resource id, should retrieve the value from resource table, or string pool if it is a string resource.
  *
@@ -25,6 +28,7 @@ public abstract class ResourceValue {
     /**
      * get value as string.
      */
+    @Nullable
     public abstract String toStringValue(ResourceTable resourceTable, Locale locale);
 
     public static ResourceValue decimal(final int value) {
@@ -112,6 +116,7 @@ public abstract class ResourceValue {
             this.stringPool = stringPool;
         }
 
+        @Nullable
         @Override
         public String toStringValue(final ResourceTable resourceTable, final Locale locale) {
             if (this.value >= 0) {
@@ -121,6 +126,7 @@ public abstract class ResourceValue {
             }
         }
 
+        @NonNull
         @Override
         public String toString() {
             return this.value + ":" + this.stringPool.get(this.value);

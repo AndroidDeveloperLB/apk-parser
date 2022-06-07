@@ -29,6 +29,8 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+import androidx.annotation.Nullable;
+
 /**
  * Encoder of ASN.1 structures into DER-encoded form.
  * <p>
@@ -105,7 +107,7 @@ public final class Asn1DerEncoder {
         final Class<?> containerClass = container.getClass();
         final List<AnnotatedField> fields = Asn1DerEncoder.getAnnotatedFields(container);
         Collections.sort(
-                fields, (f1, f2) -> f1.getAnnotation().index() - f2.getAnnotation().index());
+                fields, Comparator.comparingInt(f -> f.getAnnotation().index()));
         if (fields.size() > 1) {
             AnnotatedField lastField = null;
             for (final AnnotatedField field : fields) {
@@ -304,7 +306,6 @@ public final class Asn1DerEncoder {
         private final Asn1Field mAnnotation;
         private final Asn1Type mDataType;
         private final Asn1Type mElementDataType;
-        private final Asn1TagClass mTagClass;
         private final int mDerTagClass;
         private final int mDerTagNumber;
         private final Asn1Tagging mTagging;
@@ -326,8 +327,7 @@ public final class Asn1DerEncoder {
                     tagClass = Asn1TagClass.UNIVERSAL;
                 }
             }
-            this.mTagClass = tagClass;
-            this.mDerTagClass = BerEncoding.getTagClass(this.mTagClass);
+            this.mDerTagClass = BerEncoding.getTagClass(tagClass);
 
             final int tagNumber;
             if (annotation.tagNumber() != -1) {
@@ -357,6 +357,7 @@ public final class Asn1DerEncoder {
             return this.mAnnotation;
         }
 
+        @Nullable
         public byte[] toDer() throws Asn1EncodingException {
             final Object fieldValue = Asn1DerEncoder.getMemberFieldValue(this.mObject, this.mField);
             if (fieldValue == null) {

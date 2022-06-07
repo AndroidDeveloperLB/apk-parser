@@ -1,5 +1,8 @@
 package net.dongliu.apk.parser.struct.xml;
 
+
+import androidx.annotation.NonNull;
+
 /**
  * @author dongliu
  */
@@ -45,6 +48,7 @@ public class XmlNodeStartTag {
         this.attributes = attributes;
     }
 
+    @NonNull
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();

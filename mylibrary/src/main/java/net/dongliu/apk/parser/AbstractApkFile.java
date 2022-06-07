@@ -23,7 +23,6 @@ import net.dongliu.apk.parser.parser.ResourceTableParser;
 import net.dongliu.apk.parser.parser.XmlStreamer;
 import net.dongliu.apk.parser.parser.XmlTranslator;
 import net.dongliu.apk.parser.struct.AndroidConstants;
-import net.dongliu.apk.parser.struct.resource.Densities;
 import net.dongliu.apk.parser.struct.resource.ResourceTable;
 import net.dongliu.apk.parser.struct.signingv2.ApkSigningBlock;
 import net.dongliu.apk.parser.struct.signingv2.SignerBlock;
@@ -39,12 +38,12 @@ import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+
+import androidx.annotation.Nullable;
 
 import static java.lang.System.arraycopy;
 
@@ -65,7 +64,6 @@ public abstract class AbstractApkFile implements Closeable {
     private String manifestXml;
     private ApkMeta apkMeta;
     private List<IconPath> iconPaths;
-
     private List<ApkSigner> apkSigners;
     private List<ApkV2Signer> apkV2Signers;
 
@@ -100,43 +98,10 @@ public abstract class AbstractApkFile implements Closeable {
      * get locales supported from resource file
      *
      * @return decoded AndroidManifest.xml
-     * @throws IOException
      */
     public Set<Locale> getLocales() throws IOException {
         this.parseResourceTable();
         return this.locales;
-    }
-
-    /**
-     * Get the apk's certificate meta. If have multi signer, return the certificate the first signer used.
-     *
-     * @deprecated use {{@link #getApkSingers()}} instead
-     */
-    @Deprecated
-    public List<CertificateMeta> getCertificateMetaList() throws IOException, CertificateException {
-        if (this.apkSigners == null) {
-            this.parseCertificates();
-        }
-        if (this.apkSigners.isEmpty()) {
-            throw new ParserException("ApkFile certificate not found");
-        }
-        return this.apkSigners.get(0).getCertificateMetas();
-    }
-
-    /**
-     * Get the apk's all certificates.
-     * For each entry, the key is certificate file path in apk file, the value is the certificates info of the certificate file.
-     *
-     * @deprecated use {{@link #getApkSingers()}} instead
-     */
-    @Deprecated
-    public Map<String, List<CertificateMeta>> getAllCertificateMetas() throws IOException, CertificateException {
-        final List<ApkSigner> apkSigners = this.getApkSingers();
-        final Map<String, List<CertificateMeta>> map = new LinkedHashMap<>();
-        for (final ApkSigner apkSigner : apkSigners) {
-            map.put(apkSigner.getPath(), apkSigner.getCertificateMetas());
-        }
-        return map;
     }
 
     /**
@@ -230,6 +195,7 @@ public abstract class AbstractApkFile implements Closeable {
     /**
      * read file in apk into bytes
      */
+    @Nullable
     public abstract byte[] getFileData(String path) throws IOException;
 
     /**
@@ -243,8 +209,8 @@ public abstract class AbstractApkFile implements Closeable {
      *
      * @param path the xml file path in apk file
      * @return the text. null if file not exists
-     * @throws IOException
      */
+    @Nullable
     public String transBinaryXml(final String path) throws IOException {
         final byte[] data = this.getFileData(path);
         if (data == null) {
@@ -274,7 +240,8 @@ public abstract class AbstractApkFile implements Closeable {
      * @return icon files.
      */
     public List<IconFace> getAllIcons() throws IOException {
-        final List<IconPath> iconPaths = this.getIconPaths();
+        this.parseManifest();
+        final List<IconPath> iconPaths = this.iconPaths;
         if (iconPaths.isEmpty()) {
             return Collections.emptyList();
         }
@@ -311,48 +278,6 @@ public abstract class AbstractApkFile implements Closeable {
 
     private Icon newFileIcon(final String filePath, final int density) throws IOException {
         return new Icon(filePath, density, this.getFileData(filePath));
-    }
-
-    /**
-     * Get the default apk icon file.
-     *
-     * @deprecated use {@link #getAllIcons()}
-     */
-    @Deprecated
-    public Icon getIconFile() throws IOException {
-        final ApkMeta apkMeta = this.getApkMeta();
-        final String iconPath = apkMeta.getIcon();
-        if (iconPath == null) {
-            return null;
-        }
-        return new Icon(iconPath, Densities.DEFAULT, this.getFileData(iconPath));
-    }
-
-    /**
-     * Get all the icon paths, for different densities.
-     *
-     * @deprecated using {@link #getAllIcons()} instead
-     */
-    @Deprecated
-    public List<IconPath> getIconPaths() throws IOException {
-        this.parseManifest();
-        return this.iconPaths;
-    }
-
-    /**
-     * Get all the icons, for different densities.
-     *
-     * @deprecated using {@link #getAllIcons()} instead
-     */
-    @Deprecated
-    public List<Icon> getIconFiles() throws IOException {
-        final List<IconPath> iconPaths = this.getIconPaths();
-        final List<Icon> icons = new ArrayList<>(iconPaths.size());
-        for (final IconPath iconPath : iconPaths) {
-            final Icon icon = this.newFileIcon(iconPath.getPath(), iconPath.getDensity());
-            icons.add(icon);
-        }
-        return icons;
     }
 
     /**
@@ -460,6 +385,7 @@ public abstract class AbstractApkFile implements Closeable {
      *
      * @return null if do not have sign block
      */
+    @Nullable
     protected ByteBuffer findApkSignBlock() throws IOException {
         final ByteBuffer buffer = this.fileData().order(ByteOrder.LITTLE_ENDIAN);
         final int len = buffer.limit();

@@ -1,8 +1,10 @@
 package net.dongliu.apk.parser.bean;
 
-import org.jetbrains.annotations.Nullable;
 
 import java.io.Serializable;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 /**
  * The plain file apk icon.
@@ -52,6 +54,7 @@ public class Icon implements IconFace, Serializable {
         return this.data;
     }
 
+    @NonNull
     @Override
     public String toString() {
         return "Icon{path='" + this.path + '\'' + ", density=" + this.density + ", size=" + (this.data == null ? 0 : this.data.length) + '}';

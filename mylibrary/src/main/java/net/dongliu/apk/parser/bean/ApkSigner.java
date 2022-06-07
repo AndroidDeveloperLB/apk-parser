@@ -2,6 +2,8 @@ package net.dongliu.apk.parser.bean;
 
 import java.util.List;
 
+import androidx.annotation.NonNull;
+
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -30,6 +32,7 @@ public class ApkSigner {
         return this.certificateMetas;
     }
 
+    @NonNull
     @Override
     public String toString() {
         return "ApkSigner{" +

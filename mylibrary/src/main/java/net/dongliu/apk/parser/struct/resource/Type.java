@@ -7,6 +7,9 @@ import net.dongliu.apk.parser.utils.ParseUtils;
 import java.nio.ByteBuffer;
 import java.util.Locale;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 /**
  * @author dongliu
  */
@@ -32,6 +35,7 @@ public class Type {
         this.density = config.getDensity();
     }
 
+    @Nullable
     public ResourceEntry getResourceEntry(final int id) {
         if (id >= this.offsets.length) {
             return null;
@@ -157,6 +161,7 @@ public class Type {
         return this.density;
     }
 
+    @NonNull
     @Override
     public String toString() {
         return "Type{" +

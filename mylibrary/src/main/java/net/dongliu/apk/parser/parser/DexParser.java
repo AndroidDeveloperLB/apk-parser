@@ -7,7 +7,6 @@ import net.dongliu.apk.parser.struct.dex.DexClassStruct;
 import net.dongliu.apk.parser.struct.dex.DexHeader;
 import net.dongliu.apk.parser.utils.Buffers;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
@@ -121,10 +120,6 @@ public class DexParser {
     /**
      * read string pool for dex file.
      * dex file string pool diff a bit with binary xml file or resource table.
-     *
-     * @param offsets
-     * @return
-     * @throws IOException
      */
     private StringPool readStrings(final long[] offsets) {
         // read strings.
@@ -214,9 +209,6 @@ public class DexParser {
 
     /**
      * read varints.
-     *
-     * @return
-     * @throws IOException
      */
     private int readVarInts() {
         int i = 0;

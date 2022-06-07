@@ -30,6 +30,8 @@ import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
 
+import androidx.annotation.Nullable;
+
 /**
  * Android Binary XML format
  * see http://justanapplication.wordpress.com/category/android/android-binary-xml/
@@ -42,7 +44,6 @@ public class BinaryXmlParser {
      * By default the data buffer Chunks is buffer little-endian byte order both at runtime and when stored buffer
      * files.
      */
-    private final ByteOrder byteOrder = ByteOrder.LITTLE_ENDIAN;
     private StringPool stringPool;
     // some attribute name stored by resource id
     private String[] resourceMap;
@@ -56,7 +57,7 @@ public class BinaryXmlParser {
 
     public BinaryXmlParser(final ByteBuffer buffer, final ResourceTable resourceTable) {
         this.buffer = buffer.duplicate();
-        this.buffer.order(this.byteOrder);
+        this.buffer.order(ByteOrder.LITTLE_ENDIAN);
         this.resourceTable = resourceTable;
     }
 
@@ -103,9 +104,9 @@ public class BinaryXmlParser {
         }
 
         while (chunkHeader != null) {
-                /*if (chunkHeader.chunkType == ChunkType.XML_END_NAMESPACE) {
-                    break;
-                }*/
+            //if (chunkHeader.chunkType == ChunkType.XML_END_NAMESPACE) {
+            //     break;
+            // }
             final long beginPos = this.buffer.position();
             switch (chunkHeader.getChunkType()) {
                 case ChunkType.XML_END_NAMESPACE:
@@ -300,7 +301,7 @@ public class BinaryXmlParser {
         return resourceIds;
     }
 
-
+    @Nullable
     private ChunkHeader readChunkHeader() {
         // finished
         if (!this.buffer.hasRemaining()) {

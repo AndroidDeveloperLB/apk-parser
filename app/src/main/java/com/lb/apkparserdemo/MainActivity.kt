@@ -57,15 +57,15 @@ class MainActivity : AppCompatActivity() {
                     when {
                         apkType == ApkInfo.ApkType.STANDALONE && hasSplitApks -> Log.e(
                             "AppLog",
-                            "detected packageInfo as standalone, but has splits"
+                            "detected packageInfo as standalone, but has splits, for \"$packageName\" in: \"$apkFilePath\" "
                         )
                         apkType == ApkInfo.ApkType.BASE_OF_SPLIT && !hasSplitApks -> Log.e(
                             "AppLog",
-                            "detected packageInfo as base of split, but doesn't have splits"
+                            "detected packageInfo as base of split, but doesn't have splits, for \"$packageName\" in: \"$apkFilePath\" "
                         )
                         apkType == ApkInfo.ApkType.SPLIT -> Log.e(
                             "AppLog",
-                            "detected packageInfo as split, but it is not"
+                            "detected packageInfo as split, but it is not, for \"$packageName\" in: \"$apkFilePath\" "
                         )
                     }
                     var baseApkInfo: ApkInfo? = null
@@ -78,7 +78,10 @@ class MainActivity : AppCompatActivity() {
                                 requestParseResources = VALIDATE_RESOURCES
                             )
                         } catch (e: Exception) {
-                            Log.e("AppLog", "can't parse apk:$apkFilePath - exception:$e")
+                            Log.e(
+                                "AppLog",
+                                "can't parse apk for \"$packageName\" in: \"$apkFilePath\" - exception:$e"
+                            )
                             e.printStackTrace()
                             return@use
                         }
@@ -97,26 +100,29 @@ class MainActivity : AppCompatActivity() {
                             if (packageInfo.applicationInfo.icon != 0 && appIcon == null)
                                 Log.e(
                                     "AppLog",
-                                    "can\'t get app icon for $packageName path: $apkFilePath "
+                                    "can\'t get app icon for \"$packageName\" in: \"$apkFilePath\" "
                                 )
                         }
                         when {
-                            apkInfo == null -> Log.e("AppLog", "can't parse apk:$apkFilePath")
+                            apkInfo == null -> Log.e(
+                                "AppLog",
+                                "can't parse for \"$packageName\" in: \"$apkFilePath\""
+                            )
                             GET_APK_TYPE && apkInfo.apkType == ApkInfo.ApkType.UNKNOWN -> Log.e(
                                 "AppLog",
-                                "can\'t get apk type: $apkFilePath "
+                                "can\'t get apk type for \"$packageName\" in: \"$apkFilePath\"  "
                             )
                             GET_APK_TYPE && apkInfo.apkType == ApkInfo.ApkType.STANDALONE && hasSplitApks -> Log.e(
                                 "AppLog",
-                                "detected as standalone, but in fact is base of split apks: $apkFilePath"
+                                "detected as standalone, but in fact is base of split apks, for \"$packageName\" in: \"$apkFilePath\" "
                             )
                             GET_APK_TYPE && apkInfo.apkType == ApkInfo.ApkType.BASE_OF_SPLIT && !hasSplitApks -> Log.e(
                                 "AppLog",
-                                "detected as base of split apks, but in fact is standalone: $apkFilePath"
+                                "detected as base of split apks, but in fact is standalone, for \"$packageName\" in: \"$apkFilePath\" "
                             )
                             GET_APK_TYPE && apkInfo.apkType == ApkInfo.ApkType.SPLIT -> Log.e(
                                 "AppLog",
-                                "detected as split apk, but in fact a main apk: $apkFilePath"
+                                "detected as split apk, but in fact a main apk, for \"$packageName\" in: \"$apkFilePath\" "
                             )
                             else -> {
                                 val apkMeta = apkInfo.apkMetaTranslator.apkMeta
@@ -130,26 +136,25 @@ class MainActivity : AppCompatActivity() {
                                 when {
                                     packageInfo.packageName != apkMeta.packageName -> Log.e(
                                         "AppLog",
-                                        "apk package name is different for $apkFilePath : correct one is: ${packageInfo.packageName} vs found: ${apkMeta.packageName}"
+                                        "apk package name is different for $apkFilePath : correct one is: \"${packageInfo.packageName}\" vs found: \"${apkMeta.packageName}\""
                                     )
                                     VALIDATE_RESOURCES && packageInfo.versionName != apkMeta.versionName -> Log.e(
                                         "AppLog",
-                                        "apk version name is different for $apkFilePath : correct one is: ${packageInfo.versionName} vs found: ${apkMeta.versionName}"
+                                        "apk version name is different for \"$packageName\" on $apkFilePath : correct one is: \"${packageInfo.versionName}\" vs found: \"${apkMeta.versionName}\""
                                     )
                                     versionCodeCompat(packageInfo) != apkMeta.versionCode -> Log.e(
                                         "AppLog",
-                                        "apk version code is different for $apkFilePath : correct one is: ${
-                                            versionCodeCompat(packageInfo)
-                                        } vs found: ${apkMeta.versionCode}"
+                                        "apk version code is different for \"$packageName\" on $apkFilePath : correct one is: " +
+                                                "${versionCodeCompat(packageInfo)} vs found: ${apkMeta.versionCode}"
                                     )
                                     VALIDATE_RESOURCES && label != labelOfLibrary -> Log.e(
                                         "AppLog",
-                                        "apk label is different for $apkFilePath : correct one is: $label vs found: $labelOfLibrary"
+                                        "apk label is different for \"${packageName}\" on $apkFilePath : correct one is: \"$label\" vs found: \"$labelOfLibrary\""
                                     )
                                     else -> {
                                         Log.d(
                                             "AppLog",
-                                            "apk data of $apkFilePath : ${apkMeta.packageName}, ${apkMeta.versionCode}, ${apkMeta.versionName}, $labelOfLibrary, ${apkMeta.icon}, ${apkMetaTranslator.iconPaths}"
+                                            "apk data of $apkFilePath : ${apkMeta.packageName}, ${apkMeta.versionCode}, ${apkMeta.versionName}, $labelOfLibrary, ${apkMetaTranslator.iconPaths}"
                                         )
                                     }
                                 }
@@ -169,7 +174,10 @@ class MainActivity : AppCompatActivity() {
                                     requestParseResources = VALIDATE_RESOURCES
                                 )
                             } catch (e: Exception) {
-                                Log.e("AppLog", "can't parse apk:$apkFilePath - exception:$e")
+                                Log.e(
+                                    "AppLog",
+                                    "can't parse apk of \"$packageName\" in $apkFilePath - exception:$e"
+                                )
                                 e.printStackTrace()
                                 return@use
                             }
@@ -197,7 +205,7 @@ class MainActivity : AppCompatActivity() {
                                     when {
                                         packageInfo.packageName != apkMeta.packageName -> Log.e(
                                             "AppLog",
-                                            "apk package name is different for $apkFilePath : correct one is: ${packageInfo.packageName} vs found: ${apkMeta.packageName}"
+                                            "apk package name is different for $apkFilePath : correct one is: $packageName vs found: ${apkMeta.packageName}"
                                         )
                                         versionCodeCompat(packageInfo) != apkMeta.versionCode -> Log.e(
                                             "AppLog",
@@ -207,7 +215,7 @@ class MainActivity : AppCompatActivity() {
                                         )
                                         else -> Log.d(
                                             "AppLog",
-                                            "apk data of $apkFilePath : ${apkMeta.packageName}, ${apkMeta.versionCode}, ${apkMeta.versionName}, ${apkMeta.name}, ${apkMeta.icon}, ${apkMetaTranslator.iconPaths}"
+                                            "apk data of $apkFilePath : ${apkMeta.packageName}, ${apkMeta.versionCode}, ${apkMeta.versionName}, ${apkMeta.name}, ${apkMetaTranslator.iconPaths}"
                                         )
                                     }
 
@@ -221,11 +229,11 @@ class MainActivity : AppCompatActivity() {
             endTime = System.currentTimeMillis()
             Log.d(
                 "AppLog",
-                "time taken: ${endTime - startTime} . handled ${installedPackages.size} apps apks:$apksHandledSoFar"
+                "time taken(ms): ${endTime - startTime} . handled ${installedPackages.size} apps, apksCount:$apksHandledSoFar"
             )
             Log.d(
                 "AppLog",
-                "averageTime:${(endTime - startTime).toFloat() / installedPackages.size.toFloat()} per app ${(endTime - startTime).toFloat() / apksHandledSoFar.toFloat()} per APK"
+                "averageTime(ms):${(endTime - startTime).toFloat() / installedPackages.size.toFloat()} per app, ${(endTime - startTime).toFloat() / apksHandledSoFar.toFloat()} per APK"
             )
             Log.e("AppLog", "done")
         }

@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import androidx.annotation.Nullable;
+
 /**
  * the xml file's namespaces.
  *
@@ -35,6 +37,7 @@ class XmlNamespaces {
         this.newNamespaces.remove(namespace);
     }
 
+    @Nullable
     public String getPrefixViaUri(final String uri) {
         if (uri == null) {
             return null;

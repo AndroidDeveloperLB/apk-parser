@@ -3,6 +3,8 @@ package net.dongliu.apk.parser.utils;
 
 import java.util.Iterator;
 
+import androidx.annotation.Nullable;
+
 public class Strings {
 
     /**
@@ -10,6 +12,7 @@ public class Strings {
      * <p>Joins the elements of the provided {@code Iterable} into
      * a single String containing the provided elements.</p>
      */
+    @Nullable
     public static String join(final Iterable<?> iterable, final String separator) {
         if (iterable == null) {
             return null;
@@ -20,6 +23,7 @@ public class Strings {
     /**
      * Copied fom commons StringUtils
      */
+    @Nullable
     public static String join(final Iterator<?> iterator, final String separator) {
 
         // handle null, zero and one elements before building a buffer

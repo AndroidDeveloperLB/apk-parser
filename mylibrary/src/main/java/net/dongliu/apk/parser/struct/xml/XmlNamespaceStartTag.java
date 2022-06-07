@@ -1,5 +1,7 @@
 package net.dongliu.apk.parser.struct.xml;
 
+import androidx.annotation.NonNull;
+
 /**
  * @author dongliu
  */
@@ -23,6 +25,7 @@ public class XmlNamespaceStartTag {
         this.uri = uri;
     }
 
+    @NonNull
     @Override
     public String toString() {
         return this.prefix + "=" + this.uri;

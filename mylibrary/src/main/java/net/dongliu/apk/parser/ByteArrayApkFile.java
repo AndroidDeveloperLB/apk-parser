@@ -13,6 +13,8 @@ import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import androidx.annotation.Nullable;
+
 /**
  * Parse apk file from byte array.
  * This class is not thread-safe
@@ -43,6 +45,7 @@ public class ByteArrayApkFile extends AbstractApkFile implements Closeable {
         return list;
     }
 
+    @Nullable
     @Override
     public byte[] getFileData(final String path) throws IOException {
         try (final InputStream in = new ByteArrayInputStream(this.apkData);

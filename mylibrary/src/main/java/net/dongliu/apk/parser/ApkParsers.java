@@ -29,8 +29,6 @@ public class ApkParsers {
 
     /**
      * Get apk meta info for apk file
-     *
-     * @throws IOException
      */
     public static ApkMeta getMetaInfo(final String apkFilePath) throws IOException {
         try (final ApkFile apkFile = new ApkFile(apkFilePath)) {
@@ -40,8 +38,6 @@ public class ApkParsers {
 
     /**
      * Get apk meta info for apk file
-     *
-     * @throws IOException
      */
     public static ApkMeta getMetaInfo(final File file) throws IOException {
         try (final ApkFile apkFile = new ApkFile(file)) {
@@ -51,8 +47,6 @@ public class ApkParsers {
 
     /**
      * Get apk meta info for apk file
-     *
-     * @throws IOException
      */
     public static ApkMeta getMetaInfo(final byte[] apkData) throws IOException {
         try (final ByteArrayApkFile apkFile = new ByteArrayApkFile(apkData)) {
@@ -62,8 +56,6 @@ public class ApkParsers {
 
     /**
      * Get apk meta info for apk file, with locale
-     *
-     * @throws IOException
      */
     public static ApkMeta getMetaInfo(final String apkFilePath, final Locale locale) throws IOException {
         try (final ApkFile apkFile = new ApkFile(apkFilePath)) {
@@ -74,8 +66,6 @@ public class ApkParsers {
 
     /**
      * Get apk meta info for apk file
-     *
-     * @throws IOException
      */
     public static ApkMeta getMetaInfo(final File file, final Locale locale) throws IOException {
         try (final ApkFile apkFile = new ApkFile(file)) {
@@ -86,8 +76,6 @@ public class ApkParsers {
 
     /**
      * Get apk meta info for apk file
-     *
-     * @throws IOException
      */
     public static ApkMeta getMetaInfo(final byte[] apkData, final Locale locale) throws IOException {
         try (final ByteArrayApkFile apkFile = new ByteArrayApkFile(apkData)) {
@@ -98,8 +86,6 @@ public class ApkParsers {
 
     /**
      * Get apk manifest xml file as text
-     *
-     * @throws IOException
      */
     public static String getManifestXml(final String apkFilePath) throws IOException {
         try (final ApkFile apkFile = new ApkFile(apkFilePath)) {
@@ -109,8 +95,6 @@ public class ApkParsers {
 
     /**
      * Get apk manifest xml file as text
-     *
-     * @throws IOException
      */
     public static String getManifestXml(final File file) throws IOException {
         try (final ApkFile apkFile = new ApkFile(file)) {
@@ -120,8 +104,6 @@ public class ApkParsers {
 
     /**
      * Get apk manifest xml file as text
-     *
-     * @throws IOException
      */
     public static String getManifestXml(final byte[] apkData) throws IOException {
         try (final ByteArrayApkFile apkFile = new ByteArrayApkFile(apkData)) {
@@ -131,8 +113,6 @@ public class ApkParsers {
 
     /**
      * Get apk manifest xml file as text
-     *
-     * @throws IOException
      */
     public static String getManifestXml(final String apkFilePath, final Locale locale) throws IOException {
         try (final ApkFile apkFile = new ApkFile(apkFilePath)) {
@@ -143,8 +123,6 @@ public class ApkParsers {
 
     /**
      * Get apk manifest xml file as text
-     *
-     * @throws IOException
      */
     public static String getManifestXml(final File file, final Locale locale) throws IOException {
         try (final ApkFile apkFile = new ApkFile(file)) {
@@ -155,8 +133,6 @@ public class ApkParsers {
 
     /**
      * Get apk manifest xml file as text
-     *
-     * @throws IOException
      */
     public static String getManifestXml(final byte[] apkData, final Locale locale) throws IOException {
         try (final ByteArrayApkFile apkFile = new ByteArrayApkFile(apkData)) {

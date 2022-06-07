@@ -1,5 +1,7 @@
 package net.dongliu.apk.parser.bean;
 
+import androidx.annotation.NonNull;
+
 /**
  * Icon path, and density
  */
@@ -27,6 +29,7 @@ public class IconPath {
         return this.density;
     }
 
+    @NonNull
     @Override
     public String toString() {
         return "IconPath{" +

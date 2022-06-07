@@ -1,5 +1,8 @@
 package net.dongliu.apk.parser.bean;
 
+
+import androidx.annotation.NonNull;
+
 /**
  * the glEsVersion apk used.
  *
@@ -29,6 +32,7 @@ public class GlEsVersion {
         return this.required;
     }
 
+    @NonNull
     @Override
     public String toString() {
         return this.major + "." + this.minor;

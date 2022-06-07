@@ -2,6 +2,9 @@ package net.dongliu.apk.parser.bean;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
+
+import androidx.annotation.NonNull;
 
 /**
  * basic certificate info.
@@ -90,9 +93,10 @@ public class CertificateMeta {
         return this.signAlgorithmOID;
     }
 
+    @NonNull
     @Override
     public String toString() {
-        final SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        final SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ROOT);
         return "CertificateMeta{signAlgorithm=" + this.signAlgorithm + ", " +
                 "certBase64Md5=" + this.certBase64Md5 + ", " +
                 "startDate=" + df.format(this.startDate) + ", " + "endDate=" + df.format(this.endDate) + "}";

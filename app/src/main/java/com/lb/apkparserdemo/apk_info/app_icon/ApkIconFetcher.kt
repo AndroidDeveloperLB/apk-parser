@@ -30,7 +30,7 @@ object ApkIconFetcher {
         requestedAppIconSize: Int = 0
     ): Bitmap? {
         val iconPaths = apkInfo.apkMetaTranslator.iconPaths
-        if (iconPaths.isNullOrEmpty())
+        if (iconPaths.isEmpty())
             return null
         val resources = context.resources
         val densityDpi = resources.displayMetrics.densityDpi

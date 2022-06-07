@@ -18,14 +18,14 @@ import net.dongliu.apk.parser.struct.xml.XmlNamespaceStartTag;
 import net.dongliu.apk.parser.struct.xml.XmlNodeEndTag;
 import net.dongliu.apk.parser.struct.xml.XmlNodeStartTag;
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 
 /**
@@ -212,12 +212,12 @@ public class ApkMetaTranslator implements XmlStreamer {
 
     }
 
-    @NotNull
+    @NonNull
     public ApkMeta getApkMeta() {
         return this.apkMetaBuilder.build();
     }
 
-    @NotNull
+    @NonNull
     public List<IconPath> getIconPaths() {
         return this.iconPaths;
     }

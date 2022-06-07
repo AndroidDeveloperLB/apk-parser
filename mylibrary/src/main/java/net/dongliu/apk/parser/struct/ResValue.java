@@ -1,6 +1,8 @@
 package net.dongliu.apk.parser.struct;
 
-import org.jetbrains.annotations.Nullable;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 /**
  * Apk res value struct.
@@ -33,6 +35,7 @@ public class ResValue {
     @Nullable
     private ResourceValue data;
 
+    @NonNull
     @Override
     public String toString() {
         return "ResValue{" +

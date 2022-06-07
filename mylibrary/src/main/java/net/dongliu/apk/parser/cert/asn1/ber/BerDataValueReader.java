@@ -16,6 +16,8 @@
 
 package net.dongliu.apk.parser.cert.asn1.ber;
 
+import androidx.annotation.Nullable;
+
 /**
  * Reader of ASN.1 Basic Encoding Rules (BER) data values.
  *
@@ -30,5 +32,6 @@ public interface BerDataValueReader {
      *
      * @throws BerDataValueFormatException if the value being read is malformed.
      */
+    @Nullable
     BerDataValue readDataValue() throws BerDataValueFormatException;
 }

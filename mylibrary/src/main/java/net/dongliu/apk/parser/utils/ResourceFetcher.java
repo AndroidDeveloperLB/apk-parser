@@ -18,6 +18,8 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
+import androidx.annotation.Nullable;
+
 /**
  * fetch dependency resource file from android source
  *
@@ -45,7 +47,7 @@ public class ResourceFetcher {
         final DefaultHandler dh = new DefaultHandler() {
             @Override
             public void startElement(final String uri, final String localName, final String qName,
-                                     final Attributes attributes) throws SAXException {
+                                     final Attributes attributes) {
                 if (!qName.equals("public")) {
                     return;
                 }
@@ -114,10 +116,13 @@ public class ResourceFetcher {
         }
     }
 
+    @Nullable
     private String retrieveCode(final String html) {
         final Matcher matcher = Pattern.compile("<ol class=\"prettyprint\">(.*?)</ol>").matcher(html);
         if (matcher.find()) {
             final String codeHtml = matcher.group(1);
+            if (codeHtml == null)
+                return null;
             return codeHtml.replace("</li>", "\n").replaceAll("<[^>]+>", "").replace("&lt;", "<")
                     .replace("&quot;", "\"").replace("&gt;", ">");
         } else {

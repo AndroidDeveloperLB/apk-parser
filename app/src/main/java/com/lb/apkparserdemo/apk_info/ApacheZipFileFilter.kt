@@ -28,12 +28,12 @@ class ApacheZipFileFilter(private val zipFile: org.apache.commons.compress.archi
             val totalItemsCount = mandatoryEntriesNames.size + (extraEntriesNames?.size ?: 0)
             val result = HashMap<String, ByteArray>(totalItemsCount)
             for (name in mandatoryEntriesNames) {
-                val entry: ZipArchiveEntry? = zipFile.getEntry(name) ?: return null
+                val entry: ZipArchiveEntry = zipFile.getEntry(name) ?: return null
                 result[name] = zipFile.getInputStream(entry).readBytes()
             }
             if (extraEntriesNames != null)
                 for (name in extraEntriesNames) {
-                    val entry: ZipArchiveEntry? = zipFile.getEntry(name) ?: continue
+                    val entry: ZipArchiveEntry = zipFile.getEntry(name) ?: continue
                     result[name] = zipFile.getInputStream(entry).readBytes()
                 }
             return result

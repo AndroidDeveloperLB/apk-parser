@@ -3,6 +3,9 @@ package net.dongliu.apk.parser.struct.resource;
 import java.util.Arrays;
 import java.util.Locale;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 /**
  * @author dongliu.
  */
@@ -49,9 +52,8 @@ public class ResourceMapEntry extends ResourceEntry {
 
     /**
      * get value as string
-     *
-     * @return
      */
+    @Nullable
     @Override
     public String toStringValue(final ResourceTable resourceTable, final Locale locale) {
         if (this.resourceTableMaps.length > 0) {
@@ -61,6 +63,7 @@ public class ResourceMapEntry extends ResourceEntry {
         }
     }
 
+    @NonNull
     @Override
     public String toString() {
         return "ResourceMapEntry{" +

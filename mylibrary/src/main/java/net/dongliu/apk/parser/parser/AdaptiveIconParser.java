@@ -8,6 +8,8 @@ import net.dongliu.apk.parser.struct.xml.XmlNamespaceStartTag;
 import net.dongliu.apk.parser.struct.xml.XmlNodeEndTag;
 import net.dongliu.apk.parser.struct.xml.XmlNodeStartTag;
 
+import androidx.annotation.Nullable;
+
 /**
  * Parse adaptive icon xml file.
  *
@@ -35,6 +37,7 @@ public class AdaptiveIconParser implements XmlStreamer {
         }
     }
 
+    @Nullable
     private String getDrawable(final XmlNodeStartTag xmlNodeStartTag) {
         final Attributes attributes = xmlNodeStartTag.getAttributes();
         for (final Attribute attribute : attributes.values()) {
