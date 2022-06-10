@@ -32,6 +32,7 @@ public class ResourceEntry {
     private String key;
 
     // the resvalue following this resource entry.
+    @Nullable
     private ResourceValue value;
 
     /**
@@ -39,8 +40,9 @@ public class ResourceEntry {
      */
     @Nullable
     public String toStringValue(final ResourceTable resourceTable, final Locale locale) {
-        if (this.value != null) {
-            return this.value.toStringValue(resourceTable, locale);
+        final ResourceValue value = this.value;
+        if (value != null) {
+            return value.toStringValue(resourceTable, locale);
         } else {
             return "null";
         }

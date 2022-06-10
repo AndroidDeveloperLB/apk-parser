@@ -18,6 +18,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 /**
@@ -39,7 +40,7 @@ public class ResourceFetcher {
         }
     }
 
-    private void parseAttributeXml(final String xml)
+    private void parseAttributeXml(@NonNull final String xml)
             throws IOException, ParserConfigurationException, SAXException {
         final SAXParserFactory factory = SAXParserFactory.newInstance();
         final SAXParser parser = factory.newSAXParser();
@@ -103,6 +104,7 @@ public class ResourceFetcher {
         }
     }
 
+    @NonNull
     private String getUrl(final String url) throws IOException {
         final HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
         try {
@@ -117,7 +119,7 @@ public class ResourceFetcher {
     }
 
     @Nullable
-    private String retrieveCode(final String html) {
+    private String retrieveCode(@NonNull final String html) {
         final Matcher matcher = Pattern.compile("<ol class=\"prettyprint\">(.*?)</ol>").matcher(html);
         if (matcher.find()) {
             final String codeHtml = matcher.group(1);

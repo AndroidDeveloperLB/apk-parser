@@ -1,6 +1,7 @@
 package net.dongliu.apk.parser.struct.xml;
 
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 /**
@@ -21,7 +22,7 @@ public class Attributes {
     }
 
     @Nullable
-    public Attribute get(final String name) {
+    public Attribute get(final @NonNull String name) {
         for (final Attribute attribute : this.attributes) {
             if (attribute.getName().equals(name)) {
                 return attribute;
@@ -35,7 +36,7 @@ public class Attributes {
      * Get attribute with name, return value as string
      */
     @Nullable
-    public String getString(final String name) {
+    public String getString(final @NonNull String name) {
         final Attribute attribute = this.get(name);
         if (attribute == null) {
             return null;
@@ -47,13 +48,13 @@ public class Attributes {
         return this.attributes.length;
     }
 
-    public boolean getBoolean(final String name, final boolean b) {
+    public boolean getBoolean(final @NonNull String name, final boolean b) {
         final String value = this.getString(name);
         return value == null ? b : Boolean.parseBoolean(value);
     }
 
     @Nullable
-    public Integer getInt(final String name) {
+    public Integer getInt(final @NonNull String name) {
         final String value = this.getString(name);
         if (value == null) {
             return null;
@@ -65,7 +66,7 @@ public class Attributes {
     }
 
     @Nullable
-    public Long getLong(final String name) {
+    public Long getLong(final @NonNull String name) {
         final String value = this.getString(name);
         if (value == null) {
             return null;

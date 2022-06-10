@@ -36,6 +36,7 @@ import androidx.annotation.Nullable;
 public class ApkMetaTranslator implements XmlStreamer {
     private final String[] tagStack = new String[100];
     private int depth = 0;
+    @NonNull
     private final ApkMeta.Builder apkMetaBuilder = ApkMeta.newBuilder();
     private List<IconPath> iconPaths = Collections.emptyList();
 
@@ -49,9 +50,9 @@ public class ApkMetaTranslator implements XmlStreamer {
     }
 
     @Override
-    public void onStartTag(final XmlNodeStartTag xmlNodeStartTag) {
-        final Attributes attributes = xmlNodeStartTag.getAttributes();
-        switch (xmlNodeStartTag.getName()) {
+    public void onStartTag(final @NonNull XmlNodeStartTag xmlNodeStartTag) {
+        final Attributes attributes = xmlNodeStartTag.attributes;
+        switch (xmlNodeStartTag.name) {
             case "application":
                 this.apkMetaBuilder.setDebuggable(attributes.getBoolean("debuggable", false));
                 //TODO fix this part in a better way. Workaround for this: https://github.com/hsiafan/apk-parser/issues/119
@@ -189,7 +190,7 @@ public class ApkMetaTranslator implements XmlStreamer {
                 this.apkMetaBuilder.addPermissions(permission);
                 break;
         }
-        this.tagStack[this.depth++] = xmlNodeStartTag.getName();
+        this.tagStack[this.depth++] = xmlNodeStartTag.name;
     }
 
     @Override

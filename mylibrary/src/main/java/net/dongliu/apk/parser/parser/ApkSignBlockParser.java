@@ -17,6 +17,8 @@ import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.List;
 
+import androidx.annotation.NonNull;
+
 // see https://source.android.com/security/apksigning/v2
 
 /**
@@ -29,6 +31,7 @@ public class ApkSignBlockParser {
         this.data = data.order(ByteOrder.LITTLE_ENDIAN);
     }
 
+    @NonNull
     public ApkSigningBlock parse() throws CertificateException {
         // sign block found, read pairs
         final List<SignerBlock> signerBlocks = new ArrayList<>();
@@ -50,6 +53,7 @@ public class ApkSignBlockParser {
         return new ApkSigningBlock(signerBlocks);
     }
 
+    @NonNull
     private SignerBlock readSigningV2(ByteBuffer buffer) throws CertificateException {
         buffer = this.readLenPrefixData(buffer);
 

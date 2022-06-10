@@ -27,6 +27,8 @@ import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
 
+import androidx.annotation.NonNull;
+
 import static net.dongliu.apk.parser.struct.ChunkType.UNKNOWN_YET;
 
 /**
@@ -63,10 +65,11 @@ public class ResourceTableParser {
         final ResourceTableHeader resourceTableHeader = (ResourceTableHeader) this.readChunkHeader();
 
         // read string pool chunk
-        this.stringPool = ParseUtils.readStringPool(this.buffer, (StringPoolHeader) this.readChunkHeader());
+        final StringPool stringPool = ParseUtils.readStringPool(this.buffer, (StringPoolHeader) this.readChunkHeader());
+        this.stringPool = stringPool;
 
         this.resourceTable = new ResourceTable();
-        this.resourceTable.setStringPool(this.stringPool);
+        this.resourceTable.setStringPool(stringPool);
 
         final long packageCount = resourceTableHeader.getPackageCount();
         if (packageCount != 0) {
@@ -80,7 +83,7 @@ public class ResourceTableParser {
     }
 
     // read one package
-    private Pair<ResourcePackage, PackageHeader> readPackage(final PackageHeader packageHeader) {
+    private Pair<ResourcePackage, PackageHeader> readPackage(@NonNull final PackageHeader packageHeader) {
         final Pair<ResourcePackage, PackageHeader> pair = new Pair<>();
         //read packageHeader
         final ResourcePackage resourcePackage = new ResourcePackage(packageHeader);
@@ -175,6 +178,7 @@ public class ResourceTableParser {
 
     }
 
+    @NonNull
     private ChunkHeader readChunkHeader() {
         final long begin = this.buffer.position();
 

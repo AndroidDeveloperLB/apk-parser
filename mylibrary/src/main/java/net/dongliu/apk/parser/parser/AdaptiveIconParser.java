@@ -8,6 +8,7 @@ import net.dongliu.apk.parser.struct.xml.XmlNamespaceStartTag;
 import net.dongliu.apk.parser.struct.xml.XmlNodeEndTag;
 import net.dongliu.apk.parser.struct.xml.XmlNodeStartTag;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 /**
@@ -16,30 +17,33 @@ import androidx.annotation.Nullable;
  * @author Liu Dong dongliu@live.cn
  */
 public class AdaptiveIconParser implements XmlStreamer {
-
+    @Nullable
     private String foreground;
+    @Nullable
     private String background;
 
+    @Nullable
     public String getForeground() {
         return this.foreground;
     }
 
+    @Nullable
     public String getBackground() {
         return this.background;
     }
 
     @Override
-    public void onStartTag(final XmlNodeStartTag xmlNodeStartTag) {
-        if (xmlNodeStartTag.getName().equals("background")) {
+    public void onStartTag(final @NonNull XmlNodeStartTag xmlNodeStartTag) {
+        if ("background".equals(xmlNodeStartTag.name)) {
             this.background = this.getDrawable(xmlNodeStartTag);
-        } else if (xmlNodeStartTag.getName().equals("foreground")) {
+        } else if ("foreground".equals(xmlNodeStartTag.name)) {
             this.foreground = this.getDrawable(xmlNodeStartTag);
         }
     }
 
     @Nullable
     private String getDrawable(final XmlNodeStartTag xmlNodeStartTag) {
-        final Attributes attributes = xmlNodeStartTag.getAttributes();
+        final Attributes attributes = xmlNodeStartTag.attributes;
         for (final Attribute attribute : attributes.values()) {
             if (attribute.getName().equals("drawable")) {
                 return attribute.getValue();

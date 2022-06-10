@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 /**
@@ -23,7 +24,7 @@ public class ResourcePackage {
     //  contains the names (keys) of the Resources defined in the ResourcePackage.
     private StringPool keyStringPool;
 
-    public ResourcePackage(final PackageHeader header) {
+    public ResourcePackage(final @NonNull PackageHeader header) {
         this.name = header.getName();
         this.id = (short) header.getId();
     }
@@ -75,7 +76,7 @@ public class ResourcePackage {
         return this.typeStringPool;
     }
 
-    public void setTypeStringPool(final StringPool typeStringPool) {
+    public void setTypeStringPool(final @NonNull StringPool typeStringPool) {
         this.typeStringPool = typeStringPool;
     }
 
@@ -83,7 +84,7 @@ public class ResourcePackage {
         return this.keyStringPool;
     }
 
-    public void setKeyStringPool(final StringPool keyStringPool) {
+    public void setKeyStringPool(final @NonNull StringPool keyStringPool) {
         this.keyStringPool = keyStringPool;
     }
 

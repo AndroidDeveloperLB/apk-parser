@@ -4,16 +4,19 @@ package net.dongliu.apk.parser.bean;
 import java.io.Serializable;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 /**
  * Android adaptive icon, from android 8.0
  */
 public class AdaptiveIcon implements IconFace, Serializable {
     private static final long serialVersionUID = 4185750290211529320L;
+    @Nullable
     private final Icon foreground;
+    @Nullable
     private final Icon background;
 
-    public AdaptiveIcon(final Icon foreground, final Icon background) {
+    public AdaptiveIcon(@Nullable final Icon foreground, @Nullable final Icon background) {
         this.foreground = foreground;
         this.background = background;
     }
@@ -22,6 +25,7 @@ public class AdaptiveIcon implements IconFace, Serializable {
     /**
      * The foreground icon
      */
+    @Nullable
     public Icon getForeground() {
         return this.foreground;
     }
@@ -29,6 +33,7 @@ public class AdaptiveIcon implements IconFace, Serializable {
     /**
      * The background icon
      */
+    @Nullable
     public Icon getBackground() {
         return this.background;
     }
@@ -48,6 +53,7 @@ public class AdaptiveIcon implements IconFace, Serializable {
     }
 
     @Override
+    @Nullable
     public byte[] getData() {
         return this.foreground.getData();
     }

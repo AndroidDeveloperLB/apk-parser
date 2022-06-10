@@ -3,6 +3,8 @@ package net.dongliu.apk.parser.utils;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
+import androidx.annotation.NonNull;
+
 /**
  * utils method for byte buffer
  *
@@ -21,7 +23,7 @@ public class Buffers {
     /**
      * get one unsigned short as int type
      */
-    public static int readUShort(final ByteBuffer buffer) {
+    public static int readUShort(final @NonNull ByteBuffer buffer) {
         final short s = buffer.getShort();
         return s & 0xffff;
     }
@@ -53,6 +55,7 @@ public class Buffers {
     /**
      * Read ascii string ,by len
      */
+    @NonNull
     public static String readAsciiString(final ByteBuffer buffer, final int strLen) {
         final byte[] bytes = new byte[strLen];
         buffer.get(bytes);

@@ -4,8 +4,11 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+import androidx.annotation.NonNull;
+
 public class Inputs {
 
+    @NonNull
     public static byte[] readAll(final InputStream in) throws IOException {
         final byte[] buf = new byte[1024 * 8];
         try (final ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
@@ -17,7 +20,8 @@ public class Inputs {
         }
     }
 
-    public static byte[] readAllAndClose(final InputStream in) throws IOException {
+    @NonNull
+    public static byte[] readAllAndClose(final @NonNull InputStream in) throws IOException {
         try (in) {
             return Inputs.readAll(in);
         }

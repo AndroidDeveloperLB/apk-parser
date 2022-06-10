@@ -4,8 +4,6 @@ import java.util.List;
 
 import androidx.annotation.NonNull;
 
-import static java.util.Objects.requireNonNull;
-
 /**
  * ApkSignV1 certificate file.
  */
@@ -17,17 +15,19 @@ public class ApkSigner {
     /**
      * The meta info of certificate contained in this cert file.
      */
+    @NonNull
     private final List<CertificateMeta> certificateMetas;
 
-    public ApkSigner(final String path, final List<CertificateMeta> certificateMetas) {
+    public ApkSigner(@NonNull final String path, final @NonNull List<CertificateMeta> certificateMetas) {
         this.path = path;
-        this.certificateMetas = requireNonNull(certificateMetas);
+        this.certificateMetas = certificateMetas;
     }
 
     public String getPath() {
         return this.path;
     }
 
+    @NonNull
     public List<CertificateMeta> getCertificateMetas() {
         return this.certificateMetas;
     }

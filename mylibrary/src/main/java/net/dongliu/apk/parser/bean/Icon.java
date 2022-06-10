@@ -14,11 +14,13 @@ import androidx.annotation.Nullable;
 public class Icon implements IconFace, Serializable {
 
     private static final long serialVersionUID = 8680309892249769701L;
+    @NonNull
     private final String path;
     private final int density;
+    @Nullable
     private final byte[] data;
 
-    public Icon(final String path, final int density, final byte[] data) {
+    public Icon(@NonNull final String path, final int density, final @Nullable byte[] data) {
         this.path = path;
         this.density = density;
         this.data = data;
@@ -27,6 +29,7 @@ public class Icon implements IconFace, Serializable {
     /**
      * The icon path in apk file
      */
+    @NonNull
     @Override
     public String getPath() {
         return this.path;

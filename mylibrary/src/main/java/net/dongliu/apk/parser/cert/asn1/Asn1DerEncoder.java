@@ -29,6 +29,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 /**
@@ -53,7 +54,8 @@ public final class Asn1DerEncoder {
      *                  </ul>
      * @throws Asn1EncodingException if the input could not be encoded
      */
-    public static byte[] encode(final Object container) throws Asn1EncodingException {
+    @Nullable
+    public static byte[] encode(final @NonNull Object container) throws Asn1EncodingException {
         final Class<?> containerClass = container.getClass();
         final Asn1Class containerAnnotation = containerClass.getAnnotation(Asn1Class.class);
         if (containerAnnotation == null) {
@@ -72,7 +74,8 @@ public final class Asn1DerEncoder {
         }
     }
 
-    private static byte[] toChoice(final Object container) throws Asn1EncodingException {
+    @Nullable
+    private static byte[] toChoice(@Nullable final Object container) throws Asn1EncodingException {
         final Class<?> containerClass = container.getClass();
         final List<AnnotatedField> fields = Asn1DerEncoder.getAnnotatedFields(container);
         if (fields.isEmpty()) {
@@ -456,7 +459,7 @@ public final class Asn1DerEncoder {
         private JavaToDerConverter() {
         }
 
-        public static byte[] toDer(final Object source, final Asn1Type targetType, final Asn1Type targetElementType)
+        public static byte[] toDer(@NonNull final Object source, final Asn1Type targetType, @Nullable final Asn1Type targetElementType)
                 throws Asn1EncodingException {
             final Class<?> sourceType = source.getClass();
             if (Asn1OpaqueObject.class.equals(sourceType)) {

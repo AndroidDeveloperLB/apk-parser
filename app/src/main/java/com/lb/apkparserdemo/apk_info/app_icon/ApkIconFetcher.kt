@@ -40,8 +40,8 @@ object ApkIconFetcher {
         var bestDensityDiff = -1
         val xmlIconsPaths = HashSet<String>()
         for (iconPath in iconPaths) {
-            if (iconPath.path.endsWith(".xml", true)) {
-                xmlIconsPaths.add(iconPath.path)
+            if (iconPath.path!!.endsWith(".xml", true)) {
+                xmlIconsPaths.add(iconPath.path!!)
                 continue
             }
             if (iconPath.density % densityDpi == 0) {

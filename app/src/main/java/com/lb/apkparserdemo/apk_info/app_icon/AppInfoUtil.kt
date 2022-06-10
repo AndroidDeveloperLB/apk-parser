@@ -2,7 +2,13 @@ package com.lb.apkparserdemo.apk_info.app_icon
 
 import android.app.ActivityManager
 import android.content.Context
+import android.content.pm.ApplicationInfo
+import android.content.pm.PackageInfo
 import com.lb.apkparserdemo.getSystemService
+
+fun ApplicationInfo.isSystemApp() = this.flags and ApplicationInfo.FLAG_SYSTEM != 0
+
+fun PackageInfo.isSystemApp() = this.applicationInfo.isSystemApp()
 
 object AppInfoUtil {
     private var appIconSize = 0

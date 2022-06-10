@@ -16,7 +16,6 @@
  */
 package net.dongliu.apk.parser.utils.xml;
 
-import java.io.IOException;
 import java.io.Writer;
 
 /**
@@ -28,7 +27,7 @@ class UnicodeUnpairedSurrogateRemover extends CodePointTranslator {
      * {@inheritDoc}
      */
     @Override
-    public boolean translate(final int codepoint, final Writer out) throws IOException {
+    public boolean translate(final int codepoint, final Writer out) {
         // It's a surrogate. Write nothing and say we've translated.
         // It's not a surrogate. Don't translate it.
         return codepoint >= Character.MIN_SURROGATE && codepoint <= Character.MAX_SURROGATE;

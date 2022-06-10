@@ -16,6 +16,8 @@
  */
 package net.dongliu.apk.parser.utils.xml;
 
+import androidx.annotation.NonNull;
+
 /**
  * Class holding various entity data for HTML and XML - generally for use with
  * the LookupTranslator.
@@ -29,6 +31,7 @@ public class EntityArrays {
      *
      * @return the mapping table
      */
+    @NonNull
     public static String[][] BASIC_ESCAPE() {
         return EntityArrays.BASIC_ESCAPE.clone();
     }
@@ -45,6 +48,7 @@ public class EntityArrays {
      *
      * @return the mapping table
      */
+    @NonNull
     public static String[][] APOS_ESCAPE() {
         return EntityArrays.APOS_ESCAPE.clone();
     }

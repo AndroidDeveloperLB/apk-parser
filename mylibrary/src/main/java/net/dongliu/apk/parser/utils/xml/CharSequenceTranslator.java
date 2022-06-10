@@ -21,6 +21,7 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.util.Locale;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 /**
@@ -51,7 +52,7 @@ abstract class CharSequenceTranslator {
      * @return String output of translation
      */
     @Nullable
-    public final String translate(final CharSequence input) {
+    public final String translate(@Nullable final CharSequence input) {
         if (input == null) {
             return null;
         }
@@ -105,6 +106,7 @@ abstract class CharSequenceTranslator {
      * @param translators CharSequenceTranslator array of translators to merge with this one
      * @return CharSequenceTranslator merging this translator with the others
      */
+    @NonNull
     public final CharSequenceTranslator with(final CharSequenceTranslator... translators) {
         final CharSequenceTranslator[] newArray = new CharSequenceTranslator[translators.length + 1];
         newArray[0] = this;

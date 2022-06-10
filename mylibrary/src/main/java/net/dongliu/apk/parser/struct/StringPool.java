@@ -1,11 +1,14 @@
 package net.dongliu.apk.parser.struct;
 
+import androidx.annotation.NonNull;
+
 /**
  * String pool.
  *
  * @author dongliu
  */
 public class StringPool {
+    @NonNull
     private final String[] pool;
 
     public StringPool(final int poolSize) {

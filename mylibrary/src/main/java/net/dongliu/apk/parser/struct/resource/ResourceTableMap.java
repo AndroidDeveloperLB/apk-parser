@@ -3,6 +3,7 @@ package net.dongliu.apk.parser.struct.resource;
 import net.dongliu.apk.parser.struct.ResourceValue;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 /**
  * @author dongliu
@@ -27,7 +28,7 @@ public class ResourceTableMap {
         return this.resValue;
     }
 
-    public void setResValue(final ResourceValue resValue) {
+    public void setResValue(final @Nullable ResourceValue resValue) {
         this.resValue = resValue;
     }
 

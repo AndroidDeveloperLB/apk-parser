@@ -1,15 +1,17 @@
 package net.dongliu.apk.parser.bean;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 /**
  * Icon path, and density
  */
 public class IconPath {
+    @Nullable
     private final String path;
     private final int density;
 
-    public IconPath(final String path, final int density) {
+    public IconPath(final @Nullable String path, final int density) {
         this.path = path;
         this.density = density;
     }
@@ -17,6 +19,7 @@ public class IconPath {
     /**
      * The icon path in apk file
      */
+    @Nullable
     public String getPath() {
         return this.path;
     }

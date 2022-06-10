@@ -84,6 +84,7 @@ public class ApkMeta {
         this.permissions = builder.permissions;
     }
 
+    @NonNull
     public static Builder newBuilder() {
         return new Builder();
     }
@@ -279,156 +280,187 @@ public class ApkMeta {
         private Builder() {
         }
 
-        public Builder setPackageName(final String packageName) {
+        @NonNull
+        public Builder setPackageName(final @Nullable String packageName) {
             this.packageName = packageName;
             return this;
         }
 
-        public Builder setLabel(final String label) {
+        @NonNull
+        public Builder setLabel(final @NonNull String label) {
             this.label = label;
             return this;
         }
 
-        public Builder setIcon(final String icon) {
+        @NonNull
+        public Builder setIcon(final @Nullable String icon) {
             this.icon = icon;
             return this;
         }
 
-        public Builder setVersionName(final String versionName) {
+        @NonNull
+        public Builder setVersionName(final @Nullable String versionName) {
             this.versionName = versionName;
             return this;
         }
 
-        public Builder setVersionCode(final Long versionCode) {
+        @NonNull
+        public Builder setVersionCode(final @Nullable Long versionCode) {
             this.versionCode = versionCode;
             return this;
         }
 
-        public Builder setRevisionCode(final Long revisionCode) {
+        @NonNull
+        public Builder setRevisionCode(final @Nullable Long revisionCode) {
             this.revisionCode = revisionCode;
             return this;
         }
 
-        public Builder setSharedUserId(final String sharedUserId) {
+        @NonNull
+        public Builder setSharedUserId(final @Nullable String sharedUserId) {
             this.sharedUserId = sharedUserId;
             return this;
         }
 
-        public Builder setSharedUserLabel(final String sharedUserLabel) {
+        @NonNull
+        public Builder setSharedUserLabel(final @Nullable String sharedUserLabel) {
             this.sharedUserLabel = sharedUserLabel;
             return this;
         }
 
-        public Builder setSplit(final String split) {
+        @NonNull
+        public Builder setSplit(final @Nullable String split) {
             this.split = split;
             return this;
         }
 
-        public Builder setConfigForSplit(final String configForSplit) {
+        @NonNull
+        public Builder setConfigForSplit(final @Nullable String configForSplit) {
             this.configForSplit = configForSplit;
             return this;
         }
 
+        @NonNull
         public Builder setIsFeatureSplit(final boolean isFeatureSplit) {
             this.isFeatureSplit = isFeatureSplit;
             return this;
         }
 
+        @NonNull
         public Builder setIsSplitRequired(final boolean isSplitRequired) {
             this.isSplitRequired = isSplitRequired;
             return this;
         }
 
+        @NonNull
         public Builder setIsolatedSplits(final boolean isolatedSplits) {
             this.isolatedSplits = isolatedSplits;
             return this;
         }
 
-        public Builder setInstallLocation(final String installLocation) {
+        @NonNull
+        public Builder setInstallLocation(final @NonNull String installLocation) {
             this.installLocation = installLocation;
             return this;
         }
 
-        public Builder setMinSdkVersion(final String minSdkVersion) {
+        @NonNull
+        public Builder setMinSdkVersion(final @NonNull String minSdkVersion) {
             this.minSdkVersion = minSdkVersion;
             return this;
         }
 
-        public Builder setTargetSdkVersion(final String targetSdkVersion) {
+        @NonNull
+        public Builder setTargetSdkVersion(final @NonNull String targetSdkVersion) {
             this.targetSdkVersion = targetSdkVersion;
             return this;
         }
 
-        public Builder setMaxSdkVersion(final String maxSdkVersion) {
+        @NonNull
+        public Builder setMaxSdkVersion(final @NonNull String maxSdkVersion) {
             this.maxSdkVersion = maxSdkVersion;
             return this;
         }
 
-        public Builder setCompileSdkVersion(final String compileSdkVersion) {
+        @NonNull
+        public Builder setCompileSdkVersion(final @Nullable String compileSdkVersion) {
             this.compileSdkVersion = compileSdkVersion;
             return this;
         }
 
-        public Builder setCompileSdkVersionCodename(final String compileSdkVersionCodename) {
+        @NonNull
+        public Builder setCompileSdkVersionCodename(final @Nullable String compileSdkVersionCodename) {
             this.compileSdkVersionCodename = compileSdkVersionCodename;
             return this;
         }
 
-        public Builder setPlatformBuildVersionCode(final String platformBuildVersionCode) {
+        @NonNull
+        public Builder setPlatformBuildVersionCode(final @Nullable String platformBuildVersionCode) {
             this.platformBuildVersionCode = platformBuildVersionCode;
             return this;
         }
 
-        public Builder setPlatformBuildVersionName(final String platformBuildVersionName) {
+        @NonNull
+        public Builder setPlatformBuildVersionName(final @Nullable String platformBuildVersionName) {
             this.platformBuildVersionName = platformBuildVersionName;
             return this;
         }
 
-        public Builder setGlEsVersion(final GlEsVersion glEsVersion) {
+        @NonNull
+        public Builder setGlEsVersion(final @NonNull GlEsVersion glEsVersion) {
             this.glEsVersion = glEsVersion;
             return this;
         }
 
+        @NonNull
         public Builder setAnyDensity(final boolean anyDensity) {
             this.anyDensity = anyDensity;
             return this;
         }
 
+        @NonNull
         public Builder setSmallScreens(final boolean smallScreens) {
             this.smallScreens = smallScreens;
             return this;
         }
 
+        @NonNull
         public Builder setNormalScreens(final boolean normalScreens) {
             this.normalScreens = normalScreens;
             return this;
         }
 
+        @NonNull
         public Builder setLargeScreens(final boolean largeScreens) {
             this.largeScreens = largeScreens;
             return this;
         }
 
+        @NonNull
         public Builder setDebuggable(final boolean debuggable) {
             this.debuggable = debuggable;
             return this;
         }
 
-        public Builder addUsesPermission(final String usesPermission) {
+        @NonNull
+        public Builder addUsesPermission(final @Nullable String usesPermission) {
             this.usesPermissions.add(usesPermission);
             return this;
         }
 
-        public Builder addUsesFeature(final UseFeature usesFeature) {
+        @NonNull
+        public Builder addUsesFeature(final @NonNull UseFeature usesFeature) {
             this.usesFeatures.add(usesFeature);
             return this;
         }
 
-        public Builder addPermissions(final Permission permission) {
+        @NonNull
+        public Builder addPermissions(final @NonNull Permission permission) {
             this.permissions.add(permission);
             return this;
         }
 
+        @NonNull
         public ApkMeta build() {
             return new ApkMeta(this);
         }

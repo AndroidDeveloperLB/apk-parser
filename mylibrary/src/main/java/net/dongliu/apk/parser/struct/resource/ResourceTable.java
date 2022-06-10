@@ -20,7 +20,7 @@ import androidx.annotation.NonNull;
 public class ResourceTable {
     private final Map<Short, ResourcePackage> packageMap = new HashMap<>();
     private StringPool stringPool;
-
+    @NonNull
     public static final Map<Integer, String> sysStyle = ResourceLoader.loadSystemStyles();
 
     public void addPackage(final ResourcePackage resourcePackage) {

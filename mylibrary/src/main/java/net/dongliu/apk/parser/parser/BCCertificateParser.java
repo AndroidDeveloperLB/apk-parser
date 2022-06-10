@@ -18,6 +18,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import androidx.annotation.NonNull;
+
 /**
  * Parser certificate info using BouncyCastle.
  *
@@ -27,7 +29,7 @@ class BCCertificateParser extends CertificateParser {
 
     private static final Provider provider = new BouncyCastleProvider();
 
-    public BCCertificateParser(final byte[] data) {
+    public BCCertificateParser(@NonNull final byte[] data) {
         super(data);
     }
 
@@ -36,6 +38,7 @@ class BCCertificateParser extends CertificateParser {
      */
     @Override
     @SuppressWarnings("unchecked")
+    @NonNull
     public List<CertificateMeta> parse() throws CertificateException {
         final CMSSignedData cmsSignedData;
         try {

@@ -6,6 +6,7 @@ import net.dongliu.apk.parser.struct.resource.ResourceTable;
 import java.util.Locale;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 /**
  * @author dongliu
@@ -27,6 +28,7 @@ public class XmlCData {
     /**
      * get value as string
      */
+    @NonNull
     public String toStringValue(final ResourceTable resourceTable, final Locale locale) {
         if (this.data != null) {
             return XmlCData.CDATA_START + this.data + XmlCData.CDATA_END;
@@ -47,7 +49,7 @@ public class XmlCData {
         return this.typedData;
     }
 
-    public void setTypedData(final ResourceValue typedData) {
+    public void setTypedData(final @Nullable ResourceValue typedData) {
         this.typedData = typedData;
     }
 

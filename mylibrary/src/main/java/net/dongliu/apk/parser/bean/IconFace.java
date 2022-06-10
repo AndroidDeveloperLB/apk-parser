@@ -2,6 +2,8 @@ package net.dongliu.apk.parser.bean;
 
 import java.io.Serializable;
 
+import androidx.annotation.Nullable;
+
 /**
  * The icon interface
  */
@@ -16,6 +18,7 @@ public interface IconFace extends Serializable {
      * Return the icon file as bytes. This method is valid only when {@link #isFile()} return true.
      * Otherwise, {@link UnsupportedOperationException} should be thrown.
      */
+    @Nullable
     byte[] getData();
 
 

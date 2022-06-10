@@ -31,42 +31,52 @@ public abstract class ResourceValue {
     @Nullable
     public abstract String toStringValue(ResourceTable resourceTable, Locale locale);
 
+    @NonNull
     public static ResourceValue decimal(final int value) {
         return new DecimalResourceValue(value);
     }
 
+    @NonNull
     public static ResourceValue hexadecimal(final int value) {
         return new HexadecimalResourceValue(value);
     }
 
+    @NonNull
     public static ResourceValue bool(final int value) {
         return new BooleanResourceValue(value);
     }
 
+    @NonNull
     public static ResourceValue string(final int value, final StringPool stringPool) {
         return new StringResourceValue(value, stringPool);
     }
 
+    @NonNull
     public static ResourceValue reference(final int value) {
         return new ReferenceResourceValue(value);
     }
 
+    @NonNull
     public static ResourceValue nullValue() {
         return NullResourceValue.instance;
     }
 
+    @NonNull
     public static ResourceValue rgb(final int value, final int len) {
         return new RGBResourceValue(value, len);
     }
 
+    @NonNull
     public static ResourceValue dimension(final int value) {
         return new DimensionValue(value);
     }
 
+    @NonNull
     public static ResourceValue fraction(final int value) {
         return new FractionValue(value);
     }
 
+    @NonNull
     public static ResourceValue raw(final int value, final short type) {
         return new RawValue(value, type);
     }
@@ -143,7 +153,8 @@ public abstract class ResourceValue {
         }
 
         @Override
-        public String toStringValue(final ResourceTable resourceTable, final Locale locale) {
+        @Nullable
+        public String toStringValue(final @Nullable ResourceTable resourceTable, final Locale locale) {
             final long resourceId = this.getReferenceResourceId();
             // android system styles.
             if (resourceId > AndroidConstants.SYS_STYLE_ID_START && resourceId < AndroidConstants.SYS_STYLE_ID_END) {

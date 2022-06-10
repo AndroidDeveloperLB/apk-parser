@@ -18,6 +18,7 @@ import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 
@@ -31,8 +32,6 @@ public class ApkFile extends AbstractApkFile implements Closeable {
 
     private final ZipFile zf;
     private final File apkFile;
-    @Nullable
-    private FileChannel fileChannel;
 
     public ApkFile(final File apkFile) throws IOException {
         this.apkFile = apkFile;
@@ -44,6 +43,7 @@ public class ApkFile extends AbstractApkFile implements Closeable {
         this(new File(filePath));
     }
 
+    @NonNull
     @Override
     protected List<CertificateFile> getAllCertificateData() throws IOException {
         final Enumeration<? extends ZipEntry> enu = this.zf.entries();
@@ -63,7 +63,7 @@ public class ApkFile extends AbstractApkFile implements Closeable {
 
     @Nullable
     @Override
-    public byte[] getFileData(final String path) throws IOException {
+    public byte[] getFileData(final @NonNull String path) throws IOException {
         final ZipEntry entry = this.zf.getEntry(path);
         if (entry == null) {
             return null;
@@ -73,10 +73,11 @@ public class ApkFile extends AbstractApkFile implements Closeable {
         return Inputs.readAllAndClose(inputStream);
     }
 
+    @NonNull
     @Override
     protected ByteBuffer fileData() throws IOException {
-        this.fileChannel = new FileInputStream(this.apkFile).getChannel();
-        return this.fileChannel.map(FileChannel.MapMode.READ_ONLY, 0, this.fileChannel.size());
+        final FileChannel channel = new FileInputStream(this.apkFile).getChannel();
+        return channel.map(FileChannel.MapMode.READ_ONLY, 0, channel.size());
     }
 
 
@@ -85,6 +86,7 @@ public class ApkFile extends AbstractApkFile implements Closeable {
      *
      * @deprecated using google official ApkVerifier of apksig lib instead.
      */
+    @NonNull
     @Override
     @Deprecated
     public ApkSignStatus verifyApk() throws IOException {
@@ -119,10 +121,7 @@ public class ApkFile extends AbstractApkFile implements Closeable {
 
     @Override
     public void close() throws IOException {
-        try (final Closeable superClosable = ApkFile.super::close;
-             final Closeable zipFileClosable = this.zf;
-             final Closeable fileChannelClosable = this.fileChannel) {
-
+        try (final Closeable superClosable = ApkFile.super::close) {
         }
     }
 

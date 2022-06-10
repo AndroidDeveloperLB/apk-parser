@@ -19,6 +19,8 @@ package net.dongliu.apk.parser.utils.xml;
 import java.io.IOException;
 import java.io.Writer;
 
+import androidx.annotation.NonNull;
+
 /**
  * Translates codepoints to their XML numeric entity escaped value.
  */
@@ -57,6 +59,7 @@ class NumericEntityEscaper extends CodePointTranslator {
      * @param codepoint below which to escape
      * @return the newly created {@code NumericEntityEscaper} instance
      */
+    @NonNull
     public static NumericEntityEscaper below(final int codepoint) {
         return NumericEntityEscaper.outsideOf(codepoint, Integer.MAX_VALUE);
     }
@@ -67,6 +70,7 @@ class NumericEntityEscaper extends CodePointTranslator {
      * @param codepoint above which to escape
      * @return the newly created {@code NumericEntityEscaper} instance
      */
+    @NonNull
     public static NumericEntityEscaper above(final int codepoint) {
         return NumericEntityEscaper.outsideOf(0, codepoint);
     }
@@ -78,6 +82,7 @@ class NumericEntityEscaper extends CodePointTranslator {
      * @param codepointHigh below which to escape
      * @return the newly created {@code NumericEntityEscaper} instance
      */
+    @NonNull
     public static NumericEntityEscaper between(final int codepointLow, final int codepointHigh) {
         return new NumericEntityEscaper(codepointLow, codepointHigh, true);
     }
@@ -89,6 +94,7 @@ class NumericEntityEscaper extends CodePointTranslator {
      * @param codepointHigh above which to escape
      * @return the newly created {@code NumericEntityEscaper} instance
      */
+    @NonNull
     public static NumericEntityEscaper outsideOf(final int codepointLow, final int codepointHigh) {
         return new NumericEntityEscaper(codepointLow, codepointHigh, false);
     }

@@ -8,6 +8,7 @@ import java.util.Locale;
 import java.util.Map;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 /**
  * xml node attribute
@@ -22,16 +23,22 @@ public class Attribute {
     // Processed typed value of Attribute
     private ResourceValue typedValue;
     // the final value as string
+    @Nullable
     private String value;
 
+    @Nullable
     public String toStringValue(final ResourceTable resourceTable, final Locale locale) {
-        if (this.rawValue != null) {
-            return this.rawValue;
-        } else if (this.typedValue != null) {
-            return this.typedValue.toStringValue(resourceTable, locale);
+        final String rawValue = this.rawValue;
+        if (rawValue != null) {
+            return rawValue;
         } else {
-            // something happen;
-            return "";
+            final ResourceValue typedValue = this.typedValue;
+            if (typedValue != null) {
+                return typedValue.toStringValue(resourceTable, locale);
+            } else {
+                // something happen;
+                return "";
+            }
         }
     }
 
@@ -41,9 +48,10 @@ public class Attribute {
      * @author dongliu
      */
     public static class AttrIds {
-
+        @NonNull
         private static final Map<Integer, String> ids = ResourceLoader.loadSystemAttrIds();
 
+        @NonNull
         public static String getString(final long id) {
             String value = AttrIds.ids.get((int) id);
             if (value == null) {
@@ -82,15 +90,16 @@ public class Attribute {
         return this.typedValue;
     }
 
-    public void setTypedValue(final ResourceValue typedValue) {
+    public void setTypedValue(final @Nullable ResourceValue typedValue) {
         this.typedValue = typedValue;
     }
 
+    @Nullable
     public String getValue() {
         return this.value;
     }
 
-    public void setValue(final String value) {
+    public void setValue(final @Nullable String value) {
         this.value = value;
     }
 

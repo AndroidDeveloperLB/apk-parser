@@ -11,6 +11,7 @@ import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 /**
@@ -95,7 +96,8 @@ public class ParseUtils {
     /**
      * read String pool, for apk binary xml file and resource table.
      */
-    public static StringPool readStringPool(final ByteBuffer buffer, final StringPoolHeader stringPoolHeader) {
+    @NonNull
+    public static StringPool readStringPool(final @NonNull ByteBuffer buffer, final @NonNull StringPoolHeader stringPoolHeader) {
 
         final long beginPos = buffer.position();
         final int[] offsets = new int[stringPoolHeader.getStringCount()];
@@ -151,7 +153,7 @@ public class ParseUtils {
      * read res value, convert from different types to string.
      */
     @Nullable
-    public static ResourceValue readResValue(final ByteBuffer buffer, final StringPool stringPool) {
+    public static ResourceValue readResValue(final @NonNull ByteBuffer buffer, final StringPool stringPool) {
 //        ResValue resValue = new ResValue();
         final int size = Buffers.readUShort(buffer);
         final short res0 = Buffers.readUByte(buffer);

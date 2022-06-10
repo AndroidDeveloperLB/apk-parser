@@ -1,5 +1,7 @@
 package net.dongliu.apk.parser.utils.xml;
 
+import androidx.annotation.Nullable;
+
 /**
  * Utils method to escape xml string, copied from apache commons lang3
  *
@@ -10,7 +12,8 @@ public class XmlEscaper {
     /**
      * <p>Escapes the characters in a {@code String} using XML entities.</p>
      */
-    public static String escapeXml10(final String input) {
+    @Nullable
+    public static String escapeXml10(@Nullable final String input) {
         return XmlEscaper.ESCAPE_XML10.translate(input);
     }
 

@@ -40,6 +40,7 @@ public class InputStreamBerDataValueReader implements BerDataValueReader {
     }
 
     @Override
+    @Nullable
     public BerDataValue readDataValue() throws BerDataValueFormatException {
         return InputStreamBerDataValueReader.readDataValue(this.mIn);
     }

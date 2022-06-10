@@ -1,9 +1,6 @@
 package net.dongliu.apk.parser.struct;
 
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
 /**
  * Apk res value struct.
  * Only for description now, The value is hold in ResourceValue
@@ -11,40 +8,6 @@ import androidx.annotation.Nullable;
  * @author dongliu
  */
 public class ResValue {
-    // Number of bytes in this structure. uint16; always 8
-    private int size;
-    // Always set to 0. uint8
-    private short res0;
-    // Type of the data value. uint8
-    private short dataType;
-    // The data for this item; as interpreted according to dataType. unit32
-
-    /*
-     * The data field is a fixed size 32-bit integer.
-     * How it is interpreted depends upon the value of the type field.
-     * Some of the possible interpretations are as
-     *     a boolean value
-     *     a float value
-     *     an integer value
-     *     an index into the Table chunk’s StringPool
-     *     a composite value
-     */
-    /**
-     * the real data represented by string
-     */
-    @Nullable
-    private ResourceValue data;
-
-    @NonNull
-    @Override
-    public String toString() {
-        return "ResValue{" +
-                "size=" + this.size +
-                ", res0=" + this.res0 +
-                ", dataType=" + this.dataType +
-                ", data=" + this.data +
-                '}';
-    }
 
     public static class ResType {
         // Contains no data.

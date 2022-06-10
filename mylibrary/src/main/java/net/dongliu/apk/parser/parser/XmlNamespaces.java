@@ -16,17 +16,12 @@ import androidx.annotation.Nullable;
  */
 class XmlNamespaces {
 
-    private final List<XmlNamespace> namespaces;
+    private final List<XmlNamespace> namespaces = new ArrayList<>();
 
-    private final List<XmlNamespace> newNamespaces;
-
-    public XmlNamespaces() {
-        this.namespaces = new ArrayList<>();
-        this.newNamespaces = new ArrayList<>();
-    }
+    private final List<XmlNamespace> newNamespaces = new ArrayList<>();
 
     public void addNamespace(final XmlNamespaceStartTag tag) {
-        final XmlNamespace namespace = new XmlNamespace(tag.getPrefix(), tag.getUri());
+        final XmlNamespace namespace = new XmlNamespace(tag.prefix, tag.uri);
         this.namespaces.add(namespace);
         this.newNamespaces.add(namespace);
     }

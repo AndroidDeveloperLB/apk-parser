@@ -18,16 +18,19 @@ import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.List;
 
+import androidx.annotation.NonNull;
+
 /**
  * Parser certificate info using jsse.
  *
  * @author dongliu
  */
 class JSSECertificateParser extends CertificateParser {
-    public JSSECertificateParser(final byte[] data) {
+    public JSSECertificateParser(@NonNull final byte[] data) {
         super(data);
     }
 
+    @NonNull
     @Override
     public List<CertificateMeta> parse() throws CertificateException {
         final ContentInfo contentInfo;

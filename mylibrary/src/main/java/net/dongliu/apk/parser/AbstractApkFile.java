@@ -43,6 +43,7 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import static java.lang.System.arraycopy;
@@ -152,21 +153,26 @@ public abstract class AbstractApkFile implements Closeable {
     }
 
 
+    @NonNull
     protected abstract List<CertificateFile> getAllCertificateData() throws IOException;
 
     protected static class CertificateFile {
+        @NonNull
         private final String path;
+        @NonNull
         private final byte[] data;
 
-        public CertificateFile(final String path, final byte[] data) {
+        public CertificateFile(@NonNull final String path, @NonNull final byte[] data) {
             this.path = path;
             this.data = data;
         }
 
+        @NonNull
         public String getPath() {
             return this.path;
         }
 
+        @NonNull
         public byte[] getData() {
             return this.data;
         }
@@ -201,6 +207,7 @@ public abstract class AbstractApkFile implements Closeable {
     /**
      * return the whole apk file as ByteBuffer
      */
+    @NonNull
     protected abstract ByteBuffer fileData() throws IOException;
 
 
@@ -239,6 +246,7 @@ public abstract class AbstractApkFile implements Closeable {
      *
      * @return icon files.
      */
+    @NonNull
     public List<IconFace> getAllIcons() throws IOException {
         this.parseManifest();
         final List<IconPath> iconPaths = this.iconPaths;
@@ -259,12 +267,14 @@ public abstract class AbstractApkFile implements Closeable {
                 final AdaptiveIconParser iconParser = new AdaptiveIconParser();
                 this.transBinaryXml(data, iconParser);
                 Icon backgroundIcon = null;
-                if (iconParser.getBackground() != null) {
-                    backgroundIcon = this.newFileIcon(iconParser.getBackground(), iconPath.getDensity());
+                final String background = iconParser.getBackground();
+                if (background != null) {
+                    backgroundIcon = this.newFileIcon(background, iconPath.getDensity());
                 }
                 Icon foregroundIcon = null;
-                if (iconParser.getForeground() != null) {
-                    foregroundIcon = this.newFileIcon(iconParser.getForeground(), iconPath.getDensity());
+                final String foreground = iconParser.getForeground();
+                if (foreground != null) {
+                    foregroundIcon = this.newFileIcon(foreground, iconPath.getDensity());
                 }
                 final AdaptiveIcon icon = new AdaptiveIcon(foregroundIcon, backgroundIcon);
                 iconFaces.add(icon);
@@ -276,7 +286,8 @@ public abstract class AbstractApkFile implements Closeable {
         return iconFaces;
     }
 
-    private Icon newFileIcon(final String filePath, final int density) throws IOException {
+    @NonNull
+    private Icon newFileIcon(@NonNull final String filePath, final int density) throws IOException {
         return new Icon(filePath, density, this.getFileData(filePath));
     }
 
@@ -290,13 +301,14 @@ public abstract class AbstractApkFile implements Closeable {
         return this.dexClasses;
     }
 
-    private DexClass[] mergeDexClasses(final DexClass[] first, final DexClass[] second) {
+    private DexClass[] mergeDexClasses(@NonNull final DexClass[] first, @NonNull final DexClass[] second) {
         final DexClass[] result = new DexClass[first.length + second.length];
         arraycopy(first, 0, result, 0, first.length);
         arraycopy(second, 0, result, first.length, second.length);
         return result;
     }
 
+    @NonNull
     private DexClass[] parseDexFile(final String path) throws IOException {
         final byte[] data = this.getFileData(path);
         if (data == null) {
@@ -349,6 +361,7 @@ public abstract class AbstractApkFile implements Closeable {
      *
      * @deprecated using google official ApkVerifier of apksig lib instead.
      */
+    @NonNull
     @Deprecated
     public abstract ApkSignStatus verifyApk() throws IOException;
 

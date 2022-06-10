@@ -10,6 +10,8 @@ import net.dongliu.apk.parser.utils.Buffers;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
+import androidx.annotation.NonNull;
+
 /**
  * parse dex file.
  * current we only get the class name.
@@ -30,6 +32,7 @@ public class DexParser {
         this.buffer.order(ByteOrder.LITTLE_ENDIAN);
     }
 
+    @NonNull
     public DexClass[] parse() {
         // read magic
         final String magic = new String(Buffers.readBytes(this.buffer, 8));
@@ -163,6 +166,7 @@ public class DexParser {
     /**
      * read dex encoding string.
      */
+    @NonNull
     private String readString() {
         // the length is char len, not byte len
         final int strLen = this.readVarInts();
@@ -174,6 +178,7 @@ public class DexParser {
      *
      * @param strLen the java-utf16-char len, not strLen nor bytes len.
      */
+    @NonNull
     private String readString(final int strLen) {
         final char[] chars = new char[strLen];
 

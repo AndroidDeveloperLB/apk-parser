@@ -2,13 +2,16 @@ package net.dongliu.apk.parser.struct.xml;
 
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 /**
  * @author dongliu
  */
 public class XmlNodeStartTag {
-    private String namespace;
-    private String name;
+    @Nullable
+    public final String namespace;
+    @Nullable
+    public final String name;
 
     // Byte offset from the start of this structure where the attributes start. uint16
     //public int attributeStart;
@@ -21,30 +24,12 @@ public class XmlNodeStartTag {
     //public short idIndex;
     // Index (1-based) of the "style" attribute. 0 if none. uint16
     //public short styleIndex;
+    @NonNull
+    public final Attributes attributes;
 
-    private Attributes attributes;
-
-    public String getNamespace() {
-        return this.namespace;
-    }
-
-    public void setNamespace(final String namespace) {
+    public XmlNodeStartTag(@Nullable final String namespace, final @Nullable String name, final @NonNull Attributes attributes) {
         this.namespace = namespace;
-    }
-
-    public String getName() {
-        return this.name;
-    }
-
-    public void setName(final String name) {
         this.name = name;
-    }
-
-    public Attributes getAttributes() {
-        return this.attributes;
-    }
-
-    public void setAttributes(final Attributes attributes) {
         this.attributes = attributes;
     }
 

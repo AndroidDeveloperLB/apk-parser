@@ -18,6 +18,7 @@ package net.dongliu.apk.parser.cert.asn1.ber;
 
 import java.nio.ByteBuffer;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 /**
@@ -85,6 +86,7 @@ public class BerDataValue {
     /**
      * Returns a new reader of the contents of this data value.
      */
+    @NonNull
     public BerDataValueReader contentsReader() {
         return new ByteBufferBerDataValueReader(this.getEncodedContents());
     }
@@ -93,6 +95,7 @@ public class BerDataValue {
      * Returns a new reader which returns just this data value. This may be useful for re-reading
      * this value in different contexts.
      */
+    @NonNull
     public BerDataValueReader dataValueReader() {
         return new ParsedValueReader(this);
     }

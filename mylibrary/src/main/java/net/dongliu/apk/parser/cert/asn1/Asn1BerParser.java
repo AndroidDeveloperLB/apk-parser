@@ -32,6 +32,8 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+import androidx.annotation.NonNull;
+
 /**
  * Parser of ASN.1 BER-encoded structures.
  * <p>
@@ -397,7 +399,7 @@ public final class Asn1BerParser {
             return this.mBerTagNumber;
         }
 
-        public void setValueFrom(BerDataValue dataValue, final Object obj) throws Asn1DecodingException {
+        public void setValueFrom(@NonNull BerDataValue dataValue, final Object obj) throws Asn1DecodingException {
             final int readTagClass = dataValue.getTagClass();
             if (this.mBerTagNumber != -1) {
                 final int readTagNumber = dataValue.getTagNumber();
@@ -482,6 +484,7 @@ public final class Asn1BerParser {
                         + " set");
     }
 
+    @NonNull
     private static BigInteger integerToBigInteger(final ByteBuffer encoded) {
         if (!encoded.hasRemaining()) {
             return BigInteger.ZERO;

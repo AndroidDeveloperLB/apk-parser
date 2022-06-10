@@ -6,6 +6,8 @@ import net.dongliu.apk.parser.bean.CertificateMeta;
 import java.security.cert.CertificateException;
 import java.util.List;
 
+import androidx.annotation.NonNull;
+
 /**
  * Parser certificate info.
  * One apk may have multi certificates(certificate chain).
@@ -13,14 +15,15 @@ import java.util.List;
  * @author dongliu
  */
 public abstract class CertificateParser {
-
+    @NonNull
     protected final byte[] data;
 
-    public CertificateParser(final byte[] data) {
+    public CertificateParser(final @NonNull byte[] data) {
         this.data = data;
     }
 
-    public static CertificateParser getInstance(final byte[] data) {
+    @NonNull
+    public static CertificateParser getInstance(final @NonNull byte[] data) {
         if (ApkParsers.useBouncyCastle()) {
             return new BCCertificateParser(data);
         }
@@ -30,6 +33,7 @@ public abstract class CertificateParser {
     /**
      * get certificate info
      */
+    @NonNull
     public abstract List<CertificateMeta> parse() throws CertificateException;
 
 }

@@ -1,29 +1,22 @@
 package net.dongliu.apk.parser.struct.xml;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 /**
  * @author dongliu
  */
 public class XmlNamespaceStartTag {
-    private String prefix;
-    private String uri;
+    @Nullable
+    public final String prefix;
+    @Nullable
+    public final String uri;
 
-    public String getPrefix() {
-        return this.prefix;
-    }
-
-    public void setPrefix(final String prefix) {
+    public XmlNamespaceStartTag(final @Nullable String prefix, final @Nullable String uri) {
         this.prefix = prefix;
-    }
-
-    public String getUri() {
-        return this.uri;
-    }
-
-    public void setUri(final String uri) {
         this.uri = uri;
     }
+
 
     @NonNull
     @Override

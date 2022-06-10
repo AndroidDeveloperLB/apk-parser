@@ -34,15 +34,15 @@ public class XmlTranslator implements XmlStreamer {
         }
         this.appendShift(this.shift++);
         this.sb.append('<');
-        if (xmlNodeStartTag.getNamespace() != null) {
-            final String prefix = this.namespaces.getPrefixViaUri(xmlNodeStartTag.getNamespace());
+        if (xmlNodeStartTag.namespace != null) {
+            final String prefix = this.namespaces.getPrefixViaUri(xmlNodeStartTag.namespace);
             if (prefix != null) {
                 this.sb.append(prefix).append(":");
             } else {
-                this.sb.append(xmlNodeStartTag.getNamespace()).append(":");
+                this.sb.append(xmlNodeStartTag.namespace).append(":");
             }
         }
-        this.sb.append(xmlNodeStartTag.getName());
+        this.sb.append(xmlNodeStartTag.name);
 
         final List<XmlNamespaces.XmlNamespace> nps = this.namespaces.consumeNameSpaces();
         if (!nps.isEmpty()) {
@@ -54,7 +54,7 @@ public class XmlTranslator implements XmlStreamer {
         }
         this.isLastStartTag = true;
 
-        for (final Attribute attribute : xmlNodeStartTag.getAttributes().values()) {
+        for (final Attribute attribute : xmlNodeStartTag.attributes.values()) {
             this.onAttribute(attribute);
         }
     }

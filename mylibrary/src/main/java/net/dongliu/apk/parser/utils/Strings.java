@@ -3,6 +3,7 @@ package net.dongliu.apk.parser.utils;
 
 import java.util.Iterator;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 public class Strings {
@@ -13,10 +14,7 @@ public class Strings {
      * a single String containing the provided elements.</p>
      */
     @Nullable
-    public static String join(final Iterable<?> iterable, final String separator) {
-        if (iterable == null) {
-            return null;
-        }
+    public static String join(final @NonNull Iterable<?> iterable, final @NonNull String separator) {
         return Strings.join(iterable.iterator(), separator);
     }
 
@@ -24,12 +22,7 @@ public class Strings {
      * Copied fom commons StringUtils
      */
     @Nullable
-    public static String join(final Iterator<?> iterator, final String separator) {
-
-        // handle null, zero and one elements before building a buffer
-        if (iterator == null) {
-            return null;
-        }
+    public static String join(final @NonNull Iterator<?> iterator, final @Nullable String separator) {
         if (!iterator.hasNext()) {
             return "";
         }
@@ -56,7 +49,7 @@ public class Strings {
         return buf.toString();
     }
 
-    public static boolean isNumeric(final CharSequence cs) {
+    public static boolean isNumeric(final @Nullable CharSequence cs) {
         if (Strings.isEmpty(cs)) {
             return false;
         }
@@ -69,12 +62,13 @@ public class Strings {
         return true;
     }
 
-    public static boolean isEmpty(final CharSequence cs) {
+    public static boolean isEmpty(final @Nullable CharSequence cs) {
         return cs == null || cs.length() == 0;
     }
 
-    public static String substringBefore(final String str, final String separator) {
-        if (Strings.isEmpty(str) || separator == null) {
+    @NonNull
+    public static String substringBefore(final @NonNull String str, final @NonNull String separator) {
+        if (str.isEmpty()) {
             return str;
         }
         if (separator.isEmpty()) {

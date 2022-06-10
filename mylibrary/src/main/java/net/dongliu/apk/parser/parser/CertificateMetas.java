@@ -11,9 +11,12 @@ import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.List;
 
+import androidx.annotation.NonNull;
+
 public class CertificateMetas {
 
-    public static List<CertificateMeta> from(final List<X509Certificate> certificates) throws CertificateEncodingException {
+    @NonNull
+    public static List<CertificateMeta> from(final @NonNull List<X509Certificate> certificates) throws CertificateEncodingException {
         final List<CertificateMeta> certificateMetas = new ArrayList<>(certificates.size());
         for (final X509Certificate certificate : certificates) {
             final CertificateMeta certificateMeta = CertificateMetas.from(certificate);
@@ -22,7 +25,8 @@ public class CertificateMetas {
         return certificateMetas;
     }
 
-    public static CertificateMeta from(final X509Certificate certificate) throws CertificateEncodingException {
+    @NonNull
+    public static CertificateMeta from(final @NonNull X509Certificate certificate) throws CertificateEncodingException {
         final byte[] bytes = certificate.getEncoded();
         final String certMd5 = CertificateMetas.md5Digest(bytes);
         final String publicKeyString = CertificateMetas.byteToHexString(bytes);

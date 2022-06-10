@@ -30,6 +30,7 @@ import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 /**
@@ -47,6 +48,7 @@ public class BinaryXmlParser {
     private StringPool stringPool;
     // some attribute name stored by resource id
     private String[] resourceMap;
+    @NonNull
     private final ByteBuffer buffer;
     private XmlStreamer xmlStreamer;
     private final ResourceTable resourceTable;
@@ -55,7 +57,7 @@ public class BinaryXmlParser {
      */
     private Locale locale = Locales.any;
 
-    public BinaryXmlParser(final ByteBuffer buffer, final ResourceTable resourceTable) {
+    public BinaryXmlParser(final @NonNull ByteBuffer buffer, final ResourceTable resourceTable) {
         this.buffer = buffer.duplicate();
         this.buffer.order(ByteOrder.LITTLE_ENDIAN);
         this.resourceTable = resourceTable;
@@ -173,12 +175,8 @@ public class BinaryXmlParser {
     private XmlNodeStartTag readXmlNodeStartTag() {
         final int nsRef = this.buffer.getInt();
         final int nameRef = this.buffer.getInt();
-        final XmlNodeStartTag xmlNodeStartTag = new XmlNodeStartTag();
-        if (nsRef > 0) {
-            xmlNodeStartTag.setNamespace(this.stringPool.get(nsRef));
-        }
-        xmlNodeStartTag.setName(this.stringPool.get(nameRef));
-
+        final String namespace = nsRef > 0 ? this.stringPool.get(nsRef) : null;
+        final String name = this.stringPool.get(nameRef);
         // read attributes.
         // attributeStart and attributeSize are always 20 (0x14)
         final int attributeStart = Buffers.readUShort(this.buffer);
@@ -204,7 +202,7 @@ public class BinaryXmlParser {
                 attributes.set(count, attribute);
             }
         }
-        xmlNodeStartTag.setAttributes(attributes);
+        final XmlNodeStartTag xmlNodeStartTag = new XmlNodeStartTag(namespace, name, attributes);
 
         if (this.xmlStreamer != null) {
             this.xmlStreamer.onStartTag(xmlNodeStartTag);
@@ -269,14 +267,9 @@ public class BinaryXmlParser {
     private XmlNamespaceStartTag readXmlNamespaceStartTag() {
         final int prefixRef = this.buffer.getInt();
         final int uriRef = this.buffer.getInt();
-        final XmlNamespaceStartTag nameSpace = new XmlNamespaceStartTag();
-        if (prefixRef > 0) {
-            nameSpace.setPrefix(this.stringPool.get(prefixRef));
-        }
-        if (uriRef > 0) {
-            nameSpace.setUri(this.stringPool.get(uriRef));
-        }
-        return nameSpace;
+        final String prefix = prefixRef > 0 ? this.stringPool.get(prefixRef) : null;
+        final String uri = uriRef > 0 ? this.stringPool.get(uriRef) : null;
+        return new XmlNamespaceStartTag(prefix, uri);
     }
 
     private XmlNamespaceEndTag readXmlNamespaceEndTag() {

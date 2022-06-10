@@ -6,6 +6,8 @@ import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Map;
 
+import androidx.annotation.NonNull;
+
 /**
  * methods for load resources.
  *
@@ -17,6 +19,7 @@ public class ResourceLoader {
     /**
      * load system attr ids for parse binary xml.
      */
+    @NonNull
     public static Map<Integer, String> loadSystemAttrIds() {
         try (final BufferedReader reader = ResourceLoader.toReader("/r_values.ini")) {
             final Map<Integer, String> map = new HashMap<>();
@@ -36,6 +39,7 @@ public class ResourceLoader {
         }
     }
 
+    @NonNull
     public static Map<Integer, String> loadSystemStyles() {
         final Map<Integer, String> map = new HashMap<>();
         try (final BufferedReader reader = ResourceLoader.toReader("/r_styles.ini")) {
@@ -56,7 +60,7 @@ public class ResourceLoader {
         return map;
     }
 
-
+    @NonNull
     private static BufferedReader toReader(final String path) {
         return new BufferedReader(new InputStreamReader(
                 ResourceLoader.class.getResourceAsStream(path)));

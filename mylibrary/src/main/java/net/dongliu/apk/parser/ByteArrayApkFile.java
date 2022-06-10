@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 /**
@@ -29,6 +30,7 @@ public class ByteArrayApkFile extends AbstractApkFile implements Closeable {
         this.apkData = apkData;
     }
 
+    @NonNull
     @Override
     protected List<CertificateFile> getAllCertificateData() throws IOException {
         final List<CertificateFile> list = new ArrayList<>();
@@ -60,11 +62,13 @@ public class ByteArrayApkFile extends AbstractApkFile implements Closeable {
         return null;
     }
 
+    @NonNull
     @Override
     protected ByteBuffer fileData() {
         return ByteBuffer.wrap(this.apkData).asReadOnlyBuffer();
     }
 
+    @NonNull
     @Deprecated
     @Override
     public ApkSignStatus verifyApk() {
