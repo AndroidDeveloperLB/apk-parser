@@ -19,11 +19,6 @@ https://jitpack.io/#AndroidDeveloperLB/apk-parser/
 
 # Known issues and notes
 
-- The sample app shows that in some rare cases of APK files, you can't get the app-icon. Sometimes it's some invalid "bmp" file. Sometimes it's some XML file. And other weird cases. Same goes for app-names (labels). I hope that some day it could be fixed.
-The good news is that usually this happens for system apps only. Reported here:
-https://github.com/AndroidDeveloperLB/apk-parser/issues/2
-https://github.com/AndroidDeveloperLB/apk-parser/issues/3 
-- Very rare issue too is that there are some parsing issues that need to be handled as the library parsing capability hasn't been updated for a long time. An example for this is when parsing the app with package name , as it has "ParserException: Unexpected chunk Type: 0x206" . 
-While this is quite rare and usually happens for system apps, it is very important that such things will get updated. Reported here: https://github.com/AndroidDeveloperLB/apk-parser/issues/1
+- The sample app shows that in some rare cases it fails to parse the label/icon/version-code of the app, or even the app itself (incredibly rare). It seems to occur only for system apps though. I hope that some day it could be fixed. Reported here: https://github.com/AndroidDeveloperLB/apk-parser/issues/1 https://github.com/AndroidDeveloperLB/apk-parser/issues/2  https://github.com/AndroidDeveloperLB/apk-parser/issues/3 https://github.com/AndroidDeveloperLB/apk-parser/issues/4
 - The entire code is in Java. I personally prefer Kotlin. I hope one day the whole library would be in Kotlin. At the very least, we should have a clear understanding for everything, if it's nullable or not. This needs to be carefully done and without ruining the performance and memory usage of the library.
 - Could be nice to have better optimization in memory usage and speed, because somehow the framework seems to be more efficient on both. I think a better optimization is needed. Maybe some sort of way to tell exactly what we want to get out of it, it would minimize such memory usage.
