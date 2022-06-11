@@ -19,11 +19,9 @@ https://jitpack.io/#AndroidDeveloperLB/apk-parser/
 
 # Known issues and notes
 
-- The sample app shows that in some rare cases it fails to parse the label/icon of the app, or even the app itself. It seems to occur only for system apps though. I hope that some day it could be fixed.
-Reported here:
- - https://github.com/AndroidDeveloperLB/apk-parser/issues/1
- - https://github.com/AndroidDeveloperLB/apk-parser/issues/2
- - https://github.com/AndroidDeveloperLB/apk-parser/issues/3 
+- The sample app shows that in some rare cases it fails to parse the label/icon of the app, or even the app itself (incredibly rare). It seems to occur only for system apps though. I hope that some day it could be fixed.
+- 
+Reported here: https://github.com/AndroidDeveloperLB/apk-parser/issues/1 https://github.com/AndroidDeveloperLB/apk-parser/issues/2  https://github.com/AndroidDeveloperLB/apk-parser/issues/3 
 
 - The entire code is in Java. I personally prefer Kotlin. I hope one day the whole library would be in Kotlin. At the very least, we should have a clear understanding for everything, if it's nullable or not. This needs to be carefully done and without ruining the performance and memory usage of the library.
 - Could be nice to have better optimization in memory usage and speed, because somehow the framework seems to be more efficient on both. I think a better optimization is needed. Maybe some sort of way to tell exactly what we want to get out of it, it would minimize such memory usage.
