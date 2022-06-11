@@ -29,8 +29,6 @@ import java.util.Set;
 
 import androidx.annotation.NonNull;
 
-import static net.dongliu.apk.parser.struct.ChunkType.UNKNOWN_YET;
-
 /**
  * Parse android resource table file.
  *
@@ -235,10 +233,12 @@ public class ResourceTableParser {
                 libraryHeader.setCount(Buffers.readUInt(this.buffer));
                 Buffers.position(this.buffer, begin + headerSize);
                 return libraryHeader;
-            case UNKNOWN_YET:
+            case ChunkType.TABLE_OVERLAYABLE:
             case ChunkType.NULL:
                 Buffers.position(this.buffer, begin + headerSize);
                 return new NullHeader(headerSize, chunkSize);
+            case ChunkType.TABLE_STAGED_ALIAS:
+                //unknown how to handle this, and it causes a crash when being treated as NullHeader : https://github.com/AndroidDeveloperLB/apk-parser/issues/1#issuecomment-1152937896
             default:
                 throw new ParserException("Unexpected chunk Type: 0x" + Integer.toHexString(chunkType));
         }

@@ -31,6 +31,9 @@ public class ChunkType {
     // android5.0+
     // DynamicRefTable
     public static final int TABLE_LIBRARY = 0x0203;
-    //TODO: fix this later. Do not found definition for chunk type 0x0204 in android source yet...
-    public static final int UNKNOWN_YET = 0x0204;
+    //TODO: handle the chunkt types below
+    //https://github.com/hsiafan/apk-parser/issues/96#issuecomment-500275300 https://github.com/AndroidDeveloperLB/apk-parser/issues/1
+    public static final int TABLE_OVERLAYABLE = 0x0204;
+    public static final int TABLE_STAGED_ALIAS = 0x0206;
+
 }

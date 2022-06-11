@@ -18,7 +18,7 @@ public class ApkMeta {
     private final String label;
     private final String icon;
     private final String versionName;
-    private final Long versionCode;
+    private final long versionCode;
     private final Long revisionCode;
     private final String sharedUserId;
     private final String sharedUserLabel;
@@ -250,7 +250,7 @@ public class ApkMeta {
         private String label;
         private String icon;
         private String versionName;
-        private Long versionCode = 0L;
+        private long versionCode = 0L;
         private Long revisionCode;
         private String sharedUserId;
         private String sharedUserLabel;
