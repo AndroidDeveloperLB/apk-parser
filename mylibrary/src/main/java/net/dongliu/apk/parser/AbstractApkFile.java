@@ -256,7 +256,7 @@ public abstract class AbstractApkFile implements Closeable {
         final List<IconFace> iconFaces = new ArrayList<>(iconPaths.size());
         for (final IconPath iconPath : iconPaths) {
             final String filePath = iconPath.getPath();
-            if (filePath.endsWith(".xml")) {
+            if (filePath != null && filePath.endsWith(".xml")) {
                 // adaptive icon?
                 final byte[] data = this.getFileData(filePath);
                 if (data == null) {

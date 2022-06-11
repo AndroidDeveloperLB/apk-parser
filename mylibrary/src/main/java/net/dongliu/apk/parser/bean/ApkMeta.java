@@ -250,7 +250,7 @@ public class ApkMeta {
         private String label;
         private String icon;
         private String versionName;
-        private Long versionCode;
+        private Long versionCode = 0L;
         private Long revisionCode;
         private String sharedUserId;
         private String sharedUserLabel;
@@ -305,7 +305,7 @@ public class ApkMeta {
         }
 
         @NonNull
-        public Builder setVersionCode(final @Nullable Long versionCode) {
+        public Builder setVersionCode(final long versionCode) {
             this.versionCode = versionCode;
             return this;
         }

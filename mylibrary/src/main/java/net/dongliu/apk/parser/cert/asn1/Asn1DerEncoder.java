@@ -75,7 +75,7 @@ public final class Asn1DerEncoder {
     }
 
     @Nullable
-    private static byte[] toChoice(@Nullable final Object container) throws Asn1EncodingException {
+    private static byte[] toChoice(@NonNull final Object container) throws Asn1EncodingException {
         final Class<?> containerClass = container.getClass();
         final List<AnnotatedField> fields = Asn1DerEncoder.getAnnotatedFields(container);
         if (fields.isEmpty()) {

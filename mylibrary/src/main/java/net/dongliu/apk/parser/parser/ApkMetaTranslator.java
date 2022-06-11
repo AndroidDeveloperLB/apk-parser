@@ -130,7 +130,8 @@ public class ApkMetaTranslator implements XmlStreamer {
                     }
                     versionCode = (majorVersionCode << 32) | (versionCode & 0xFFFFFFFFL);
                 }
-                this.apkMetaBuilder.setVersionCode(versionCode);
+                if (versionCode != null)
+                    this.apkMetaBuilder.setVersionCode(versionCode);
 
                 final String installLocation = attributes.getString("installLocation");
                 if (installLocation != null) {
