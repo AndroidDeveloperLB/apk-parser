@@ -13,6 +13,8 @@ While the Android framework is more official and should work better in most case
 3. Can find some APK properties that aren't available on older Android versions.
 4. While the Android framework is technically open sourced, it has various things that are protected and can't be reached, and also hard to import as your own code.
 
+So, what I suggest is to first try to use what Android officially offers, and if it fails, use this library.
+
 # Usage in gradle file
 
 https://jitpack.io/#AndroidDeveloperLB/apk-parser/
