@@ -4,6 +4,10 @@ Apk parser for java/Android, forked from here after fixing some issues in it and
 
 https://github.com/hsiafan/apk-parser
 
+I personally use it for my own spare time app:
+
+https://play.google.com/store/apps/details?id=com.lb.app_manager
+
 # Why use this library, as we can do it using the Android framework instead?
 
 While the Android framework is more official and should work better in most cases, there are multiple reasons to use this library :
