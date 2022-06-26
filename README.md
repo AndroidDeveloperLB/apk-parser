@@ -8,6 +8,10 @@ I personally use it for my own spare time app:
 
 https://play.google.com/store/apps/details?id=com.lb.app_manager
 
+Screenshot from the sample:
+
+![image](https://user-images.githubusercontent.com/5357526/175833504-6cba993c-60b5-418c-8407-b6f1688a0348.png)
+
 # Why use this library, as we can do it using the Android framework instead?
 
 While the Android framework is more official and should work better in most cases, there are multiple reasons to use this library :
