@@ -1,12 +1,12 @@
-# apk-parser
+# APK-parser , revived
 
-Apk parser for java/Android, forked from here after fixing some issues in it and collecting some fixes from others :
+Apk parser for java/Android, forked from **[here](https://github.com/hsiafan/apk-parser)** after fixing some issues in it and collecting some fixes from others.
 
-https://github.com/hsiafan/apk-parser
+I personally use it for my own spare time app, **[App Manager](https://play.google.com/store/apps/details?id=com.lb.app_manager)**.
 
-I personally use it for my own spare time app:
+Screenshot from the sample:
 
-https://play.google.com/store/apps/details?id=com.lb.app_manager
+![image](https://user-images.githubusercontent.com/5357526/175833504-6cba993c-60b5-418c-8407-b6f1688a0348.png)
 
 # Why use this library, as we can do it using the Android framework instead?
 
