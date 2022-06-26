@@ -19,42 +19,37 @@ class MainActivity : BoundActivity<ActivityMainBinding>(ActivityMainBinding::inf
             viewModel.init()
         }
         viewModel.appsHandledLiveData.observe(this) {
-            binding.appsCountTextView.text = getString(R.string.apps_analyzed, it)
+            binding.appsCountTextView.text = it.toString()
         }
         viewModel.apkFilesHandledLiveData.observe(this) {
-            binding.apksCountTextView.text = getString(R.string.apks_analyzed, it)
+            binding.apksCountTextView.text = it.toString()
         }
         viewModel.frameworkErrorsOfApkTypeLiveData.observe(this) {
-            binding.frameworkErrorsGettingApkTypeTextView.text =
-                getString(R.string.framework_errors_getting_apk_type, it)
+            binding.frameworkErrorsGettingApkTypeTextView.text = it.toString()
         }
         viewModel.parsingErrorsLiveData.observe(this) {
-            binding.parsingErrorsTextView.text = getString(R.string.parsing_errors, it)
+            binding.parsingErrorsTextView.text = it.toString()
         }
         viewModel.wrongApkTypeErrorsLiveData.observe(this) {
-            binding.apkTypeDetectionErrorsTextView.text =
-                getString(R.string.apk_type_detection_errors, it)
+            binding.apkTypeDetectionErrorsTextView.text = it.toString()
         }
         viewModel.wrongPackageNameErrorsLiveData.observe(this) {
-            binding.wrongPackageNameErrorsTextView.text =
-                getString(R.string.wrong_package_name_errors, it)
+            binding.wrongPackageNameErrorsTextView.text = it.toString()
         }
         viewModel.failedGettingAppIconErrorsLiveData.observe(this) {
-            binding.iconFetchingErrorsTextView.text = getString(R.string.icon_fetching_errors, it)
+            binding.iconFetchingErrorsTextView.text = it.toString()
         }
         viewModel.wrongLabelErrorsLiveData.observe(this) {
-            binding.wrongLabelErrorsTextView.text = getString(R.string.wrong_label_errors, it)
+            binding.wrongLabelErrorsTextView.text = it.toString()
         }
         viewModel.wrongVersionCodeErrorsLiveData.observe(this) {
-            binding.wrongVersionCodeErrorsTextView.text =
-                getString(R.string.wrong_version_code_errors, it)
+            binding.wrongVersionCodeErrorsTextView.text = it.toString()
         }
         viewModel.wrongVersionNameErrorsLiveData.observe(this) {
-            binding.wrongVersionNameErrorsTextView.text =
-                getString(R.string.wrong_version_name_errors, it)
+            binding.wrongVersionNameErrorsTextView.text = it.toString()
         }
         viewModel.systemAppsErrorsCountLiveData.observe(this) {
-            binding.systemAppsErrorsTextView.text = getString(R.string.system_apps_errors, it)
+            binding.systemAppsErrorsTextView.text = it.toString()
         }
         viewModel.isDoneLiveData.observe(this) { isDone ->
             binding.summaryTextView.isVisible = isDone
