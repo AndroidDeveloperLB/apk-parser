@@ -4,7 +4,7 @@ import android.app.ActivityManager
 import android.content.Context
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageInfo
-import com.lb.apkparserdemo.getSystemService
+import androidx.core.content.getSystemService
 
 fun ApplicationInfo.isSystemApp() = this.flags and ApplicationInfo.FLAG_SYSTEM != 0
 
@@ -16,7 +16,7 @@ object AppInfoUtil {
     fun getAppIconSize(context: Context): Int {
         if (appIconSize > 0)
             return appIconSize
-        val activityManager = context.getSystemService<ActivityManager>()
+        val activityManager = context.getSystemService<ActivityManager>()!!
         appIconSize = try {
             activityManager.launcherLargeIconSize
         } catch (e: Exception) {

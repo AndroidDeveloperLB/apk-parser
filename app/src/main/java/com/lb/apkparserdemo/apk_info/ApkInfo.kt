@@ -1,6 +1,7 @@
 package com.lb.apkparserdemo.apk_info
 
 import android.content.pm.PackageInfo
+import android.os.Bundle
 import net.dongliu.apk.parser.parser.*
 import net.dongliu.apk.parser.struct.AndroidConstants
 import net.dongliu.apk.parser.struct.resource.ResourceTable
@@ -19,19 +20,17 @@ class ApkInfo(
 
     companion object {
         fun getApkType(packageInfo: PackageInfo): ApkType {
-            var apkType: ApkType = ApkType.UNKNOWN
-            val metaData = packageInfo.applicationInfo.metaData ?: return apkType
-            if (metaData.containsKey("com.android.vending.splits"))
-                apkType = ApkType.BASE_OF_SPLIT_OR_STANDALONE
-            if (metaData.getBoolean("instantapps.clients.allowed", false))
-                apkType = ApkType.BASE_OF_SPLIT_OR_STANDALONE
+            val metaData: Bundle = packageInfo.applicationInfo.metaData ?: return ApkType.UNKNOWN
             if (metaData.containsKey("com.android.vending.splits.required")) {
                 val isSplitRequired =
                     metaData.getBoolean("com.android.vending.splits.required", false)
-                apkType =
-                    if (isSplitRequired) ApkType.BASE_OF_SPLIT else ApkType.BASE_OF_SPLIT_OR_STANDALONE
+                return if (isSplitRequired) ApkType.BASE_OF_SPLIT else ApkType.BASE_OF_SPLIT_OR_STANDALONE
             }
-            return apkType
+            if (metaData.containsKey("com.android.vending.splits"))
+                return ApkType.BASE_OF_SPLIT_OR_STANDALONE
+            if (metaData.getBoolean("instantapps.clients.allowed", false))
+                return ApkType.BASE_OF_SPLIT_OR_STANDALONE
+            return ApkType.UNKNOWN
         }
 
         @Suppress("SameParameterValue")

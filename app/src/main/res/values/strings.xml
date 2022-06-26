@@ -1,3 +1,20 @@
 <resources>
-  <string name="app_name">ApkParserDemo</string>
+    <string name="app_name">ApkParserDemo</string>
+    <string name="apps_analyzed">Apps analyzed so far:%1$d</string>
+    <string name="apks_analyzed">APK files analyzed so far:%1$d</string>
+    <string name="framework_errors_getting_apk_type">framework-errors getting APK type (standalone, base, split, …) : %1$d</string>
+    <string name="parsing_errors">APK-parsing errors (cannot parse the APK at all) : %1$d</string>
+    <string name="apk_type_detection_errors">APK-type detection errors (standalone, base, split, …) : %1$d</string>
+    <string name="wrong_package_name_errors">Package-name detection errors : %1$d</string>
+    <string name="icon_fetching_errors">App-icon errors: %1$d</string>
+    <string name="wrong_label_errors">Wrong label errors: %1$d</string>
+    <string name="wrong_version_code_errors">Wrong version-code errors: %1$d</string>
+    <string name="wrong_version_name_errors">Wrong version-name errors: %1$d</string>
+    <string name="system_apps_errors">System apps errors (out of all the above of the library): %1$d</string>
+    <string name="summary">Done parsing all APK files of all installed apps. </string>
+    <string name="all_are_system_errors">Found various errors while handling the APK files, but all of them are of system app</string>
+    <string name="not_all_are_system_errors">Some errors are not of system apps</string>
+    <string name="intro">This sample tries to parse all the APK files of all installed apps using the library, and compares it with what\'s expected from the Android framework.
+\nCheck the logs for more information about the process and the errors.</string>
+
 </resources>
