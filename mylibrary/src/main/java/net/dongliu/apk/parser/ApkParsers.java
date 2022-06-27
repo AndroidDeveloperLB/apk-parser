@@ -1,5 +1,7 @@
 package net.dongliu.apk.parser;
 
+import androidx.annotation.NonNull;
+
 import net.dongliu.apk.parser.bean.ApkMeta;
 
 import java.io.File;
@@ -30,7 +32,7 @@ public class ApkParsers {
     /**
      * Get apk meta info for apk file
      */
-    public static ApkMeta getMetaInfo(final String apkFilePath) throws IOException {
+    public static ApkMeta getMetaInfo(final @NonNull String apkFilePath) throws IOException {
         try (final ApkFile apkFile = new ApkFile(apkFilePath)) {
             return apkFile.getApkMeta();
         }
@@ -39,7 +41,7 @@ public class ApkParsers {
     /**
      * Get apk meta info for apk file
      */
-    public static ApkMeta getMetaInfo(final File file) throws IOException {
+    public static ApkMeta getMetaInfo(final @NonNull File file) throws IOException {
         try (final ApkFile apkFile = new ApkFile(file)) {
             return apkFile.getApkMeta();
         }
@@ -57,7 +59,7 @@ public class ApkParsers {
     /**
      * Get apk meta info for apk file, with locale
      */
-    public static ApkMeta getMetaInfo(final String apkFilePath, final Locale locale) throws IOException {
+    public static ApkMeta getMetaInfo(final @NonNull String apkFilePath, final Locale locale) throws IOException {
         try (final ApkFile apkFile = new ApkFile(apkFilePath)) {
             apkFile.setPreferredLocale(locale);
             return apkFile.getApkMeta();
@@ -67,7 +69,7 @@ public class ApkParsers {
     /**
      * Get apk meta info for apk file
      */
-    public static ApkMeta getMetaInfo(final File file, final Locale locale) throws IOException {
+    public static ApkMeta getMetaInfo(final @NonNull File file, final Locale locale) throws IOException {
         try (final ApkFile apkFile = new ApkFile(file)) {
             apkFile.setPreferredLocale(locale);
             return apkFile.getApkMeta();
@@ -87,7 +89,7 @@ public class ApkParsers {
     /**
      * Get apk manifest xml file as text
      */
-    public static String getManifestXml(final String apkFilePath) throws IOException {
+    public static String getManifestXml(final @NonNull String apkFilePath) throws IOException {
         try (final ApkFile apkFile = new ApkFile(apkFilePath)) {
             return apkFile.getManifestXml();
         }
@@ -96,7 +98,7 @@ public class ApkParsers {
     /**
      * Get apk manifest xml file as text
      */
-    public static String getManifestXml(final File file) throws IOException {
+    public static String getManifestXml(final @NonNull File file) throws IOException {
         try (final ApkFile apkFile = new ApkFile(file)) {
             return apkFile.getManifestXml();
         }
@@ -114,7 +116,7 @@ public class ApkParsers {
     /**
      * Get apk manifest xml file as text
      */
-    public static String getManifestXml(final String apkFilePath, final Locale locale) throws IOException {
+    public static String getManifestXml(final @NonNull String apkFilePath, final Locale locale) throws IOException {
         try (final ApkFile apkFile = new ApkFile(apkFilePath)) {
             apkFile.setPreferredLocale(locale);
             return apkFile.getManifestXml();
@@ -124,7 +126,7 @@ public class ApkParsers {
     /**
      * Get apk manifest xml file as text
      */
-    public static String getManifestXml(final File file, final Locale locale) throws IOException {
+    public static String getManifestXml(final @NonNull File file, final Locale locale) throws IOException {
         try (final ApkFile apkFile = new ApkFile(file)) {
             apkFile.setPreferredLocale(locale);
             return apkFile.getManifestXml();

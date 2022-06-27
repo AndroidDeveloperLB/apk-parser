@@ -1,5 +1,8 @@
 package net.dongliu.apk.parser;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import net.dongliu.apk.parser.bean.ApkSignStatus;
 import net.dongliu.apk.parser.utils.Inputs;
 
@@ -12,9 +15,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 /**
  * Parse apk file from byte array.
@@ -49,7 +49,7 @@ public class ByteArrayApkFile extends AbstractApkFile implements Closeable {
 
     @Nullable
     @Override
-    public byte[] getFileData(final String path) throws IOException {
+    public byte[] getFileData(@NonNull final String path) throws IOException {
         try (final InputStream in = new ByteArrayInputStream(this.apkData);
              final ZipInputStream zis = new ZipInputStream(in)) {
             ZipEntry entry;

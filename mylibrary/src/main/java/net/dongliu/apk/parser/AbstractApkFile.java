@@ -1,5 +1,10 @@
 package net.dongliu.apk.parser;
 
+import static java.lang.System.arraycopy;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import net.dongliu.apk.parser.bean.AdaptiveIcon;
 import net.dongliu.apk.parser.bean.ApkMeta;
 import net.dongliu.apk.parser.bean.ApkSignStatus;
@@ -42,11 +47,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
-import static java.lang.System.arraycopy;
 
 /**
  * Common Apk Parser methods.
@@ -152,7 +152,6 @@ public abstract class AbstractApkFile implements Closeable {
         this.apkV2Signers = list;
     }
 
-
     @NonNull
     protected abstract List<CertificateFile> getAllCertificateData() throws IOException;
 
@@ -186,7 +185,6 @@ public abstract class AbstractApkFile implements Closeable {
         final XmlTranslator xmlTranslator = new XmlTranslator();
         final ApkMetaTranslator apkTranslator = new ApkMetaTranslator(this.resourceTable, this.preferredLocale);
         final XmlStreamer xmlStreamer = new CompositeXmlStreamer(xmlTranslator, apkTranslator);
-
         final byte[] data = this.getFileData(AndroidConstants.MANIFEST_FILE);
         if (data == null) {
             throw new ParserException("Manifest file not found");
@@ -202,14 +200,13 @@ public abstract class AbstractApkFile implements Closeable {
      * read file in apk into bytes
      */
     @Nullable
-    public abstract byte[] getFileData(String path) throws IOException;
+    public abstract byte[] getFileData(@NonNull String path) throws IOException;
 
     /**
      * return the whole apk file as ByteBuffer
      */
     @NonNull
     protected abstract ByteBuffer fileData() throws IOException;
-
 
     /**
      * trans binary xml file to text xml file.
@@ -218,13 +215,12 @@ public abstract class AbstractApkFile implements Closeable {
      * @return the text. null if file not exists
      */
     @Nullable
-    public String transBinaryXml(final String path) throws IOException {
+    public String transBinaryXml(final @NonNull String path) throws IOException {
         final byte[] data = this.getFileData(path);
         if (data == null) {
             return null;
         }
         this.parseResourceTable();
-
         final XmlTranslator xmlTranslator = new XmlTranslator();
         this.transBinaryXml(data, xmlTranslator);
         return xmlTranslator.getXml();
@@ -232,7 +228,6 @@ public abstract class AbstractApkFile implements Closeable {
 
     private void transBinaryXml(final byte[] data, final XmlStreamer xmlStreamer) throws IOException {
         this.parseResourceTable();
-
         final ByteBuffer buffer = ByteBuffer.wrap(data);
         final BinaryXmlParser binaryXmlParser = new BinaryXmlParser(buffer, this.resourceTable);
         binaryXmlParser.setLocale(this.preferredLocale);
@@ -263,7 +258,6 @@ public abstract class AbstractApkFile implements Closeable {
                     continue;
                 }
                 this.parseResourceTable();
-
                 final AdaptiveIconParser iconParser = new AdaptiveIconParser();
                 this.transBinaryXml(data, iconParser);
                 Icon backgroundIcon = null;
@@ -309,7 +303,7 @@ public abstract class AbstractApkFile implements Closeable {
     }
 
     @NonNull
-    private DexClass[] parseDexFile(final String path) throws IOException {
+    private DexClass[] parseDexFile(@NonNull final String path) throws IOException {
         final byte[] data = this.getFileData(path);
         if (data == null) {
             final String msg = String.format("Dex file %s not found", path);
@@ -348,7 +342,6 @@ public abstract class AbstractApkFile implements Closeable {
             this.locales = Collections.emptySet();
             return;
         }
-
         final ByteBuffer buffer = ByteBuffer.wrap(data);
         final ResourceTableParser resourceTableParser = new ResourceTableParser(buffer);
         resourceTableParser.parse();
@@ -379,7 +372,6 @@ public abstract class AbstractApkFile implements Closeable {
         return this.preferredLocale;
     }
 
-
     /**
      * The locale preferred. Will cause getManifestXml / getApkMeta to return different values.
      * The default value is from os default locale setting.
@@ -402,7 +394,6 @@ public abstract class AbstractApkFile implements Closeable {
     protected ByteBuffer findApkSignBlock() throws IOException {
         final ByteBuffer buffer = this.fileData().order(ByteOrder.LITTLE_ENDIAN);
         final int len = buffer.limit();
-
         // first find zip end of central directory entry
         if (len < 22) {
             // should not happen
@@ -424,11 +415,9 @@ public abstract class AbstractApkFile implements Closeable {
                 eocd.setCommentLen(Buffers.readUShort(buffer));
             }
         }
-
         if (eocd == null) {
             return null;
         }
-
         final int magicStrLen = 16;
         final long cdStart = eocd.getCdStart();
         // find apk sign block

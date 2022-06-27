@@ -1,5 +1,8 @@
 package net.dongliu.apk.parser;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import net.dongliu.apk.parser.bean.ApkSignStatus;
 import net.dongliu.apk.parser.utils.Inputs;
 
@@ -18,10 +21,6 @@ import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
-
 /**
  * ApkFile, for parsing apk file info.
  * This class is not thread-safe.
@@ -30,16 +29,17 @@ import androidx.annotation.Nullable;
  */
 public class ApkFile extends AbstractApkFile implements Closeable {
 
+    @NonNull
     private final ZipFile zf;
     private final File apkFile;
 
-    public ApkFile(final File apkFile) throws IOException {
+    public ApkFile(final @NonNull File apkFile) throws IOException {
         this.apkFile = apkFile;
         // create zip file cost time, use one zip file for apk parser life cycle
         this.zf = new ZipFile(apkFile);
     }
 
-    public ApkFile(final String filePath) throws IOException {
+    public ApkFile(@NonNull final String filePath) throws IOException {
         this(new File(filePath));
     }
 
@@ -68,7 +68,6 @@ public class ApkFile extends AbstractApkFile implements Closeable {
         if (entry == null) {
             return null;
         }
-
         final InputStream inputStream = this.zf.getInputStream(entry);
         return Inputs.readAllAndClose(inputStream);
     }
@@ -79,7 +78,6 @@ public class ApkFile extends AbstractApkFile implements Closeable {
         final FileChannel channel = new FileInputStream(this.apkFile).getChannel();
         return channel.map(FileChannel.MapMode.READ_ONLY, 0, channel.size());
     }
-
 
     /**
      * {@inheritDoc}
@@ -95,11 +93,9 @@ public class ApkFile extends AbstractApkFile implements Closeable {
             // apk is not signed;
             return ApkSignStatus.notSigned;
         }
-
         try (final JarFile jarFile = new JarFile(this.apkFile)) {
             final Enumeration<JarEntry> entries = jarFile.entries();
             final byte[] buffer = new byte[8192];
-
             while (entries.hasMoreElements()) {
                 final JarEntry e = entries.nextElement();
                 if (e.isDirectory()) {

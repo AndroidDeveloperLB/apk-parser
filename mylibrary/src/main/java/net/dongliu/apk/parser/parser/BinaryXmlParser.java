@@ -1,5 +1,8 @@
 package net.dongliu.apk.parser.parser;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import net.dongliu.apk.parser.exception.ParserException;
 import net.dongliu.apk.parser.struct.ChunkHeader;
 import net.dongliu.apk.parser.struct.ChunkType;
@@ -29,9 +32,6 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 /**
  * Android Binary XML format
@@ -71,7 +71,6 @@ public class BinaryXmlParser {
         if (firstChunkHeader == null) {
             return;
         }
-
         switch (firstChunkHeader.getChunkType()) {
             case ChunkType.XML:
             case ChunkType.NULL:
@@ -80,22 +79,18 @@ public class BinaryXmlParser {
             default:
                 // strange chunk header type, just skip this chunk header?
         }
-
         // read string pool chunk
         final ChunkHeader stringPoolChunkHeader = this.readChunkHeader();
         if (stringPoolChunkHeader == null) {
             return;
         }
-
         ParseUtils.checkChunkType(ChunkType.STRING_POOL, stringPoolChunkHeader.getChunkType());
         this.stringPool = ParseUtils.readStringPool(this.buffer, (StringPoolHeader) stringPoolChunkHeader);
-
         // read on chunk, check if it was an optional XMLResourceMap chunk
         ChunkHeader chunkHeader = this.readChunkHeader();
         if (chunkHeader == null) {
             return;
         }
-
         if (chunkHeader.getChunkType() == ChunkType.XML_RESOURCE_MAP) {
             final long[] resourceIds = this.readXmlResourceMap((XmlResourceMapHeader) chunkHeader);
             this.resourceMap = new String[resourceIds.length];
@@ -104,7 +99,6 @@ public class BinaryXmlParser {
             }
             chunkHeader = this.readChunkHeader();
         }
-
         while (chunkHeader != null) {
             //if (chunkHeader.chunkType == ChunkType.XML_END_NAMESPACE) {
             //     break;
@@ -185,7 +179,6 @@ public class BinaryXmlParser {
         final int idIndex = Buffers.readUShort(this.buffer);
         final int classIndex = Buffers.readUShort(this.buffer);
         final int styleIndex = Buffers.readUShort(this.buffer);
-
         // read attributes
         final Attributes attributes = new Attributes(attributeCount);
         for (int count = 0; count < attributeCount; count++) {
@@ -203,11 +196,9 @@ public class BinaryXmlParser {
             }
         }
         final XmlNodeStartTag xmlNodeStartTag = new XmlNodeStartTag(namespace, name, attributes);
-
         if (this.xmlStreamer != null) {
             this.xmlStreamer.onStartTag(xmlNodeStartTag);
         }
-
         return xmlNodeStartTag;
     }
 
@@ -216,7 +207,7 @@ public class BinaryXmlParser {
                     "launchMode", "installLocation", "protectionLevel"));
 
     //trans int attr value to string
-    private String getFinalValueAsString(final String attributeName, final String str) {
+    private String getFinalValueAsString(final String attributeName, @NonNull final String str) {
         final int value = Integer.parseInt(str);
         switch (attributeName) {
             case "screenOrientation":
@@ -246,24 +237,22 @@ public class BinaryXmlParser {
             if (!namespace.equals("http://schemas.android.com/apk/res/android"))
                 attribute.setNamespace(namespace);
         }
-
         attribute.setName(this.stringPool.get(nameRef));
         if (attribute.getName().isEmpty() && this.resourceMap != null && nameRef < this.resourceMap.length) {
             // some processed apk file make the string pool value empty, if it is a xmlmap attr.
             attribute.setName(this.resourceMap[nameRef]);
             //TODO: how to get the namespace of attribute
         }
-
         final int rawValueRef = this.buffer.getInt();
         if (rawValueRef > 0) {
             attribute.setRawValue(this.stringPool.get(rawValueRef));
         }
         final ResourceValue resValue = ParseUtils.readResValue(this.buffer, this.stringPool);
         attribute.setTypedValue(resValue);
-
         return attribute;
     }
 
+    @NonNull
     private XmlNamespaceStartTag readXmlNamespaceStartTag() {
         final int prefixRef = this.buffer.getInt();
         final int uriRef = this.buffer.getInt();
@@ -272,6 +261,7 @@ public class BinaryXmlParser {
         return new XmlNamespaceStartTag(prefix, uri);
     }
 
+    @NonNull
     private XmlNamespaceEndTag readXmlNamespaceEndTag() {
         final int prefixRef = this.buffer.getInt();
         final int uriRef = this.buffer.getInt();
@@ -300,12 +290,10 @@ public class BinaryXmlParser {
         if (!this.buffer.hasRemaining()) {
             return null;
         }
-
         final long begin = this.buffer.position();
         final int chunkType = Buffers.readUShort(this.buffer);
         final int headerSize = Buffers.readUShort(this.buffer);
         final long chunkSize = Buffers.readUInt(this.buffer);
-
         switch (chunkType) {
             case ChunkType.XML:
                 return new XmlHeader(chunkType, headerSize, chunkSize);

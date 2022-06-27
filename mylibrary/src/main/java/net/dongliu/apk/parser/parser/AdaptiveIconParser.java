@@ -1,5 +1,8 @@
 package net.dongliu.apk.parser.parser;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import net.dongliu.apk.parser.struct.xml.Attribute;
 import net.dongliu.apk.parser.struct.xml.Attributes;
 import net.dongliu.apk.parser.struct.xml.XmlCData;
@@ -7,9 +10,6 @@ import net.dongliu.apk.parser.struct.xml.XmlNamespaceEndTag;
 import net.dongliu.apk.parser.struct.xml.XmlNamespaceStartTag;
 import net.dongliu.apk.parser.struct.xml.XmlNodeEndTag;
 import net.dongliu.apk.parser.struct.xml.XmlNodeStartTag;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 /**
  * Parse adaptive icon xml file.
@@ -53,22 +53,18 @@ public class AdaptiveIconParser implements XmlStreamer {
     }
 
     @Override
-    public void onEndTag(final XmlNodeEndTag xmlNodeEndTag) {
-
+    public void onEndTag(@NonNull final XmlNodeEndTag xmlNodeEndTag) {
     }
 
     @Override
-    public void onCData(final XmlCData xmlCData) {
-
+    public void onCData(@NonNull final XmlCData xmlCData) {
     }
 
     @Override
-    public void onNamespaceStart(final XmlNamespaceStartTag tag) {
-
+    public void onNamespaceStart(@NonNull final XmlNamespaceStartTag tag) {
     }
 
     @Override
-    public void onNamespaceEnd(final XmlNamespaceEndTag tag) {
-
+    public void onNamespaceEnd(@NonNull final XmlNamespaceEndTag tag) {
     }
 }

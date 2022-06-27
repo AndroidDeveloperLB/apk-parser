@@ -1,5 +1,8 @@
 package net.dongliu.apk.parser.parser;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import net.dongliu.apk.parser.utils.Strings;
 
 import java.util.ArrayList;
@@ -12,10 +15,10 @@ import java.util.List;
  */
 public class AttributeValues {
 
-
     // Activity constants begin. see:
     // http://developer.android.com/reference/android/content/pm/ActivityInfo.html
     // http://developer.android.com/guide/topics/manifest/activity-element.html
+    @NonNull
     public static String getScreenOrientation(final int value) {
         switch (value) {
             case 0x00000003:
@@ -55,6 +58,7 @@ public class AttributeValues {
         }
     }
 
+    @NonNull
     public static String getLaunchMode(final int value) {
         switch (value) {
             case 0x00000000:
@@ -71,6 +75,7 @@ public class AttributeValues {
 
     }
 
+    @Nullable
     public static String getConfigChanges(final int value) {
         final List<String> list = new ArrayList<>();
         if ((value & 0x00001000) != 0) {
@@ -107,6 +112,7 @@ public class AttributeValues {
         return Strings.join(list, "|");
     }
 
+    @Nullable
     public static String getWindowSoftInputMode(final int value) {
         final int adjust = value & 0x000000f0;
         final int state = value & 0x0000000f;
@@ -155,6 +161,7 @@ public class AttributeValues {
     }
 
     //http://developer.android.com/reference/android/content/pm/PermissionInfo.html
+    @Nullable
     public static String getProtectionLevel(int value) {
         final List<String> levels = new ArrayList<>(3);
         if ((value & 0x10) != 0) {
@@ -183,13 +190,12 @@ public class AttributeValues {
         }
         return Strings.join(levels, "|");
     }
-
-
     // Activity constants end
 
     /**
      * get Installation string values from int
      */
+    @NonNull
     public static String getInstallLocation(final int value) {
         switch (value) {
             case 0:

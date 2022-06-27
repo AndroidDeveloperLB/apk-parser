@@ -1,5 +1,7 @@
 package net.dongliu.apk.parser.parser;
 
+import androidx.annotation.NonNull;
+
 import net.dongliu.apk.parser.struct.xml.XmlCData;
 import net.dongliu.apk.parser.struct.xml.XmlNamespaceEndTag;
 import net.dongliu.apk.parser.struct.xml.XmlNamespaceStartTag;
@@ -13,13 +15,13 @@ import net.dongliu.apk.parser.struct.xml.XmlNodeStartTag;
  */
 public interface XmlStreamer {
 
-    void onStartTag(XmlNodeStartTag xmlNodeStartTag);
+    void onStartTag(@NonNull XmlNodeStartTag xmlNodeStartTag);
 
-    void onEndTag(XmlNodeEndTag xmlNodeEndTag);
+    void onEndTag(@NonNull XmlNodeEndTag xmlNodeEndTag);
 
-    void onCData(XmlCData xmlCData);
+    void onCData(@NonNull XmlCData xmlCData);
 
-    void onNamespaceStart(XmlNamespaceStartTag tag);
+    void onNamespaceStart(@NonNull XmlNamespaceStartTag tag);
 
-    void onNamespaceEnd(XmlNamespaceEndTag tag);
+    void onNamespaceEnd(@NonNull XmlNamespaceEndTag tag);
 }

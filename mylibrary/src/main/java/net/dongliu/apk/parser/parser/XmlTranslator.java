@@ -1,5 +1,7 @@
 package net.dongliu.apk.parser.parser;
 
+import androidx.annotation.NonNull;
+
 import net.dongliu.apk.parser.struct.xml.Attribute;
 import net.dongliu.apk.parser.struct.xml.XmlCData;
 import net.dongliu.apk.parser.struct.xml.XmlNamespaceEndTag;
@@ -28,7 +30,7 @@ public class XmlTranslator implements XmlStreamer {
     }
 
     @Override
-    public void onStartTag(final XmlNodeStartTag xmlNodeStartTag) {
+    public void onStartTag(final @NonNull XmlNodeStartTag xmlNodeStartTag) {
         if (this.isLastStartTag) {
             this.sb.append(">\n");
         }
@@ -43,7 +45,6 @@ public class XmlTranslator implements XmlStreamer {
             }
         }
         this.sb.append(xmlNodeStartTag.name);
-
         final List<XmlNamespaces.XmlNamespace> nps = this.namespaces.consumeNameSpaces();
         if (!nps.isEmpty()) {
             for (final XmlNamespaces.XmlNamespace np : nps) {
@@ -53,7 +54,6 @@ public class XmlTranslator implements XmlStreamer {
             }
         }
         this.isLastStartTag = true;
-
         for (final Attribute attribute : xmlNodeStartTag.attributes.values()) {
             this.onAttribute(attribute);
         }
@@ -74,7 +74,7 @@ public class XmlTranslator implements XmlStreamer {
     }
 
     @Override
-    public void onEndTag(final XmlNodeEndTag xmlNodeEndTag) {
+    public void onEndTag(@NonNull final XmlNodeEndTag xmlNodeEndTag) {
         --this.shift;
         if (this.isLastStartTag) {
             this.sb.append(" />\n");
@@ -94,21 +94,20 @@ public class XmlTranslator implements XmlStreamer {
         this.isLastStartTag = false;
     }
 
-
     @Override
-    public void onCData(final XmlCData xmlCData) {
+    public void onCData(@NonNull final XmlCData xmlCData) {
         this.appendShift(this.shift);
         this.sb.append(xmlCData.getValue()).append('\n');
         this.isLastStartTag = false;
     }
 
     @Override
-    public void onNamespaceStart(final XmlNamespaceStartTag tag) {
+    public void onNamespaceStart(@NonNull final XmlNamespaceStartTag tag) {
         this.namespaces.addNamespace(tag);
     }
 
     @Override
-    public void onNamespaceEnd(final XmlNamespaceEndTag tag) {
+    public void onNamespaceEnd(@NonNull final XmlNamespaceEndTag tag) {
         this.namespaces.removeNamespace(tag);
     }
 

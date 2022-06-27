@@ -1,5 +1,8 @@
 package net.dongliu.apk.parser.parser;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import net.dongliu.apk.parser.bean.ApkMeta;
 import net.dongliu.apk.parser.bean.GlEsVersion;
 import net.dongliu.apk.parser.bean.IconPath;
@@ -22,11 +25,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
-import java.util.Objects;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
 
 /**
  * trans binary xml to apk meta info
@@ -44,8 +42,8 @@ public class ApkMetaTranslator implements XmlStreamer {
     @Nullable
     private final Locale locale;
 
-    public ApkMetaTranslator(final ResourceTable resourceTable, @Nullable final Locale locale) {
-        this.resourceTable = Objects.requireNonNull(resourceTable);
+    public ApkMetaTranslator(final @NonNull ResourceTable resourceTable, @Nullable final Locale locale) {
+        this.resourceTable = resourceTable;
         this.locale = locale;
     }
 
@@ -121,7 +119,6 @@ public class ApkMetaTranslator implements XmlStreamer {
                     this.apkMetaBuilder.setIsSplitRequired(attributes.getBoolean("isSplitRequired", false));
                 if (!this.apkMetaBuilder.isolatedSplits)
                     this.apkMetaBuilder.setIsolatedSplits(attributes.getBoolean("isolatedSplits", false));
-
                 final Long majorVersionCode = attributes.getLong("versionCodeMajor");
                 Long versionCode = attributes.getLong("versionCode");
                 if (majorVersionCode != null) {
@@ -132,7 +129,6 @@ public class ApkMetaTranslator implements XmlStreamer {
                 }
                 if (versionCode != null)
                     this.apkMetaBuilder.setVersionCode(versionCode);
-
                 final String installLocation = attributes.getString("installLocation");
                 if (installLocation != null) {
                     this.apkMetaBuilder.setInstallLocation(installLocation);
@@ -195,23 +191,20 @@ public class ApkMetaTranslator implements XmlStreamer {
     }
 
     @Override
-    public void onEndTag(final XmlNodeEndTag xmlNodeEndTag) {
+    public void onEndTag(@NonNull final XmlNodeEndTag xmlNodeEndTag) {
         this.depth--;
     }
 
     @Override
-    public void onCData(final XmlCData xmlCData) {
-
+    public void onCData(@NonNull final XmlCData xmlCData) {
     }
 
     @Override
-    public void onNamespaceStart(final XmlNamespaceStartTag tag) {
-
+    public void onNamespaceStart(@NonNull final XmlNamespaceStartTag tag) {
     }
 
     @Override
-    public void onNamespaceEnd(final XmlNamespaceEndTag tag) {
-
+    public void onNamespaceEnd(@NonNull final XmlNamespaceEndTag tag) {
     }
 
     @NonNull
