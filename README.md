@@ -25,7 +25,7 @@ https://jitpack.io/#AndroidDeveloperLB/apk-parser/
 
 # How to use
 
-You can use what's on the original repository (**[here](https://github.com/hsiafan/apk-parser)**), or you can have a more advanced usage of parsing the exact things you want, as on the sample.
+You can use what's on the original repository (meaning creating a new instance of ApkFile, as shown **[here](https://github.com/hsiafan/apk-parser#usage)**), or you can have a more advanced usage of parsing the exact things you want, as on the sample.
 
 # Known issues and notes
 
