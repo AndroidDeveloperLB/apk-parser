@@ -5,7 +5,6 @@ import java.io.Serializable;
 /**
  * The plain icon, using color drawable resource.
  */
-//to be implemented
 public class ColorIcon implements IconFace, Serializable {
     private static final long serialVersionUID = -7913024425268466186L;
 

@@ -15,9 +15,11 @@ import java.util.List;
  */
 public class AttributeValues {
 
-    // Activity constants begin. see:
-    // http://developer.android.com/reference/android/content/pm/ActivityInfo.html
-    // http://developer.android.com/guide/topics/manifest/activity-element.html
+    /**
+     * Activity constants begin. see:
+     * http://developer.android.com/reference/android/content/pm/ActivityInfo.html
+     * http://developer.android.com/guide/topics/manifest/activity-element.html
+     */
     @NonNull
     public static String getScreenOrientation(final int value) {
         switch (value) {
@@ -160,7 +162,9 @@ public class AttributeValues {
         //mode_changed(0x00000200),
     }
 
-    //http://developer.android.com/reference/android/content/pm/PermissionInfo.html
+    /**
+     * http://developer.android.com/reference/android/content/pm/PermissionInfo.html
+     */
     @Nullable
     public static String getProtectionLevel(int value) {
         final List<String> levels = new ArrayList<>(3);

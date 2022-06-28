@@ -13,16 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package net.dongliu.apk.parser.cert.asn1
 
-package net.dongliu.apk.parser.cert.asn1;
+enum class Asn1TagClass {
+    Universal, Application, ContextSpecific, Private,
 
-public enum Asn1Type {
-    ANY,
-    CHOICE,
-    INTEGER,
-    OBJECT_IDENTIFIER,
-    OCTET_STRING,
-    SEQUENCE,
-    SEQUENCE_OF,
-    SET_OF,
+    /**
+     * Not really an actual tag class: decoder/encoder will attempt to deduce the correct tag class
+     * automatically.
+     */
+    Automatic
 }

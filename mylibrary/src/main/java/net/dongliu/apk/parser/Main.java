@@ -1,5 +1,7 @@
 package net.dongliu.apk.parser;
 
+import androidx.annotation.NonNull;
+
 import java.io.IOException;
 import java.security.cert.CertificateException;
 import java.util.Locale;
@@ -10,7 +12,7 @@ import java.util.Locale;
  * @author Liu Dong {@literal <dongliu@live.cn>}
  */
 public class Main {
-    public static void main(final String[] args) throws IOException, CertificateException {
+    public static void main(final @NonNull String[] args) throws IOException, CertificateException {
         final String action = args[0];
         final String apkPath = args[1];
         try (final ApkFile apkFile = new ApkFile(apkPath)) {

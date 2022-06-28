@@ -16,7 +16,6 @@
 
 package net.dongliu.apk.parser.cert.pkcs7;
 
-
 import net.dongliu.apk.parser.cert.asn1.Asn1Class;
 import net.dongliu.apk.parser.cert.asn1.Asn1Field;
 import net.dongliu.apk.parser.cert.asn1.Asn1OpaqueObject;
@@ -26,12 +25,12 @@ import net.dongliu.apk.parser.cert.asn1.Asn1Type;
 /**
  * PKCS #7 {@code ContentInfo} as specified in RFC 5652.
  */
-@Asn1Class(type = Asn1Type.SEQUENCE)
+@Asn1Class(type = Asn1Type.Sequence)
 public class ContentInfo {
 
-    @Asn1Field(index = 1, type = Asn1Type.OBJECT_IDENTIFIER)
+    @Asn1Field(index = 1, type = Asn1Type.ObjectIdentifier)
     public String contentType;
 
-    @Asn1Field(index = 2, type = Asn1Type.ANY, tagging = Asn1Tagging.EXPLICIT, tagNumber = 0)
+    @Asn1Field(index = 2, type = Asn1Type.Any, tagging = Asn1Tagging.Explicit, tagNumber = 0)
     public Asn1OpaqueObject content;
 }

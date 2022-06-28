@@ -46,7 +46,9 @@ public class BinaryXmlParser {
      * files.
      */
     private StringPool stringPool;
-    // some attribute name stored by resource id
+    /**
+     * some attribute name stored by resource id
+     */
     private String[] resourceMap;
     @NonNull
     private final ByteBuffer buffer;
@@ -71,7 +73,7 @@ public class BinaryXmlParser {
         if (firstChunkHeader == null) {
             return;
         }
-        switch (firstChunkHeader.getChunkType()) {
+        switch ((int) firstChunkHeader.chunkType) {
             case ChunkType.XML:
             case ChunkType.NULL:
                 break;
@@ -84,14 +86,14 @@ public class BinaryXmlParser {
         if (stringPoolChunkHeader == null) {
             return;
         }
-        ParseUtils.checkChunkType(ChunkType.STRING_POOL, stringPoolChunkHeader.getChunkType());
+        ParseUtils.checkChunkType(ChunkType.STRING_POOL, stringPoolChunkHeader.chunkType);
         this.stringPool = ParseUtils.readStringPool(this.buffer, (StringPoolHeader) stringPoolChunkHeader);
         // read on chunk, check if it was an optional XMLResourceMap chunk
         ChunkHeader chunkHeader = this.readChunkHeader();
         if (chunkHeader == null) {
             return;
         }
-        if (chunkHeader.getChunkType() == ChunkType.XML_RESOURCE_MAP) {
+        if ((int) chunkHeader.chunkType == ChunkType.XML_RESOURCE_MAP) {
             final long[] resourceIds = this.readXmlResourceMap((XmlResourceMapHeader) chunkHeader);
             this.resourceMap = new String[resourceIds.length];
             for (int i = 0; i < resourceIds.length; i++) {
@@ -104,7 +106,7 @@ public class BinaryXmlParser {
             //     break;
             // }
             final long beginPos = this.buffer.position();
-            switch (chunkHeader.getChunkType()) {
+            switch ((int) chunkHeader.chunkType) {
                 case ChunkType.XML_END_NAMESPACE:
                     final XmlNamespaceEndTag xmlNamespaceEndTag = this.readXmlNamespaceEndTag();
                     this.xmlStreamer.onNamespaceEnd(xmlNamespaceEndTag);
@@ -123,11 +125,11 @@ public class BinaryXmlParser {
                     final XmlCData xmlCData = this.readXmlCData();
                     break;
                 default:
-                    if (chunkHeader.getChunkType() >= ChunkType.XML_FIRST_CHUNK &&
-                            chunkHeader.getChunkType() <= ChunkType.XML_LAST_CHUNK) {
+                    if ((int) chunkHeader.chunkType >= ChunkType.XML_FIRST_CHUNK &&
+                            (int) chunkHeader.chunkType <= ChunkType.XML_LAST_CHUNK) {
                         Buffers.skip(this.buffer, chunkHeader.getBodySize());
                     } else {
-                        throw new ParserException("Unexpected chunk type:" + chunkHeader.getChunkType());
+                        throw new ParserException("Unexpected chunk type:" + (int) chunkHeader.chunkType);
                     }
             }
             Buffers.position(this.buffer, beginPos + chunkHeader.getBodySize());
@@ -206,7 +208,9 @@ public class BinaryXmlParser {
             Arrays.asList("screenOrientation", "configChanges", "windowSoftInputMode",
                     "launchMode", "installLocation", "protectionLevel"));
 
-    //trans int attr value to string
+    /**
+     * trans int attr value to string
+     */
     private String getFinalValueAsString(final String attributeName, @NonNull final String str) {
         final int value = Integer.parseInt(str);
         switch (attributeName) {
@@ -264,15 +268,10 @@ public class BinaryXmlParser {
     @NonNull
     private XmlNamespaceEndTag readXmlNamespaceEndTag() {
         final int prefixRef = this.buffer.getInt();
+        final String prefix = prefixRef <= 0 ? null : this.stringPool.get(prefixRef);
         final int uriRef = this.buffer.getInt();
-        final XmlNamespaceEndTag nameSpace = new XmlNamespaceEndTag();
-        if (prefixRef > 0) {
-            nameSpace.setPrefix(this.stringPool.get(prefixRef));
-        }
-        if (uriRef > 0) {
-            nameSpace.setUri(this.stringPool.get(uriRef));
-        }
-        return nameSpace;
+        final String uri = uriRef <= 0 ? null : this.stringPool.get(uriRef);
+        return new XmlNamespaceEndTag(prefix, uri);
     }
 
     private long[] readXmlResourceMap(final XmlResourceMapHeader chunkHeader) {

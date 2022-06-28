@@ -6,10 +6,14 @@ package net.dongliu.apk.parser.struct.resource;
  * @author Liu Dong
  */
 public class LibraryEntry {
-    // uint32. The package-id this shared library was assigned at build time.
+    /**
+     * uint32. The package-id this shared library was assigned at build time.
+     */
     private final int packageId;
 
-    //The package name of the shared library. \0 terminated. max 128
+    /**
+     * The package name of the shared library. \0 terminated. max 128
+     */
     private final String name;
 
     public LibraryEntry(final int packageId, final String name) {

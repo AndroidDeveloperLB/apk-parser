@@ -13,11 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package net.dongliu.apk.parser.cert.asn1
 
-package net.dongliu.apk.parser.cert.asn1;
-
-public enum Asn1Tagging {
-    NORMAL,
-    EXPLICIT,
-    IMPLICIT,
+enum class Asn1Type {
+    Any, Choice, Integer, ObjectIdentifier, OctetString, Sequence, SequenceOf, SetOf
 }

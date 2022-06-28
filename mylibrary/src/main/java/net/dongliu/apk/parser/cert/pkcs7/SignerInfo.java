@@ -28,35 +28,35 @@ import java.util.List;
 /**
  * PKCS #7 {@code SignerInfo} as specified in RFC 5652.
  */
-@Asn1Class(type = Asn1Type.SEQUENCE)
+@Asn1Class(type = Asn1Type.Sequence)
 public class SignerInfo {
 
-    @Asn1Field(index = 0, type = Asn1Type.INTEGER)
+    @Asn1Field(index = 0, type = Asn1Type.Integer)
     public int version;
 
-    @Asn1Field(index = 1, type = Asn1Type.CHOICE)
+    @Asn1Field(index = 1, type = Asn1Type.Choice)
     public SignerIdentifier sid;
 
-    @Asn1Field(index = 2, type = Asn1Type.SEQUENCE)
+    @Asn1Field(index = 2, type = Asn1Type.Sequence)
     public AlgorithmIdentifier digestAlgorithm;
 
     @Asn1Field(
             index = 3,
-            type = Asn1Type.SET_OF,
-            tagging = Asn1Tagging.IMPLICIT, tagNumber = 0,
+            type = Asn1Type.SetOf,
+            tagging = Asn1Tagging.Implicit, tagNumber = 0,
             optional = true)
     public Asn1OpaqueObject signedAttrs;
 
-    @Asn1Field(index = 4, type = Asn1Type.SEQUENCE)
+    @Asn1Field(index = 4, type = Asn1Type.Sequence)
     public AlgorithmIdentifier signatureAlgorithm;
 
-    @Asn1Field(index = 5, type = Asn1Type.OCTET_STRING)
+    @Asn1Field(index = 5, type = Asn1Type.OctetString)
     public ByteBuffer signature;
 
     @Asn1Field(
             index = 6,
-            type = Asn1Type.SET_OF,
-            tagging = Asn1Tagging.IMPLICIT, tagNumber = 1,
+            type = Asn1Type.SetOf,
+            tagging = Asn1Tagging.Implicit, tagNumber = 1,
             optional = true)
     public List<Attribute> unsignedAttrs;
 }

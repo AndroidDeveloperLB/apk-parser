@@ -26,12 +26,12 @@ import java.util.List;
 /**
  * PKCS #7 {@code Attribute} as specified in RFC 5652.
  */
-@Asn1Class(type = Asn1Type.SEQUENCE)
+@Asn1Class(type = Asn1Type.Sequence)
 public class Attribute {
 
-    @Asn1Field(index = 0, type = Asn1Type.OBJECT_IDENTIFIER)
+    @Asn1Field(index = 0, type = Asn1Type.ObjectIdentifier)
     public String attrType;
 
-    @Asn1Field(index = 1, type = Asn1Type.SET_OF)
+    @Asn1Field(index = 1, type = Asn1Type.SetOf)
     public List<Asn1OpaqueObject> attrValues;
 }

@@ -1,5 +1,8 @@
 package net.dongliu.apk.parser.utils;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
@@ -18,9 +21,6 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
 /**
  * fetch dependency resource file from android source
  *
@@ -28,13 +28,14 @@ import androidx.annotation.Nullable;
  */
 public class ResourceFetcher {
 
-    // from https://android.googlesource.com/platform/frameworks/base/+/master/core/res/res/values/public.xml
+    /**
+     * from https://android.googlesource.com/platform/frameworks/base/+/master/core/res/res/values/public.xml
+     */
     private void fetchSystemAttrIds()
             throws IOException, SAXException, ParserConfigurationException {
         final String url = "https://android.googlesource.com/platform/frameworks/base/+/master/core/res/res/values/public.xml";
         final String html = this.getUrl(url);
         final String xml = this.retrieveCode(html);
-
         if (xml != null) {
             this.parseAttributeXml(xml);
         }
@@ -77,11 +78,11 @@ public class ResourceFetcher {
         }
     }
 
-
-    // the android system r style.
-    // see http://developer.android.com/reference/android/R.style.html
-    // from https://android.googlesource.com/platform/frameworks/base/+/master/api/current.txt r.style section
-
+    /**
+     * the android system r style.
+     * see http://developer.android.com/reference/android/R.style.html
+     * from https://android.googlesource.com/platform/frameworks/base/+/master/api/current.txt r.style section
+     */
     private void fetchSystemStyle() throws IOException {
         final String url = "https://android.googlesource.com/platform/frameworks/base/+/master/api/current.txt";
         final String html = this.getUrl(url);

@@ -28,32 +28,32 @@ import java.util.List;
 /**
  * PKCS #7 {@code SignedData} as specified in RFC 5652.
  */
-@Asn1Class(type = Asn1Type.SEQUENCE)
+@Asn1Class(type = Asn1Type.Sequence)
 public class SignedData {
 
-    @Asn1Field(index = 0, type = Asn1Type.INTEGER)
+    @Asn1Field(index = 0, type = Asn1Type.Integer)
     public int version;
 
-    @Asn1Field(index = 1, type = Asn1Type.SET_OF)
+    @Asn1Field(index = 1, type = Asn1Type.SetOf)
     public List<AlgorithmIdentifier> digestAlgorithms;
 
-    @Asn1Field(index = 2, type = Asn1Type.SEQUENCE)
+    @Asn1Field(index = 2, type = Asn1Type.Sequence)
     public EncapsulatedContentInfo encapContentInfo;
 
     @Asn1Field(
             index = 3,
-            type = Asn1Type.SET_OF,
-            tagging = Asn1Tagging.IMPLICIT, tagNumber = 0,
+            type = Asn1Type.SetOf,
+            tagging = Asn1Tagging.Implicit, tagNumber = 0,
             optional = true)
     public List<Asn1OpaqueObject> certificates;
 
     @Asn1Field(
             index = 4,
-            type = Asn1Type.SET_OF,
-            tagging = Asn1Tagging.IMPLICIT, tagNumber = 1,
+            type = Asn1Type.SetOf,
+            tagging = Asn1Tagging.Implicit, tagNumber = 1,
             optional = true)
     public List<ByteBuffer> crls;
 
-    @Asn1Field(index = 5, type = Asn1Type.SET_OF)
+    @Asn1Field(index = 5, type = Asn1Type.SetOf)
     public List<SignerInfo> signerInfos;
 }

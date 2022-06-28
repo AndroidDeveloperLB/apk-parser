@@ -1,14 +1,14 @@
 package net.dongliu.apk.parser.struct.xml;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import net.dongliu.apk.parser.struct.ResourceValue;
 import net.dongliu.apk.parser.struct.resource.ResourceTable;
 import net.dongliu.apk.parser.utils.ResourceLoader;
 
 import java.util.Locale;
 import java.util.Map;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 /**
  * xml node attribute
@@ -18,11 +18,17 @@ import androidx.annotation.Nullable;
 public class Attribute {
     private String namespace;
     private String name;
-    // The original raw string value of Attribute
+    /**
+     * The original raw string value of Attribute
+     */
     private String rawValue;
-    // Processed typed value of Attribute
+    /**
+     * Processed typed value of Attribute
+     */
     private ResourceValue typedValue;
-    // the final value as string
+    /**
+     * the final value as string
+     */
     @Nullable
     private String value;
 

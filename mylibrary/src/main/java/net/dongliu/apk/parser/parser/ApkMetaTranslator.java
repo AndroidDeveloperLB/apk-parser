@@ -81,11 +81,11 @@ public class ApkMetaTranslator implements XmlStreamer {
                                 final Type type = resource.getType();
                                 final ResourceEntry resourceEntry = resource.getResourceEntry();
                                 final String path = resourceEntry.toStringValue(this.resourceTable, this.locale);
-                                if (type.getDensity() == Densities.DEFAULT) {
+                                if (type.density == Densities.DEFAULT) {
                                     hasDefault = true;
                                     this.apkMetaBuilder.setIcon(path);
                                 }
-                                final IconPath iconPath = new IconPath(path, type.getDensity());
+                                final IconPath iconPath = new IconPath(path, type.density);
                                 icons.add(iconPath);
                             }
                             if (!hasDefault) {

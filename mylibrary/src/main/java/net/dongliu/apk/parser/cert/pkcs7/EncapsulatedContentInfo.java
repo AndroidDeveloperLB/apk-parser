@@ -26,16 +26,16 @@ import java.nio.ByteBuffer;
 /**
  * PKCS #7 {@code EncapsulatedContentInfo} as specified in RFC 5652.
  */
-@Asn1Class(type = Asn1Type.SEQUENCE)
+@Asn1Class(type = Asn1Type.Sequence)
 public class EncapsulatedContentInfo {
 
-    @Asn1Field(index = 0, type = Asn1Type.OBJECT_IDENTIFIER)
+    @Asn1Field(index = 0, type = Asn1Type.ObjectIdentifier)
     public String contentType;
 
     @Asn1Field(
             index = 1,
-            type = Asn1Type.OCTET_STRING,
-            tagging = Asn1Tagging.EXPLICIT, tagNumber = 0,
+            type = Asn1Type.OctetString,
+            tagging = Asn1Tagging.Explicit, tagNumber = 0,
             optional = true)
     public ByteBuffer content;
 

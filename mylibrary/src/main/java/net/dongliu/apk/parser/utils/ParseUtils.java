@@ -1,5 +1,8 @@
 package net.dongliu.apk.parser.utils;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import net.dongliu.apk.parser.exception.ParserException;
 import net.dongliu.apk.parser.parser.StringPoolEntry;
 import net.dongliu.apk.parser.struct.ResValue;
@@ -10,9 +13,6 @@ import net.dongliu.apk.parser.struct.StringPoolHeader;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 /**
  * @author dongliu
@@ -92,13 +92,11 @@ public class ParseUtils {
         return len;
     }
 
-
     /**
      * read String pool, for apk binary xml file and resource table.
      */
     @NonNull
     public static StringPool readStringPool(final @NonNull ByteBuffer buffer, final @NonNull StringPoolHeader stringPoolHeader) {
-
         final long beginPos = buffer.position();
         final int[] offsets = new int[stringPoolHeader.getStringCount()];
         // read strings offset
@@ -112,40 +110,33 @@ public class ParseUtils {
         final boolean sorted = (stringPoolHeader.getFlags() & StringPoolHeader.SORTED_FLAG) != 0;
         // string use utf-8 format if true, otherwise utf-16
         final boolean utf8 = (stringPoolHeader.getFlags() & StringPoolHeader.UTF8_FLAG) != 0;
-
         // read strings. the head and metas have 28 bytes
-        final long stringPos = beginPos + stringPoolHeader.getStringsStart() - stringPoolHeader.getHeaderSize();
+        final long stringPos = beginPos + stringPoolHeader.getStringsStart() - (int) stringPoolHeader.headerSize;
         Buffers.position(buffer, stringPos);
-
         final StringPoolEntry[] entries = new StringPoolEntry[offsets.length];
         for (int i = 0; i < offsets.length; i++) {
             entries[i] = new StringPoolEntry(i, stringPos + Unsigned.toLong(offsets[i]));
         }
-
         String lastStr = null;
         long lastOffset = -1;
         final StringPool stringPool = new StringPool(stringPoolHeader.getStringCount());
         for (final StringPoolEntry entry : entries) {
-            if (entry.getOffset() == lastOffset) {
-                stringPool.set(entry.getIdx(), lastStr);
+            if (entry.offset == lastOffset) {
+                stringPool.set(entry.idx, lastStr);
                 continue;
             }
-
-            Buffers.position(buffer, entry.getOffset());
-            lastOffset = entry.getOffset();
+            Buffers.position(buffer, entry.offset);
+            lastOffset = entry.offset;
             final String str = ParseUtils.readString(buffer, utf8);
             lastStr = str;
-            stringPool.set(entry.getIdx(), str);
+            stringPool.set(entry.idx, str);
         }
-
         // read styles
         //noinspection StatementWithEmptyBody
         if (stringPoolHeader.getStyleCount() > 0) {
             // now we just skip it
         }
-
         Buffers.position(buffer, beginPos + stringPoolHeader.getBodySize());
-
         return stringPool;
     }
 
@@ -158,7 +149,6 @@ public class ParseUtils {
         final int size = Buffers.readUShort(buffer);
         final short res0 = Buffers.readUByte(buffer);
         final short dataType = Buffers.readUByte(buffer);
-
         switch (dataType) {
             case ResValue.ResType.INT_DEC:
                 return ResourceValue.decimal(buffer.getInt());

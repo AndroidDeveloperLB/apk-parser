@@ -91,7 +91,7 @@ public class ApkFile extends AbstractApkFile implements Closeable {
         final ZipEntry entry = this.zf.getEntry("META-INF/MANIFEST.MF");
         if (entry == null) {
             // apk is not signed;
-            return ApkSignStatus.notSigned;
+            return ApkSignStatus.NotSigned;
         }
         try (final JarFile jarFile = new JarFile(this.apkFile)) {
             final Enumeration<JarEntry> entries = jarFile.entries();
@@ -108,11 +108,11 @@ public class ApkFile extends AbstractApkFile implements Closeable {
                         // Don't care
                     }
                 } catch (final SecurityException se) {
-                    return ApkSignStatus.incorrect;
+                    return ApkSignStatus.Incorrect;
                 }
             }
         }
-        return ApkSignStatus.signed;
+        return ApkSignStatus.Signed;
     }
 
     @Override

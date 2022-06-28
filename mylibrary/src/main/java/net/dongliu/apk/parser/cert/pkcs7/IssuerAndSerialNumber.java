@@ -26,13 +26,13 @@ import java.math.BigInteger;
 /**
  * PKCS #7 {@code IssuerAndSerialNumber} as specified in RFC 5652.
  */
-@Asn1Class(type = Asn1Type.SEQUENCE)
+@Asn1Class(type = Asn1Type.Sequence)
 public class IssuerAndSerialNumber {
 
-    @Asn1Field(index = 0, type = Asn1Type.ANY)
+    @Asn1Field(index = 0, type = Asn1Type.Any)
     public Asn1OpaqueObject issuer;
 
-    @Asn1Field(index = 1, type = Asn1Type.INTEGER)
+    @Asn1Field(index = 1, type = Asn1Type.Integer)
     public BigInteger certificateSerialNumber;
 
     public IssuerAndSerialNumber() {

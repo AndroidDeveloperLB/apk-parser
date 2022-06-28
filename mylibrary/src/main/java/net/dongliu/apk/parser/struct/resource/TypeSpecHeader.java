@@ -9,20 +9,28 @@ import net.dongliu.apk.parser.utils.Unsigned;
  */
 public class TypeSpecHeader extends ChunkHeader {
 
-    // The type identifier this chunk is holding.  Type IDs start at 1 (corresponding to the value
-    // of the type bits in a resource identifier).  0 is invalid.
-    // The id also specifies the name of the Resource type. It is the string at index id - 1 in the
-    // typeStrings StringPool chunk in the containing Package chunk.
-    // uint8_t
+    /**
+     * The type identifier this chunk is holding.  Type IDs start at 1 (corresponding to the value
+     * of the type bits in a resource identifier).  0 is invalid.
+     * The id also specifies the name of the Resource type. It is the string at index id - 1 in the
+     * typeStrings StringPool chunk in the containing Package chunk.
+     * uint8_t
+     */
     private byte id;
 
-    // Must be 0. uint8_t
+    /**
+     * Must be 0. uint8_t
+     */
     private byte res0;
 
-    // Must be 0.uint16_t
+    /**
+     * Must be 0.uint16_t
+     */
     private short res1;
 
-    // Number of uint32_t entry configuration masks that follow.
+    /**
+     * Number of uint32_t entry configuration masks that follow.
+     */
     private int entryCount;
 
     public TypeSpecHeader(final int headerSize, final long chunkSize) {

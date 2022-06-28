@@ -11,54 +11,95 @@ public class DexHeader {
     public static final int kSHA1DigestLen = 20;
     public static final int kSHA1DigestOutputLen = DexHeader.kSHA1DigestLen * 2 + 1;
 
-    // includes version number. 8 bytes.
-    //public short magic;
+    /**
+     * includes version number. 8 bytes.
+     * public short magic;
+     */
     private int version;
-    // adler32 checksum. u4
-    //public long checksum;
-    // SHA-1 hash len = kSHA1DigestLen
+    /**
+     * adler32 checksum. u4
+     * public long checksum;
+     * SHA-1 hash len = kSHA1DigestLen
+     */
     private byte[] signature;
-    // length of entire file. u4
+    /**
+     * length of entire file. u4
+     */
     private long fileSize;
-    // len of header.offset to start of next section. u4
+    /**
+     * len of header.offset to start of next section. u4
+     */
     private long headerSize;
-    // u4
-    //public long endianTag;
-    // u4
+    /**
+     * u4
+     * public long endianTag;
+     * u4
+     */
     private long linkSize;
-    // u4
+    /**
+     * u4
+     */
     private long linkOff;
-    // u4
+    /**
+     * u4
+     */
     private long mapOff;
-    // u4
+    /**
+     * u4
+     */
     private int stringIdsSize;
-    // u4
+    /**
+     * u4
+     */
     private long stringIdsOff;
-    // u4
+    /**
+     * u4
+     */
     private int typeIdsSize;
-    // u4
+    /**
+     * u4
+     */
     private long typeIdsOff;
-    // u4
+    /**
+     * u4
+     */
     private int protoIdsSize;
-    // u4
+    /**
+     * u4
+     */
     private long protoIdsOff;
-    // u4
+    /**
+     * u4
+     */
     private int fieldIdsSize;
-    // u4
+    /**
+     * u4
+     */
     private long fieldIdsOff;
-    // u4
+    /**
+     * u4
+     */
     private int methodIdsSize;
-    // u4
+    /**
+     * u4
+     */
     private long methodIdsOff;
-    // u4
+    /**
+     * u4
+     */
     private int classDefsSize;
-    // u4
+    /**
+     * u4
+     */
     private long classDefsOff;
-    // u4
+    /**
+     * u4
+     */
     private int dataSize;
-    // u4
+    /**
+     * u4
+     */
     private long dataOff;
-
 
     public int getVersion() {
         return this.version;

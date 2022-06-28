@@ -1,12 +1,12 @@
 package net.dongliu.apk.parser.struct.xml;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import net.dongliu.apk.parser.struct.ResourceValue;
 import net.dongliu.apk.parser.struct.resource.ResourceTable;
 
 import java.util.Locale;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 /**
  * @author dongliu
@@ -16,13 +16,19 @@ public class XmlCData {
     public static final String CDATA_START = "<![CDATA[";
     public static final String CDATA_END = "]]>";
 
-    // The raw CDATA character data.
+    /**
+     * The raw CDATA character data.
+     */
     private String data;
 
-    // The typed value of the character data if this is a CDATA node.
+    /**
+     * The typed value of the character data if this is a CDATA node.
+     */
     private ResourceValue typedData;
 
-    // the final value as string
+    /**
+     * the final value as string
+     */
     private String value;
 
     /**

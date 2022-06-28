@@ -1,5 +1,7 @@
 package net.dongliu.apk.parser.struct.resource;
 
+import androidx.annotation.NonNull;
+
 import net.dongliu.apk.parser.struct.ResourceValue;
 import net.dongliu.apk.parser.struct.StringPool;
 import net.dongliu.apk.parser.utils.ResourceLoader;
@@ -9,8 +11,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import androidx.annotation.NonNull;
 
 /**
  * The apk resource table
@@ -39,7 +39,6 @@ public class ResourceTable {
         this.stringPool = stringPool;
     }
 
-
     /**
      * Get resources match the given resource id.
      */
@@ -49,8 +48,6 @@ public class ResourceTable {
         // an 8-bit Package id [bits 24-31]
         // an 8-bit Type id [bits 16-23]
         // a 16-bit Entry index [bits 0-15]
-
-
         final short packageId = (short) (resourceId >> 24 & 0xff);
         final short typeId = (short) ((resourceId >> 16) & 0xff);
         final int entryIndex = (int) (resourceId & 0xffff);
@@ -66,7 +63,6 @@ public class ResourceTable {
         if (!typeSpec.exists(entryIndex)) {
             return Collections.emptyList();
         }
-
         // read from type resource
         final List<Resource> result = new ArrayList<>();
         for (final Type type : types) {
@@ -78,7 +74,6 @@ public class ResourceTable {
             if (currentResourceValue == null) {
                 continue;
             }
-
             // cyclic reference detect
             if (currentResourceValue instanceof ResourceValue.ReferenceResourceValue) {
                 if (resourceId == ((ResourceValue.ReferenceResourceValue) currentResourceValue)
@@ -86,7 +81,6 @@ public class ResourceTable {
                     continue;
                 }
             }
-
             result.add(new Resource(typeSpec, type, resourceEntry));
         }
         return result;

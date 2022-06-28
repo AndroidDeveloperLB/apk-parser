@@ -16,6 +16,9 @@
 
 package net.dongliu.apk.parser.cert.asn1;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import net.dongliu.apk.parser.cert.asn1.ber.BerEncoding;
 
 import java.io.ByteArrayOutputStream;
@@ -28,9 +31,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 /**
  * Encoder of ASN.1 structures into DER-encoded form.
@@ -62,12 +62,11 @@ public final class Asn1DerEncoder {
             throw new Asn1EncodingException(
                     containerClass.getName() + " not annotated with " + Asn1Class.class.getName());
         }
-
         final Asn1Type containerType = containerAnnotation.type();
         switch (containerType) {
-            case CHOICE:
+            case Choice:
                 return Asn1DerEncoder.toChoice(container);
-            case SEQUENCE:
+            case Sequence:
                 return Asn1DerEncoder.toSequence(container);
             default:
                 throw new Asn1EncodingException("Unsupported container type: " + containerType);
@@ -83,7 +82,6 @@ public final class Asn1DerEncoder {
                     "No fields annotated with " + Asn1Field.class.getName()
                             + " in CHOICE class " + containerClass.getName());
         }
-
         AnnotatedField resultField = null;
         for (final AnnotatedField field : fields) {
             final Object fieldValue = Asn1DerEncoder.getMemberFieldValue(container, field.getField());
@@ -97,12 +95,10 @@ public final class Asn1DerEncoder {
                 resultField = field;
             }
         }
-
         if (resultField == null) {
             throw new Asn1EncodingException(
                     "No non-null fields in CHOICE class " + containerClass.getName());
         }
-
         return resultField.toDer();
     }
 
@@ -124,7 +120,6 @@ public final class Asn1DerEncoder {
                 lastField = field;
             }
         }
-
         final List<byte[]> serializedFields = new ArrayList<>(fields.size());
         for (final AnnotatedField field : fields) {
             final byte[] serializedField;
@@ -140,7 +135,6 @@ public final class Asn1DerEncoder {
                 serializedFields.add(serializedField);
             }
         }
-
         return Asn1DerEncoder.createTag(
                 BerEncoding.TAG_CLASS_UNIVERSAL, true, BerEncoding.TAG_NUMBER_SEQUENCE,
                 serializedFields.toArray(new byte[0][]));
@@ -197,7 +191,6 @@ public final class Asn1DerEncoder {
                         Asn1Field.class.getName() + " used on a static field: "
                                 + containerClass.getName() + "." + field.getName());
             }
-
             final AnnotatedField annotatedField;
             try {
                 annotatedField = new AnnotatedField(container, field, annotation);
@@ -242,7 +235,6 @@ public final class Asn1DerEncoder {
         if ((firstNode > 6) || (firstNode < 0)) {
             throw new Asn1EncodingException("Invalid value for node #1: " + firstNode);
         }
-
         final int secondNode;
         try {
             secondNode = Integer.parseInt(nodes[1]);
@@ -257,7 +249,6 @@ public final class Asn1DerEncoder {
             throw new Asn1EncodingException(
                     "First two nodes out of range: " + firstNode + "." + secondNode);
         }
-
         encodedValue.write(firstByte);
         for (int i = 2; i < nodes.length; i++) {
             final String nodeString = nodes[i];
@@ -287,7 +278,6 @@ public final class Asn1DerEncoder {
             }
             throw new Asn1EncodingException("Node #" + (i + 1) + " too large: " + node);
         }
-
         return Asn1DerEncoder.createTag(
                 BerEncoding.TAG_CLASS_UNIVERSAL, false, BerEncoding.TAG_NUMBER_OBJECT_IDENTIFIER,
                 encodedValue.toByteArray());
@@ -321,34 +311,30 @@ public final class Asn1DerEncoder {
             this.mAnnotation = annotation;
             this.mDataType = annotation.type();
             this.mElementDataType = annotation.elementType();
-
             Asn1TagClass tagClass = annotation.cls();
-            if (tagClass == Asn1TagClass.AUTOMATIC) {
+            if (tagClass == Asn1TagClass.Automatic) {
                 if (annotation.tagNumber() != -1) {
-                    tagClass = Asn1TagClass.CONTEXT_SPECIFIC;
+                    tagClass = Asn1TagClass.ContextSpecific;
                 } else {
-                    tagClass = Asn1TagClass.UNIVERSAL;
+                    tagClass = Asn1TagClass.Universal;
                 }
             }
             this.mDerTagClass = BerEncoding.getTagClass(tagClass);
-
             final int tagNumber;
             if (annotation.tagNumber() != -1) {
                 tagNumber = annotation.tagNumber();
-            } else if ((this.mDataType == Asn1Type.CHOICE) || (this.mDataType == Asn1Type.ANY)) {
+            } else if ((this.mDataType == Asn1Type.Choice) || (this.mDataType == Asn1Type.Any)) {
                 tagNumber = -1;
             } else {
                 tagNumber = BerEncoding.getTagNumber(this.mDataType);
             }
             this.mDerTagNumber = tagNumber;
-
             this.mTagging = annotation.tagging();
-            if (((this.mTagging == Asn1Tagging.EXPLICIT) || (this.mTagging == Asn1Tagging.IMPLICIT))
+            if (((this.mTagging == Asn1Tagging.Explicit) || (this.mTagging == Asn1Tagging.Implicit))
                     && (annotation.tagNumber() == -1)) {
                 throw new Asn1EncodingException(
                         "Tag number must be specified when tagging mode is " + this.mTagging);
             }
-
             this.mOptional = annotation.optional();
         }
 
@@ -369,14 +355,13 @@ public final class Asn1DerEncoder {
                 }
                 throw new Asn1EncodingException("Required field not set");
             }
-
             final byte[] encoded = JavaToDerConverter.toDer(fieldValue, this.mDataType, this.mElementDataType);
             switch (this.mTagging) {
-                case NORMAL:
+                case Normal:
                     return encoded;
-                case EXPLICIT:
+                case Explicit:
                     return Asn1DerEncoder.createTag(this.mDerTagClass, true, this.mDerTagNumber, encoded);
-                case IMPLICIT:
+                case Implicit:
                     final int originalTagNumber = BerEncoding.getTagNumber(encoded[0]);
                     if (originalTagNumber == 0x1f) {
                         throw new Asn1EncodingException("High-tag-number form not supported");
@@ -402,7 +387,6 @@ public final class Asn1DerEncoder {
         // tag class & number fit into the first byte
         final byte firstIdentifierByte =
                 (byte) ((tagClass << 6) | (constructed ? 1 << 5 : 0) | tagNumber);
-
         int contentsLength = 0;
         for (final byte[] c : contents) {
             contentsLength += c.length;
@@ -422,25 +406,29 @@ public final class Asn1DerEncoder {
             if (contentsLength <= 0xff) {
                 contentsPosInResult = 3;
                 result = new byte[contentsPosInResult + contentsLength];
-                result[1] = (byte) 0x81; // 1 length byte
+                result[1] = (byte) 0x81;
+                // 1 length byte
                 result[2] = (byte) contentsLength;
             } else if (contentsLength <= 0xffff) {
                 contentsPosInResult = 4;
                 result = new byte[contentsPosInResult + contentsLength];
-                result[1] = (byte) 0x82; // 2 length bytes
+                result[1] = (byte) 0x82;
+                // 2 length bytes
                 result[2] = (byte) (contentsLength >> 8);
                 result[3] = (byte) (contentsLength & 0xff);
             } else if (contentsLength <= 0xffffff) {
                 contentsPosInResult = 5;
                 result = new byte[contentsPosInResult + contentsLength];
-                result[1] = (byte) 0x83; // 3 length bytes
+                result[1] = (byte) 0x83;
+                // 3 length bytes
                 result[2] = (byte) (contentsLength >> 16);
                 result[3] = (byte) ((contentsLength >> 8) & 0xff);
                 result[4] = (byte) (contentsLength & 0xff);
             } else {
                 contentsPosInResult = 6;
                 result = new byte[contentsPosInResult + contentsLength];
-                result[1] = (byte) 0x84; // 4 length bytes
+                result[1] = (byte) 0x84;
+                // 4 length bytes
                 result[2] = (byte) (contentsLength >> 24);
                 result[3] = (byte) ((contentsLength >> 16) & 0xff);
                 result[4] = (byte) ((contentsLength >> 8) & 0xff);
@@ -468,13 +456,11 @@ public final class Asn1DerEncoder {
                 buf.get(result);
                 return result;
             }
-
-            if ((targetType == null) || (targetType == Asn1Type.ANY)) {
+            if ((targetType == null) || (targetType == Asn1Type.Any)) {
                 return Asn1DerEncoder.encode(source);
             }
-
             switch (targetType) {
-                case OCTET_STRING:
+                case OctetString:
                     byte[] value = null;
                     if (source instanceof ByteBuffer) {
                         final ByteBuffer buf = (ByteBuffer) source;
@@ -491,7 +477,7 @@ public final class Asn1DerEncoder {
                                 value);
                     }
                     break;
-                case INTEGER:
+                case Integer:
                     if (source instanceof Integer) {
                         return Asn1DerEncoder.toInteger((Integer) source);
                     } else if (source instanceof Long) {
@@ -500,33 +486,32 @@ public final class Asn1DerEncoder {
                         return Asn1DerEncoder.toInteger((BigInteger) source);
                     }
                     break;
-                case OBJECT_IDENTIFIER:
+                case ObjectIdentifier:
                     if (source instanceof String) {
                         return Asn1DerEncoder.toOid((String) source);
                     }
                     break;
-                case SEQUENCE: {
+                case Sequence: {
                     final Asn1Class containerAnnotation = sourceType.getAnnotation(Asn1Class.class);
                     if ((containerAnnotation != null)
-                            && (containerAnnotation.type() == Asn1Type.SEQUENCE)) {
+                            && (containerAnnotation.type() == Asn1Type.Sequence)) {
                         return Asn1DerEncoder.toSequence(source);
                     }
                     break;
                 }
-                case CHOICE: {
+                case Choice: {
                     final Asn1Class containerAnnotation = sourceType.getAnnotation(Asn1Class.class);
                     if ((containerAnnotation != null)
-                            && (containerAnnotation.type() == Asn1Type.CHOICE)) {
+                            && (containerAnnotation.type() == Asn1Type.Choice)) {
                         return Asn1DerEncoder.toChoice(source);
                     }
                     break;
                 }
-                case SET_OF:
+                case SetOf:
                     return Asn1DerEncoder.toSetOf((Collection<?>) source, targetElementType);
                 default:
                     break;
             }
-
             throw new Asn1EncodingException(
                     "Unsupported conversion: " + sourceType.getName() + " to ASN.1 " + targetType);
         }

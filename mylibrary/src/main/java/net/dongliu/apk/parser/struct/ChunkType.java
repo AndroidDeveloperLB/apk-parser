@@ -12,7 +12,9 @@ public class ChunkType {
     public static final int TABLE = 0x0002;
     public static final int XML = 0x0003;
 
-    // Chunk types in XML
+    /**
+     * Chunk types in XML
+     */
     public static final int XML_FIRST_CHUNK = 0x0100;
     public static final int XML_START_NAMESPACE = 0x0100;
     public static final int XML_END_NAMESPACE = 0x0101;
@@ -20,16 +22,22 @@ public class ChunkType {
     public static final int XML_END_ELEMENT = 0x0103;
     public static final int XML_CDATA = 0x0104;
     public static final int XML_LAST_CHUNK = 0x017f;
-    // This contains a uint32_t array mapping strings in the string
-    // pool back to resource identifiers.  It is optional.
+    /**
+     * This contains a uint32_t array mapping strings in the string
+     * pool back to resource identifiers.  It is optional.
+     */
     public static final int XML_RESOURCE_MAP = 0x0180;
 
-    // Chunk types in RES_TABLE_TYPE
+    /**
+     * Chunk types in RES_TABLE_TYPE
+     */
     public static final int TABLE_PACKAGE = 0x0200;
     public static final int TABLE_TYPE = 0x0201;
     public static final int TABLE_TYPE_SPEC = 0x0202;
-    // android5.0+
-    // DynamicRefTable
+    /**
+     * android5.0+
+     * DynamicRefTable
+     */
     public static final int TABLE_LIBRARY = 0x0203;
     //TODO: handle the chunkt types below
     //https://github.com/hsiafan/apk-parser/issues/96#issuecomment-500275300 https://github.com/AndroidDeveloperLB/apk-parser/issues/1

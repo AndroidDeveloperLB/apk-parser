@@ -1,13 +1,13 @@
 package net.dongliu.apk.parser.parser;
 
+import androidx.annotation.Nullable;
+
 import net.dongliu.apk.parser.struct.xml.XmlNamespaceEndTag;
 import net.dongliu.apk.parser.struct.xml.XmlNamespaceStartTag;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
-import androidx.annotation.Nullable;
 
 /**
  * the xml file's namespaces.
@@ -27,18 +27,18 @@ class XmlNamespaces {
     }
 
     public void removeNamespace(final XmlNamespaceEndTag tag) {
-        final XmlNamespace namespace = new XmlNamespace(tag.getPrefix(), tag.getUri());
+        final XmlNamespace namespace = new XmlNamespace(tag.prefix, tag.uri);
         this.namespaces.remove(namespace);
         this.newNamespaces.remove(namespace);
     }
 
     @Nullable
-    public String getPrefixViaUri(final String uri) {
+    public String getPrefixViaUri(@Nullable final String uri) {
         if (uri == null) {
             return null;
         }
         for (final XmlNamespace namespace : this.namespaces) {
-            if (namespace.uri.equals(uri)) {
+            if (uri.equals(namespace.uri)) {
                 return namespace.prefix;
             }
         }
@@ -59,18 +59,22 @@ class XmlNamespaces {
      * one namespace
      */
     public static class XmlNamespace {
+        @Nullable
         private final String prefix;
+        @Nullable
         private final String uri;
 
-        private XmlNamespace(final String prefix, final String uri) {
+        private XmlNamespace(@Nullable final String prefix, @Nullable final String uri) {
             this.prefix = prefix;
             this.uri = uri;
         }
 
+        @Nullable
         public String getPrefix() {
             return this.prefix;
         }
 
+        @Nullable
         public String getUri() {
             return this.uri;
         }

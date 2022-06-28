@@ -16,7 +16,6 @@
 
 package net.dongliu.apk.parser.cert.pkcs7;
 
-
 import net.dongliu.apk.parser.cert.asn1.Asn1Class;
 import net.dongliu.apk.parser.cert.asn1.Asn1Field;
 import net.dongliu.apk.parser.cert.asn1.Asn1OpaqueObject;
@@ -25,13 +24,13 @@ import net.dongliu.apk.parser.cert.asn1.Asn1Type;
 /**
  * PKCS #7 {@code AlgorithmIdentifier} as specified in RFC 5652.
  */
-@Asn1Class(type = Asn1Type.SEQUENCE)
+@Asn1Class(type = Asn1Type.Sequence)
 public class AlgorithmIdentifier {
 
-    @Asn1Field(index = 0, type = Asn1Type.OBJECT_IDENTIFIER)
+    @Asn1Field(index = 0, type = Asn1Type.ObjectIdentifier)
     public String algorithm;
 
-    @Asn1Field(index = 1, type = Asn1Type.ANY, optional = true)
+    @Asn1Field(index = 1, type = Asn1Type.Any, optional = true)
     public Asn1OpaqueObject parameters;
 
     public AlgorithmIdentifier() {

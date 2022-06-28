@@ -1,12 +1,17 @@
 package net.dongliu.apk.parser.utils;
 
+import androidx.annotation.NonNull;
+
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
-import androidx.annotation.NonNull;
-
 /**
  * utils method for byte buffer
+ * <p>
+ * Cast java.nio.ByteBuffer instances where necessary to java.nio.Buffer to avoid NoSuchMethodError
+ * when running on Java 6 to Java 8.
+ * The Java 9 ByteBuffer classes introduces overloaded methods with covariant return types the following methods:
+ * position, limit, flip, clear, mark, reset, rewind, etc.
  *
  * @author Liu Dong dongliu@live.cn
  */
@@ -96,12 +101,6 @@ public class Buffers {
         Buffers.position(buffer, buffer.position() + count);
     }
 
-    // Cast java.nio.ByteBuffer instances where necessary to java.nio.Buffer to avoid NoSuchMethodError
-    // when running on Java 6 to Java 8.
-    // The Java 9 ByteBuffer classes introduces overloaded methods with covariant return types the following methods:
-    // position, limit, flip, clear, mark, reset, rewind, etc.
-
-
     /**
      * set position
      */
@@ -115,7 +114,6 @@ public class Buffers {
     public static void position(final ByteBuffer buffer, final long position) {
         Buffers.position(buffer, Unsigned.ensureUInt(position));
     }
-
 
     /**
      * Return one new ByteBuffer from current position, with size, the byte order of new buffer will be set to little endian;

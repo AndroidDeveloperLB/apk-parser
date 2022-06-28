@@ -1,5 +1,8 @@
 package net.dongliu.apk.parser.struct;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import net.dongliu.apk.parser.struct.resource.Densities;
 import net.dongliu.apk.parser.struct.resource.ResourceEntry;
 import net.dongliu.apk.parser.struct.resource.ResourceTable;
@@ -9,9 +12,6 @@ import net.dongliu.apk.parser.utils.Locales;
 
 import java.util.List;
 import java.util.Locale;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 /**
  * Resource entity, contains the resource id, should retrieve the value from resource table, or string pool if it is a string resource.
@@ -80,7 +80,6 @@ public abstract class ResourceValue {
     public static ResourceValue raw(final int value, final short type) {
         return new RawValue(value, type);
     }
-
 
     private static class DecimalResourceValue extends ResourceValue {
 
@@ -160,12 +159,10 @@ public abstract class ResourceValue {
             if (resourceId > AndroidConstants.SYS_STYLE_ID_START && resourceId < AndroidConstants.SYS_STYLE_ID_END) {
                 return "@android:style/" + ResourceTable.sysStyle.get((int) resourceId);
             }
-
             final String raw = "resourceId:0x" + Long.toHexString(resourceId);
             if (resourceTable == null) {
                 return raw;
             }
-
             final List<ResourceTable.Resource> resources = resourceTable.getResourcesById(resourceId);
             // read from type resource
             ResourceEntry selected = null;
@@ -176,8 +173,8 @@ public abstract class ResourceValue {
                 final Type type = resource.getType();
                 typeSpec = resource.getTypeSpec();
                 final ResourceEntry resourceEntry = resource.getResourceEntry();
-                final int localMatchLevel = Locales.match(locale, type.getLocale());
-                final int densityLevel = ReferenceResourceValue.densityLevel(type.getDensity());
+                final int localMatchLevel = Locales.match(locale, type.locale);
+                final int densityLevel = ReferenceResourceValue.densityLevel(type.density);
                 if (localMatchLevel > currentLocalMatchLevel) {
                     selected = resourceEntry;
                     currentLocalMatchLevel = localMatchLevel;

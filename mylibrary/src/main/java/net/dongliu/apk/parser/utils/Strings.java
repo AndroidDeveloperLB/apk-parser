@@ -1,10 +1,9 @@
 package net.dongliu.apk.parser.utils;
 
-
-import java.util.Iterator;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+
+import java.util.Iterator;
 
 public class Strings {
 
@@ -30,13 +29,12 @@ public class Strings {
         if (!iterator.hasNext()) {
             return first == null ? null : first.toString();
         }
-
         // two or more elements
-        final StringBuilder buf = new StringBuilder(256); // Java default is 16, probably too small
+        final StringBuilder buf = new StringBuilder(256);
+        // Java default is 16, probably too small
         if (first != null) {
             buf.append(first);
         }
-
         while (iterator.hasNext()) {
             if (separator != null) {
                 buf.append(separator);

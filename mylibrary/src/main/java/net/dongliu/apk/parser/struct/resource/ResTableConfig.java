@@ -8,63 +8,98 @@ import net.dongliu.apk.parser.utils.Unsigned;
  * @author dongliu
  */
 public class ResTableConfig {
-    // Number of bytes in this structure. uint32_t
+    /**
+     * Number of bytes in this structure. uint32_t
+     */
     private int size;
 
-    // Mobile country code (from SIM).  0 means "any". uint16_t
+    /**
+     * Mobile country code (from SIM).  0 means "any". uint16_t
+     */
     private short mcc;
-    // Mobile network code (from SIM).  0 means "any". uint16_t
+    /**
+     * Mobile network code (from SIM).  0 means "any". uint16_t
+     */
     private short mnc;
-    //uint32_t imsi;
-
-    // 0 means "any".  Otherwise, en, fr, etc. char[2]
+    /**
+     * uint32_t imsi;
+     * 0 means "any".  Otherwise, en, fr, etc. char[2]
+     */
     private String language;
-    // 0 means "any".  Otherwise, US, CA, etc.  char[2]
+    /**
+     * 0 means "any".  Otherwise, US, CA, etc.  char[2]
+     */
     private String country;
-    // uint32_t locale;
-
-    // uint8_t
+    /**
+     * uint32_t locale;
+     * uint8_t
+     */
     private byte orientation;
-    // uint8_t
+    /**
+     * uint8_t
+     */
     private byte touchscreen;
-    // uint16_t
+    /**
+     * uint16_t
+     */
     private short density;
-    // uint32_t screenType;
-
-    // uint8_t
+    /**
+     * uint32_t screenType;
+     * uint8_t
+     */
     private short keyboard;
-    // uint8_t
+    /**
+     * uint8_t
+     */
     private short navigation;
-    // uint8_t
+    /**
+     * uint8_t
+     */
     private short inputFlags;
-    // uint8_t
+    /**
+     * uint8_t
+     */
     private short inputPad0;
-    // uint32_t input;
-
-    // uint16_t
+    /**
+     * uint32_t input;
+     * uint16_t
+     */
     private int screenWidth;
-    // uint16_t
+    /**
+     * uint16_t
+     */
     private int screenHeight;
-    // uint32_t screenSize;
-
-    // uint16_t
+    /**
+     * uint32_t screenSize;
+     * uint16_t
+     */
     private int sdkVersion;
-    // For now minorVersion must always be 0!!!  Its meaning is currently undefined.
-    // uint16_t
+    /**
+     * For now minorVersion must always be 0!!!  Its meaning is currently undefined.
+     * uint16_t
+     */
     private int minorVersion;
-    //uint32_t version;
-
-    // uint8_t
+    /**
+     * uint32_t version;
+     * uint8_t
+     */
     private short screenLayout;
-    // uint8_t
+    /**
+     * uint8_t
+     */
     private short uiMode;
-    // uint8_t
+    /**
+     * uint8_t
+     */
     private short screenConfigPad1;
-    // uint8_t
+    /**
+     * uint8_t
+     */
     private short screenConfigPad2;
-    //uint32_t screenConfig;
 
-
+    /**
+     * uint32_t screenConfig;
+     */
     public int getSize() {
         return this.size;
     }

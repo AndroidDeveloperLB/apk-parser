@@ -29,14 +29,14 @@ public @interface Asn1Field {
      */
     int index() default 0;
 
-    Asn1TagClass cls() default Asn1TagClass.AUTOMATIC;
+    Asn1TagClass cls() default Asn1TagClass.Automatic;
 
     Asn1Type type();
 
     /**
      * Tagging mode. Default: NORMAL.
      */
-    Asn1Tagging tagging() default Asn1Tagging.NORMAL;
+    Asn1Tagging tagging() default Asn1Tagging.Normal;
 
     /**
      * Tag number. Required when IMPLICIT and EXPLICIT tagging mode is used.
@@ -51,5 +51,5 @@ public @interface Asn1Field {
     /**
      * Type of elements. Used only for SET_OF or SEQUENCE_OF.
      */
-    Asn1Type elementType() default Asn1Type.ANY;
+    Asn1Type elementType() default Asn1Type.Any;
 }

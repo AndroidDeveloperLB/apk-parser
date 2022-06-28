@@ -11,23 +11,35 @@ public class TypeHeader extends ChunkHeader {
 
     public static final long NO_ENTRY = 0xFFFFFFFFL;
 
-    // The type identifier this chunk is holding.  Type IDs start at 1 (corresponding to the value
-    // of the type bits in a resource identifier).  0 is invalid.
-    // uint8_t
+    /**
+     * The type identifier this chunk is holding.  Type IDs start at 1 (corresponding to the value
+     * of the type bits in a resource identifier).  0 is invalid.
+     * uint8_t
+     */
     private byte id;
 
-    // Must be 0. uint8_t
+    /**
+     * Must be 0. uint8_t
+     */
     private byte res0;
-    // Must be 0. uint16_t
+    /**
+     * Must be 0. uint16_t
+     */
     private short res1;
 
-    // Number of uint32_t entry indices that follow. uint32
+    /**
+     * Number of uint32_t entry indices that follow. uint32
+     */
     private int entryCount;
 
-    // Offset from header where ResTable_entry data starts.uint32_t
+    /**
+     * Offset from header where ResTable_entry data starts.uint32_t
+     */
     private int entriesStart;
 
-    // Configuration this collection of entries is designed for.
+    /**
+     * Configuration this collection of entries is designed for.
+     */
     private ResTableConfig config;
 
     public TypeHeader(final int headerSize, final long chunkSize) {

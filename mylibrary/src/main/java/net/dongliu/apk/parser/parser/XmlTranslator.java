@@ -18,8 +18,10 @@ import java.util.List;
  * @author dongliu
  */
 public class XmlTranslator implements XmlStreamer {
+    @NonNull
     private final StringBuilder sb;
     private int shift = 0;
+    @NonNull
     private final XmlNamespaces namespaces;
     private boolean isLastStartTag;
 
@@ -117,6 +119,7 @@ public class XmlTranslator implements XmlStreamer {
         }
     }
 
+    @NonNull
     public String getXml() {
         return this.sb.toString();
     }

@@ -1,14 +1,14 @@
 package net.dongliu.apk.parser.struct.resource;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import net.dongliu.apk.parser.struct.StringPool;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 /**
  * Resource packge.
@@ -19,9 +19,13 @@ public class ResourcePackage {
     // the packageName
     private String name;
     private short id;
-    // contains the names of the types of the Resources defined in the ResourcePackage
+    /**
+     * contains the names of the types of the Resources defined in the ResourcePackage
+     */
     private StringPool typeStringPool;
-    //  contains the names (keys) of the Resources defined in the ResourcePackage.
+    /**
+     * contains the names (keys) of the Resources defined in the ResourcePackage.
+     */
     private StringPool keyStringPool;
 
     public ResourcePackage(final @NonNull PackageHeader header) {
@@ -43,10 +47,10 @@ public class ResourcePackage {
     }
 
     public void addType(final Type type) {
-        List<Type> types = this.typesMap.get(type.getId());
+        List<Type> types = this.typesMap.get(type.id);
         if (types == null) {
             types = new ArrayList<>();
-            this.typesMap.put(type.getId(), types);
+            this.typesMap.put(type.id, types);
         }
         types.add(type);
     }

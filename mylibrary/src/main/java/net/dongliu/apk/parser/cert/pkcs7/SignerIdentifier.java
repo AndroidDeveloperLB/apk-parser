@@ -26,13 +26,13 @@ import java.nio.ByteBuffer;
 /**
  * PKCS #7 {@code SignerIdentifier} as specified in RFC 5652.
  */
-@Asn1Class(type = Asn1Type.CHOICE)
+@Asn1Class(type = Asn1Type.Choice)
 public class SignerIdentifier {
 
-    @Asn1Field(type = Asn1Type.SEQUENCE)
+    @Asn1Field(type = Asn1Type.Sequence)
     public IssuerAndSerialNumber issuerAndSerialNumber;
 
-    @Asn1Field(type = Asn1Type.OCTET_STRING, tagging = Asn1Tagging.IMPLICIT, tagNumber = 0)
+    @Asn1Field(type = Asn1Type.OctetString, tagging = Asn1Tagging.Implicit, tagNumber = 0)
     public ByteBuffer subjectKeyIdentifier;
 
     public SignerIdentifier() {

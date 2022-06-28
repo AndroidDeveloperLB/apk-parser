@@ -1,21 +1,25 @@
 package net.dongliu.apk.parser.struct.resource;
 
-import java.util.Arrays;
-import java.util.Locale;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+
+import java.util.Arrays;
+import java.util.Locale;
 
 /**
  * @author dongliu.
  */
 public class ResourceMapEntry extends ResourceEntry {
-    // Resource identifier of the parent mapping, or 0 if there is none.
-    //ResTable_ref specifies the parent Resource, if any, of this Resource.
-    // struct ResTable_ref { uint32_t ident; };
+    /**
+     * Resource identifier of the parent mapping, or 0 if there is none.
+     * ResTable_ref specifies the parent Resource, if any, of this Resource.
+     * struct ResTable_ref { uint32_t ident; };
+     */
     private long parent;
 
-    // Number of name/value pairs that follow for FLAG_COMPLEX. uint32_t
+    /**
+     * Number of name/value pairs that follow for FLAG_COMPLEX. uint32_t
+     */
     private long count;
 
     private ResourceTableMap[] resourceTableMaps;

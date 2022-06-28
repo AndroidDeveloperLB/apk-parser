@@ -83,16 +83,16 @@ public abstract class BerEncoding {
 
     public static int getTagNumber(final Asn1Type dataType) {
         switch (dataType) {
-            case INTEGER:
+            case Integer:
                 return BerEncoding.TAG_NUMBER_INTEGER;
-            case OBJECT_IDENTIFIER:
+            case ObjectIdentifier:
                 return BerEncoding.TAG_NUMBER_OBJECT_IDENTIFIER;
-            case OCTET_STRING:
+            case OctetString:
                 return BerEncoding.TAG_NUMBER_OCTET_STRING;
-            case SET_OF:
+            case SetOf:
                 return BerEncoding.TAG_NUMBER_SET;
-            case SEQUENCE:
-            case SEQUENCE_OF:
+            case Sequence:
+            case SequenceOf:
                 return BerEncoding.TAG_NUMBER_SEQUENCE;
             default:
                 throw new IllegalArgumentException("Unsupported data type: " + dataType);
@@ -101,13 +101,13 @@ public abstract class BerEncoding {
 
     public static int getTagClass(final Asn1TagClass tagClass) {
         switch (tagClass) {
-            case APPLICATION:
+            case Application:
                 return BerEncoding.TAG_CLASS_APPLICATION;
-            case CONTEXT_SPECIFIC:
+            case ContextSpecific:
                 return BerEncoding.TAG_CLASS_CONTEXT_SPECIFIC;
-            case PRIVATE:
+            case Private:
                 return BerEncoding.TAG_CLASS_PRIVATE;
-            case UNIVERSAL:
+            case Universal:
                 return BerEncoding.TAG_CLASS_UNIVERSAL;
             default:
                 throw new IllegalArgumentException("Unsupported tag class: " + tagClass);
@@ -134,7 +134,6 @@ public abstract class BerEncoding {
         final String numberString = BerEncoding.tagNumberToString(tagNumber);
         return classString.isEmpty() ? numberString : classString + " " + numberString;
     }
-
 
     public static String tagNumberToString(final int tagNumber) {
         switch (tagNumber) {

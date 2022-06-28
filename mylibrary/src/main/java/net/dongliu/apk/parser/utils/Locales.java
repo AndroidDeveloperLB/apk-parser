@@ -1,5 +1,7 @@
 package net.dongliu.apk.parser.utils;
 
+import androidx.annotation.Nullable;
+
 import java.util.Locale;
 
 /**
@@ -15,7 +17,7 @@ public class Locales {
     /**
      * How much the given locale match the expected locale.
      */
-    public static int match(final Locale locale, final Locale targetLocale) {
+    public static int match(final @Nullable Locale locale, final Locale targetLocale) {
         if (locale == null) {
             return -1;
         }

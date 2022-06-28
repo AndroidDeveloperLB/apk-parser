@@ -10,7 +10,9 @@ import net.dongliu.apk.parser.utils.Unsigned;
  * @author dongliu
  */
 public class ResourceTableHeader extends ChunkHeader {
-    // The number of ResTable_package structures. uint32
+    /**
+     * The number of ResTable_package structures. uint32
+     */
     private int packageCount;
 
     public ResourceTableHeader(final int headerSize, final int chunkSize) {

@@ -5,22 +5,35 @@ package net.dongliu.apk.parser.struct.zip;
  */
 public class EOCD {
     public static final int SIGNATURE = 0x06054b50;
-    //    private int signature;
-    // Number of this disk
+    /**
+     * private int signature;
+     * Number of this disk
+     */
     private short diskNum;
-    // Disk where central directory starts
+    /**
+     * Disk where central directory starts
+     */
     private short cdStartDisk;
-    // Number of central directory records on this disk
+    /**
+     * Number of central directory records on this disk
+     */
     private short cdRecordNum;
-    // Total number of central directory records
+    /**
+     * Total number of central directory records
+     */
     private short totalCDRecordNum;
-    // Size of central directory (bytes)
+    /**
+     * Size of central directory (bytes)
+     */
     private int cdSize;
-    // Offset of start of central directory, relative to start of archive
+    /**
+     * Offset of start of central directory, relative to start of archive
+     */
     private int cdStart;
-    // Comment length (n)
+    /**
+     * Comment length (n)
+     */
     private short commentLen;
-//    private List<String> commentList;
 
     public short getDiskNum() {
         return this.diskNum;

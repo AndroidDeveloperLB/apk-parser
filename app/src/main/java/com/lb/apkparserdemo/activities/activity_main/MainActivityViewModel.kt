@@ -1,26 +1,20 @@
 package com.lb.apkparserdemo.activities.activity_main
 
 import android.app.Application
-import android.content.pm.PackageInfo
-import android.content.pm.PackageManager
+import android.content.pm.*
 import android.os.Build
 import android.util.Log
-import androidx.annotation.UiThread
-import androidx.annotation.WorkerThread
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.viewModelScope
+import androidx.annotation.*
+import androidx.lifecycle.*
 import com.lb.apkparserdemo.apk_info.*
-import com.lb.apkparserdemo.apk_info.app_icon.ApkIconFetcher
-import com.lb.apkparserdemo.apk_info.app_icon.AppInfoUtil
-import com.lb.apkparserdemo.apk_info.app_icon.isSystemApp
+import com.lb.apkparserdemo.apk_info.app_icon.*
 import com.lb.common_utils.BaseViewModel
 import kotlinx.coroutines.*
 import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream
 import java.io.FileInputStream
 import java.util.*
 import java.util.concurrent.Executors
-import java.util.zip.ZipFile
-import java.util.zip.ZipInputStream
+import java.util.zip.*
 
 private const val VALIDATE_RESOURCES = true
 private const val GET_APK_TYPE = true
@@ -345,6 +339,7 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
     }
 
     companion object {
+        @Suppress("DEPRECATION")
         fun versionCodeCompat(packageInfo: PackageInfo) =
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) packageInfo.longVersionCode else packageInfo.versionCode.toLong()
 

@@ -1,8 +1,7 @@
 package com.lb.apkparserdemo.activities.activity_main
 
 import android.annotation.SuppressLint
-import android.os.Handler
-import android.os.Looper
+import android.os.*
 import androidx.annotation.AnyThread
 import androidx.lifecycle.MutableLiveData
 
@@ -12,9 +11,10 @@ class CounterMutableLiveData(initialValue: Int = 0) : MutableLiveData<Int>(initi
     @AnyThread
     @SuppressLint("WrongThread")
     fun inc() {
-        if (Thread.currentThread() == Looper.getMainLooper().thread) value += 1
+        if (Thread.currentThread() == Looper.getMainLooper().thread)
+            value += 1
         else handler.post {
-            value = (value ?: 0) + 1
+            value += 1
         }
     }
 
