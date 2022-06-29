@@ -1,41 +1,29 @@
 package net.dongliu.apk.parser.bean;
 
-
-import java.io.Serializable;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+
+import java.io.Serializable;
 
 /**
  * Android adaptive icon, from android 8.0
  */
 public class AdaptiveIcon implements IconFace, Serializable {
     private static final long serialVersionUID = 4185750290211529320L;
-    @Nullable
-    private final Icon foreground;
-    @Nullable
-    private final Icon background;
-
-    public AdaptiveIcon(@Nullable final Icon foreground, @Nullable final Icon background) {
-        this.foreground = foreground;
-        this.background = background;
-    }
-
-
     /**
      * The foreground icon
      */
     @Nullable
-    public Icon getForeground() {
-        return this.foreground;
-    }
-
+    public final Icon foreground;
     /**
      * The background icon
      */
     @Nullable
-    public Icon getBackground() {
-        return this.background;
+    public final Icon background;
+
+    public AdaptiveIcon(@Nullable final Icon foreground, @Nullable final Icon background) {
+        this.foreground = foreground;
+        this.background = background;
     }
 
     @NonNull

@@ -16,9 +16,10 @@
 
 package net.dongliu.apk.parser.cert.asn1.ber;
 
-import java.nio.ByteBuffer;
-
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+
+import java.nio.ByteBuffer;
 
 /**
  * {@link BerDataValueReader} which reads from a {@link ByteBuffer} containing BER-encoded data
@@ -27,10 +28,7 @@ import androidx.annotation.Nullable;
 public class ByteBufferBerDataValueReader implements BerDataValueReader {
     private final ByteBuffer mBuf;
 
-    public ByteBufferBerDataValueReader(final ByteBuffer buf) {
-        if (buf == null) {
-            throw new NullPointerException("buf == null");
-        }
+    public ByteBufferBerDataValueReader(final @NonNull ByteBuffer buf) {
         this.mBuf = buf;
     }
 
@@ -44,7 +42,6 @@ public class ByteBufferBerDataValueReader implements BerDataValueReader {
         final byte firstIdentifierByte = this.mBuf.get();
         final int tagNumber = this.readTagNumber(firstIdentifierByte);
         final boolean constructed = BerEncoding.isConstructed(firstIdentifierByte);
-
         if (!this.mBuf.hasRemaining()) {
             throw new BerDataValueFormatException("Missing length");
         }
@@ -69,7 +66,6 @@ public class ByteBufferBerDataValueReader implements BerDataValueReader {
                             ? this.skipConstructedIndefiniteLengthContents()
                             : this.skipPrimitiveIndefiniteLengthContents();
         }
-
         // Create the encoded data value ByteBuffer
         final int endPosition = this.mBuf.position();
         this.mBuf.position(startPosition);
@@ -78,13 +74,11 @@ public class ByteBufferBerDataValueReader implements BerDataValueReader {
         final ByteBuffer encoded = this.mBuf.slice();
         this.mBuf.position(this.mBuf.limit());
         this.mBuf.limit(bufOriginalLimit);
-
         // Create the encoded contents ByteBuffer
         encoded.position(contentsOffsetInTag);
         encoded.limit(contentsOffsetInTag + contentsLength);
         final ByteBuffer encodedContents = encoded.slice();
         encoded.clear();
-
         return new BerDataValue(
                 encoded,
                 encodedContents,
@@ -203,7 +197,6 @@ public class ByteBufferBerDataValueReader implements BerDataValueReader {
             // No luck. This must be a BER-encoded data value -- skip over it by parsing it
             this.readDataValue();
         }
-
         throw new BerDataValueFormatException(
                 "Truncated indefinite-length contents: "
                         + (this.mBuf.position() - startPos) + " bytes read");

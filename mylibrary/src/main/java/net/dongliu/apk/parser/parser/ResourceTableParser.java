@@ -48,9 +48,9 @@ public class ResourceTableParser {
     /**
      * the resource table file size
      */
-    private ResourceTable resourceTable;
-
-    private final Set<Locale> locales;
+    public ResourceTable resourceTable;
+    @NonNull
+    public final Set<Locale> locales;
 
     public ResourceTableParser(final @NonNull ByteBuffer buffer) {
         this.buffer = buffer.duplicate();
@@ -67,8 +67,7 @@ public class ResourceTableParser {
         // read string pool chunk
         final StringPool stringPool = ParseUtils.readStringPool(this.buffer, (StringPoolHeader) this.readChunkHeader());
         this.stringPool = stringPool;
-        this.resourceTable = new ResourceTable();
-        this.resourceTable.setStringPool(stringPool);
+        this.resourceTable = new ResourceTable(stringPool);
         final long packageCount = resourceTableHeader.getPackageCount();
         if (packageCount != 0) {
             PackageHeader packageHeader = (PackageHeader) this.readChunkHeader();
@@ -258,7 +257,4 @@ public class ResourceTableParser {
         return this.resourceTable;
     }
 
-    public Set<Locale> getLocales() {
-        return this.locales;
-    }
 }

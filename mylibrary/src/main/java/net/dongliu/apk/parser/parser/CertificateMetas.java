@@ -1,5 +1,7 @@
 package net.dongliu.apk.parser.parser;
 
+import androidx.annotation.NonNull;
+
 import net.dongliu.apk.parser.bean.CertificateMeta;
 
 import java.math.BigInteger;
@@ -10,8 +12,6 @@ import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.List;
-
-import androidx.annotation.NonNull;
 
 public class CertificateMetas {
 
@@ -39,12 +39,14 @@ public class CertificateMetas {
                 bytes, certBase64Md5, certMd5);
     }
 
+    @NonNull
     private static String md5Digest(final byte[] input) {
         final MessageDigest digest = CertificateMetas.getDigest("md5");
         digest.update(input);
         return CertificateMetas.getHexString(digest.digest());
     }
 
+    @NonNull
     private static String md5Digest(final String input) {
         final MessageDigest digest = CertificateMetas.getDigest("md5");
         digest.update(input.getBytes(StandardCharsets.UTF_8));
@@ -64,6 +66,7 @@ public class CertificateMetas {
         return sb.toString();
     }
 
+    @NonNull
     private static String getHexString(final byte[] digest) {
         final BigInteger bi = new BigInteger(1, digest);
         return String.format("%032x", bi);

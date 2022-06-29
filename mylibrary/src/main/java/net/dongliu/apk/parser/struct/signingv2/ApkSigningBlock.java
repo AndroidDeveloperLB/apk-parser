@@ -1,5 +1,7 @@
 package net.dongliu.apk.parser.struct.signingv2;
 
+import androidx.annotation.NonNull;
+
 import java.util.List;
 
 /**
@@ -11,14 +13,11 @@ public class ApkSigningBlock {
     public static final int SIGNING_V2_ID = 0x7109871a;
 
     public static final String MAGIC = "APK Sig Block 42";
+    @NonNull
+    public final List<SignerBlock> signerBlocks;
 
-    private final List<SignerBlock> signerBlocks;
-
-    public ApkSigningBlock(final List<SignerBlock> signerBlocks) {
+    public ApkSigningBlock(final @NonNull List<SignerBlock> signerBlocks) {
         this.signerBlocks = signerBlocks;
     }
 
-    public List<SignerBlock> getSignerBlocks() {
-        return this.signerBlocks;
-    }
 }

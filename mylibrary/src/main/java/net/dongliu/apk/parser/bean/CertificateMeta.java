@@ -1,10 +1,10 @@
 package net.dongliu.apk.parser.bean;
 
+import androidx.annotation.NonNull;
+
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
-
-import androidx.annotation.NonNull;
 
 /**
  * basic certificate info.
@@ -16,7 +16,7 @@ public class CertificateMeta {
     /**
      * the sign algorithm name
      */
-    private final String signAlgorithm;
+    public final String signAlgorithm;
 
     /**
      * the signature algorithm OID string.
@@ -26,36 +26,36 @@ public class CertificateMeta {
      * RFC 3279: Algorithms and Identifiers for the Internet X.509 Public Key Infrastructure Certificate and CRL Profile
      * </a>.
      */
-    private final String signAlgorithmOID;
+    public final String signAlgorithmOID;
 
     /**
      * the start date of the validity period.
      */
-    private final Date startDate;
+    public final Date startDate;
 
     /**
      * the end date of the validity period.
      */
-    private final Date endDate;
+    public final Date endDate;
 
     /**
      * certificate binary data.
      */
-    private final byte[] data;
+    public final byte[] data;
 
     /**
      * first use base64 to encode certificate binary data, and then calculate md5 of base64b string.
      * some programs use this as the certMd5 of certificate
      */
-    private final String certBase64Md5;
+    public final String certBase64Md5;
 
     /**
      * use md5 to calculate certificate's certMd5.
      */
-    private final String certMd5;
+    public final String certMd5;
 
-    public CertificateMeta(final String signAlgorithm, final String signAlgorithmOID, final Date startDate, final Date endDate,
-                           final byte[] data, final String certBase64Md5, final String certMd5) {
+    public CertificateMeta(final @NonNull String signAlgorithm, final @NonNull String signAlgorithmOID, final @NonNull Date startDate, final @NonNull Date endDate,
+                           final @NonNull byte[] data, final @NonNull String certBase64Md5, final @NonNull String certMd5) {
         this.signAlgorithm = signAlgorithm;
         this.signAlgorithmOID = signAlgorithmOID;
         this.startDate = startDate;
@@ -63,34 +63,6 @@ public class CertificateMeta {
         this.data = data;
         this.certBase64Md5 = certBase64Md5;
         this.certMd5 = certMd5;
-    }
-
-    public byte[] getData() {
-        return this.data;
-    }
-
-    public String getCertBase64Md5() {
-        return this.certBase64Md5;
-    }
-
-    public String getCertMd5() {
-        return this.certMd5;
-    }
-
-    public String getSignAlgorithm() {
-        return this.signAlgorithm;
-    }
-
-    public Date getStartDate() {
-        return this.startDate;
-    }
-
-    public Date getEndDate() {
-        return this.endDate;
-    }
-
-    public String getSignAlgorithmOID() {
-        return this.signAlgorithmOID;
     }
 
     @NonNull
@@ -102,4 +74,3 @@ public class CertificateMeta {
                 "startDate=" + df.format(this.startDate) + ", " + "endDate=" + df.format(this.endDate) + "}";
     }
 }
-

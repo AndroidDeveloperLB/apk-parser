@@ -8,20 +8,12 @@ import androidx.annotation.NonNull;
  * @author dongliu
  */
 public class UseFeature {
-    private final String name;
-    private final boolean required;
+    public final String name;
+    public final boolean isRequired;
 
     public UseFeature(final String name, final boolean required) {
         this.name = name;
-        this.required = required;
-    }
-
-    public String getName() {
-        return this.name;
-    }
-
-    public boolean isRequired() {
-        return this.required;
+        this.isRequired = required;
     }
 
     @NonNull

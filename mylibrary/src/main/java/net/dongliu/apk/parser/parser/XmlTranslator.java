@@ -50,13 +50,13 @@ public class XmlTranslator implements XmlStreamer {
         final List<XmlNamespaces.XmlNamespace> nps = this.namespaces.consumeNameSpaces();
         if (!nps.isEmpty()) {
             for (final XmlNamespaces.XmlNamespace np : nps) {
-                this.sb.append(" xmlns:").append(np.getPrefix()).append("=\"")
-                        .append(np.getUri())
+                this.sb.append(" xmlns:").append(np.prefix).append("=\"")
+                        .append(np.uri)
                         .append("\"");
             }
         }
         this.isLastStartTag = true;
-        for (final Attribute attribute : xmlNodeStartTag.attributes.values()) {
+        for (final Attribute attribute : xmlNodeStartTag.attributes.attributes) {
             this.onAttribute(attribute);
         }
     }

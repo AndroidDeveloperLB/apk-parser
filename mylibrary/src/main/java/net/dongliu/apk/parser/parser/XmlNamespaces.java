@@ -60,23 +60,13 @@ class XmlNamespaces {
      */
     public static class XmlNamespace {
         @Nullable
-        private final String prefix;
+        public final String prefix;
         @Nullable
-        private final String uri;
+        public final String uri;
 
         private XmlNamespace(@Nullable final String prefix, @Nullable final String uri) {
             this.prefix = prefix;
             this.uri = uri;
-        }
-
-        @Nullable
-        public String getPrefix() {
-            return this.prefix;
-        }
-
-        @Nullable
-        public String getUri() {
-            return this.uri;
         }
 
         @Override

@@ -16,71 +16,60 @@
 
 package net.dongliu.apk.parser.cert.asn1.ber;
 
-import java.nio.ByteBuffer;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+
+import java.nio.ByteBuffer;
 
 /**
  * ASN.1 Basic Encoding Rules (BER) data value -- see {@code X.690}.
  */
 public class BerDataValue {
-    private final ByteBuffer mEncoded;
-    private final ByteBuffer mEncodedContents;
-    private final int mTagClass;
-    private final boolean mConstructed;
-    private final int mTagNumber;
-
-    BerDataValue(
-            final ByteBuffer encoded,
-            final ByteBuffer encodedContents,
-            final int tagClass,
-            final boolean constructed,
-            final int tagNumber) {
-        this.mEncoded = encoded;
-        this.mEncodedContents = encodedContents;
-        this.mTagClass = tagClass;
-        this.mConstructed = constructed;
-        this.mTagNumber = tagNumber;
-    }
-
+    private final ByteBuffer encoded;
+    private final ByteBuffer encodedContents;
     /**
      * Returns the tag class of this data value. See {@link BerEncoding} {@code TAG_CLASS}
      * constants.
      */
-    public int getTagClass() {
-        return this.mTagClass;
-    }
-
+    public final int tagClass;
     /**
      * Returns {@code true} if the content octets of this data value are the complete BER encoding
      * of one or more data values, {@code false} if the content octets of this data value directly
      * represent the value.
      */
-    public boolean isConstructed() {
-        return this.mConstructed;
-    }
-
+    public final boolean isConstructed;
     /**
      * Returns the tag number of this data value. See {@link BerEncoding} {@code TAG_NUMBER}
      * constants.
      */
-    public int getTagNumber() {
-        return this.mTagNumber;
+    public final int tagNumber;
+
+    BerDataValue(
+            @NonNull final ByteBuffer encoded,
+            @NonNull final ByteBuffer encodedContents,
+            final int tagClass,
+            final boolean constructed,
+            final int tagNumber) {
+        this.encoded = encoded;
+        this.encodedContents = encodedContents;
+        this.tagClass = tagClass;
+        this.isConstructed = constructed;
+        this.tagNumber = tagNumber;
     }
 
     /**
      * Returns the encoded form of this data value.
      */
     public ByteBuffer getEncoded() {
-        return this.mEncoded.slice();
+        return this.encoded.slice();
     }
 
     /**
      * Returns the encoded contents of this data value.
      */
+    @NonNull
     public ByteBuffer getEncodedContents() {
-        return this.mEncodedContents.slice();
+        return this.encodedContents.slice();
     }
 
     /**

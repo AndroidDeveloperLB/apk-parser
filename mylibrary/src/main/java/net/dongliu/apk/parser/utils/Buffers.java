@@ -44,6 +44,7 @@ public class Buffers {
     /**
      * get bytes
      */
+    @NonNull
     public static byte[] readBytes(final ByteBuffer buffer, final int size) {
         final byte[] bytes = new byte[size];
         buffer.get(bytes);
@@ -53,6 +54,7 @@ public class Buffers {
     /**
      * get all bytes remains
      */
+    @NonNull
     public static byte[] readBytes(final ByteBuffer buffer) {
         return Buffers.readBytes(buffer, buffer.remaining());
     }

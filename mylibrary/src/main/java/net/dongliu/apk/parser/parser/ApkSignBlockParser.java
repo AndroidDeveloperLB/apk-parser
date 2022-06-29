@@ -24,9 +24,10 @@ import java.util.List;
  * see https://source.android.com/security/apksigning/v2
  */
 public class ApkSignBlockParser {
+    @NonNull
     private final ByteBuffer data;
 
-    public ApkSignBlockParser(final ByteBuffer data) {
+    public ApkSignBlockParser(final @NonNull ByteBuffer data) {
         this.data = data.order(ByteOrder.LITTLE_ENDIAN);
     }
 
@@ -68,6 +69,7 @@ public class ApkSignBlockParser {
         return new SignerBlock(digests, certificates, signatures);
     }
 
+    @NonNull
     private List<Digest> readDigests(final ByteBuffer buffer) {
         final List<Digest> list = new ArrayList<>();
         while (buffer.hasRemaining()) {
@@ -79,6 +81,7 @@ public class ApkSignBlockParser {
         return list;
     }
 
+    @NonNull
     private List<X509Certificate> readCertificates(final ByteBuffer buffer) throws CertificateException {
         final CertificateFactory certificateFactory = CertificateFactory.getInstance("X.509");
         final List<X509Certificate> certificates = new ArrayList<>();
@@ -99,6 +102,7 @@ public class ApkSignBlockParser {
         }
     }
 
+    @NonNull
     private List<Signature> readSignatures(final ByteBuffer buffer) {
         final List<Signature> signatures = new ArrayList<>();
         while (buffer.hasRemaining()) {
@@ -115,34 +119,33 @@ public class ApkSignBlockParser {
         final int len = Unsigned.ensureUInt(buffer.getInt());
         return Buffers.sliceAndSkip(buffer, len);
     }
-
-    /**
-     * 0x0101—RSASSA-PSS with SHA2-256 digest, SHA2-256 MGF1, 32 bytes of salt, trailer: 0xbc
-     */
-    private static final int PSS_SHA_256 = 0x0101;
-    /**
-     * 0x0102—RSASSA-PSS with SHA2-512 digest, SHA2-512 MGF1, 64 bytes of salt, trailer: 0xbc
-     */
-    private static final int PSS_SHA_512 = 0x0102;
-    /**
-     * 0x0103—RSASSA-PKCS1-v1_5 with SHA2-256 digest. This is for build systems which require deterministic signatures.
-     */
-    private static final int PKCS1_SHA_256 = 0x0103;
-    /**
-     * 0x0104—RSASSA-PKCS1-v1_5 with SHA2-512 digest. This is for build systems which require deterministic signatures.
-     */
-    private static final int PKCS1_SHA_512 = 0x0104;
-    /**
-     * 0x0201—ECDSA with SHA2-256 digest
-     */
-    private static final int ECDSA_SHA_256 = 0x0201;
-    /**
-     * 0x0202—ECDSA with SHA2-512 digest
-     */
-    private static final int ECDSA_SHA_512 = 0x0202;
-    /**
-     * 0x0301—DSA with SHA2-256 digest
-     */
-    private static final int DSA_SHA_256 = 0x0301;
+//    /**
+//     * 0x0101—RSASSA-PSS with SHA2-256 digest, SHA2-256 MGF1, 32 bytes of salt, trailer: 0xbc
+//     */
+//    private static final int PSS_SHA_256 = 0x0101;
+//    /**
+//     * 0x0102—RSASSA-PSS with SHA2-512 digest, SHA2-512 MGF1, 64 bytes of salt, trailer: 0xbc
+//     */
+//    private static final int PSS_SHA_512 = 0x0102;
+//    /**
+//     * 0x0103—RSASSA-PKCS1-v1_5 with SHA2-256 digest. This is for build systems which require deterministic signatures.
+//     */
+//    private static final int PKCS1_SHA_256 = 0x0103;
+//    /**
+//     * 0x0104—RSASSA-PKCS1-v1_5 with SHA2-512 digest. This is for build systems which require deterministic signatures.
+//     */
+//    private static final int PKCS1_SHA_512 = 0x0104;
+//    /**
+//     * 0x0201—ECDSA with SHA2-256 digest
+//     */
+//    private static final int ECDSA_SHA_256 = 0x0201;
+//    /**
+//     * 0x0202—ECDSA with SHA2-512 digest
+//     */
+//    private static final int ECDSA_SHA_512 = 0x0202;
+//    /**
+//     * 0x0301—DSA with SHA2-256 digest
+//     */
+//    private static final int DSA_SHA_256 = 0x0301;
 
 }

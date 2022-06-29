@@ -314,7 +314,7 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
                                 }
                                 Log.d(
                                     "AppLog",
-                                    "apk data of $apkFilePath : ${apkMeta.packageName}, ${apkMeta.versionCode}, ${apkMeta.versionName}, ${apkMeta.name}, ${apkMetaTranslator.iconPaths}"
+                                    "apk data of $apkFilePath : ${apkMeta.packageName}, ${apkMeta.versionCode}, ${apkMeta.versionName}, ${apkMeta.label}, ${apkMetaTranslator.iconPaths}"
                                 )
                             }
                         }

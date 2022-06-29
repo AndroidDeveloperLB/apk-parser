@@ -1,6 +1,5 @@
 package net.dongliu.apk.parser.struct.xml;
 
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -10,14 +9,16 @@ import androidx.annotation.Nullable;
  * @author dongliu
  */
 public class Attributes {
-
-    private final Attribute[] attributes;
+    /**
+     * return all attributes
+     */
+    public final Attribute[] attributes;
 
     public Attributes(final int size) {
         this.attributes = new Attribute[size];
     }
 
-    public void set(final int i, final Attribute attribute) {
+    public void set(final int i, final @NonNull Attribute attribute) {
         this.attributes[i] = attribute;
     }
 
@@ -30,7 +31,6 @@ public class Attributes {
         }
         return null;
     }
-
 
     /**
      * Get attribute with name, return value as string
@@ -77,11 +77,4 @@ public class Attributes {
         return Long.valueOf(value);
     }
 
-    /**
-     * return all attributes
-     */
-    public Attribute[] values() {
-        return this.attributes;
-    }
 }
-

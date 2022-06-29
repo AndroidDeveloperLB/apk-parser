@@ -52,7 +52,7 @@ class ApkInfo(
             val xmlTranslator = XmlTranslator()
             val resourceTable: ResourceTable =
                 if (resourcesBytes == null)
-                    ResourceTable()
+                    ResourceTable(null)
                 else {
                     val resourceTableParser = ResourceTableParser(ByteBuffer.wrap(resourcesBytes))
                     resourceTableParser.parse()

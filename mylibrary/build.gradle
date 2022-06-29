@@ -38,6 +38,6 @@ dependencies {
 //    https://developer.android.com/studio/build/multidex
     implementation("androidx.multidex:multidex:2.0.1")
 //https://developer.android.com/jetpack/androidx/releases/annotation https://androidx.tech/artifacts/annotation/annotation/    https://mvnrepository.com/artifact/androidx.annotation/annotation?repo=google
-    implementation 'androidx.annotation:annotation:1.3.0'
+    implementation 'androidx.annotation:annotation:1.4.0'
 
 }

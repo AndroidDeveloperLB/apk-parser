@@ -16,23 +16,26 @@
 
 package net.dongliu.apk.parser.cert.asn1;
 
+import androidx.annotation.NonNull;
+
 import java.nio.ByteBuffer;
 
 /**
  * Opaque holder of encoded ASN.1 stuff.
  */
 public class Asn1OpaqueObject {
-    private final ByteBuffer mEncoded;
+    private final ByteBuffer encoded;
 
-    public Asn1OpaqueObject(final ByteBuffer encoded) {
-        this.mEncoded = encoded.slice();
+    public Asn1OpaqueObject(final @NonNull ByteBuffer encoded) {
+        this.encoded = encoded.slice();
     }
 
-    public Asn1OpaqueObject(final byte[] encoded) {
-        this.mEncoded = ByteBuffer.wrap(encoded);
+    public Asn1OpaqueObject(final @NonNull byte[] encoded) {
+        this.encoded = ByteBuffer.wrap(encoded);
     }
 
+    @NonNull
     public ByteBuffer getEncoded() {
-        return this.mEncoded.slice();
+        return this.encoded.slice();
     }
 }

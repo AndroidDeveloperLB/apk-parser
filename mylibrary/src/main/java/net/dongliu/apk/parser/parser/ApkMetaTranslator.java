@@ -78,8 +78,8 @@ public class ApkMetaTranslator implements XmlStreamer {
                             final List<IconPath> icons = new ArrayList<>();
                             boolean hasDefault = false;
                             for (final ResourceTable.Resource resource : resources) {
-                                final Type type = resource.getType();
-                                final ResourceEntry resourceEntry = resource.getResourceEntry();
+                                final Type type = resource.type;
+                                final ResourceEntry resourceEntry = resource.resourceEntry;
                                 final String path = resourceEntry.toStringValue(this.resourceTable, this.locale);
                                 if (type.density == Densities.DEFAULT) {
                                     hasDefault = true;
@@ -89,7 +89,7 @@ public class ApkMetaTranslator implements XmlStreamer {
                                 icons.add(iconPath);
                             }
                             if (!hasDefault) {
-                                this.apkMetaBuilder.setIcon(icons.get(0).getPath());
+                                this.apkMetaBuilder.setIcon(icons.get(0).path);
                             }
                             this.iconPaths = icons;
                         }

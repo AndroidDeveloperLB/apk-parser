@@ -170,9 +170,9 @@ public abstract class ResourceValue {
             int currentLocalMatchLevel = -1;
             int currentDensityLevel = -1;
             for (final ResourceTable.Resource resource : resources) {
-                final Type type = resource.getType();
-                typeSpec = resource.getTypeSpec();
-                final ResourceEntry resourceEntry = resource.getResourceEntry();
+                final Type type = resource.type;
+                typeSpec = resource.typeSpec;
+                final ResourceEntry resourceEntry = resource.resourceEntry;
                 final int localMatchLevel = Locales.match(locale, type.locale);
                 final int densityLevel = ReferenceResourceValue.densityLevel(type.density);
                 if (localMatchLevel > currentLocalMatchLevel) {

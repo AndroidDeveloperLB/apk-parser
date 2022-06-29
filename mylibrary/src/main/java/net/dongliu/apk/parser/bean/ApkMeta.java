@@ -1,11 +1,10 @@
 package net.dongliu.apk.parser.bean;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 /**
  * Apk meta info
@@ -14,42 +13,45 @@ import androidx.annotation.Nullable;
  */
 public class ApkMeta {
 
-    private final String packageName;
-    private final String label;
+    public final String packageName;
+    /**
+     * get the apk's title(name)
+     */
+    public final String label;
     private final String icon;
-    private final String versionName;
-    private final long versionCode;
-    private final Long revisionCode;
-    private final String sharedUserId;
-    private final String sharedUserLabel;
-    private final String split;
-    private final String configForSplit;
-    private final boolean isFeatureSplit;
-    private final boolean isSplitRequired;
-    private final boolean isolatedSplits;
-    private final String installLocation;
-    private final String minSdkVersion;
-    private final String targetSdkVersion;
+    public final String versionName;
+    public final long versionCode;
+    public final Long revisionCode;
+    public final String sharedUserId;
+    public final String sharedUserLabel;
+    public final String split;
+    public final String configForSplit;
+    public final boolean isFeatureSplit;
+    public final boolean isSplitRequired;
+    public final boolean isolatedSplits;
+    public final String installLocation;
+    public final String minSdkVersion;
+    public final String targetSdkVersion;
     @Nullable
-    private final String maxSdkVersion;
+    public final String maxSdkVersion;
     @Nullable
-    private final String compileSdkVersion;
+    public final String compileSdkVersion;
     @Nullable
-    private final String compileSdkVersionCodename;
+    public final String compileSdkVersionCodename;
     @Nullable
-    private final String platformBuildVersionCode;
+    public final String platformBuildVersionCode;
     @Nullable
-    private final String platformBuildVersionName;
-    private final GlEsVersion glEsVersion;
-    private final boolean anyDensity;
-    private final boolean smallScreens;
-    private final boolean normalScreens;
-    private final boolean largeScreens;
-    private final boolean debuggable;
-
-    private final List<String> usesPermissions;
-    private final List<UseFeature> usesFeatures;
-    private final List<Permission> permissions;
+    public final String platformBuildVersionName;
+    public final GlEsVersion glEsVersion;
+    public final boolean isAnyDensity;
+    public final boolean isSmallScreens;
+    public final boolean isNormalScreens;
+    public final boolean isLargeScreens;
+    public final boolean isDebuggable;
+    @NonNull
+    public final List<String> usesPermissions;
+    public final List<UseFeature> usesFeatures;
+    public final List<Permission> permissions;
 
     private ApkMeta(final Builder builder) {
         this.packageName = builder.packageName;
@@ -74,11 +76,11 @@ public class ApkMeta {
         this.platformBuildVersionCode = builder.platformBuildVersionCode;
         this.platformBuildVersionName = builder.platformBuildVersionName;
         this.glEsVersion = builder.glEsVersion;
-        this.anyDensity = builder.anyDensity;
-        this.smallScreens = builder.smallScreens;
-        this.normalScreens = builder.normalScreens;
-        this.largeScreens = builder.largeScreens;
-        this.debuggable = builder.debuggable;
+        this.isAnyDensity = builder.anyDensity;
+        this.isSmallScreens = builder.smallScreens;
+        this.isNormalScreens = builder.normalScreens;
+        this.isLargeScreens = builder.largeScreens;
+        this.isDebuggable = builder.debuggable;
         this.usesPermissions = builder.usesPermissions;
         this.usesFeatures = builder.usesFeatures;
         this.permissions = builder.permissions;
@@ -89,147 +91,16 @@ public class ApkMeta {
         return new Builder();
     }
 
-    public String getPackageName() {
-        return this.packageName;
-    }
-
-    public String getVersionName() {
-        return this.versionName;
-    }
-
-    public Long getVersionCode() {
-        return this.versionCode;
-    }
-
-    public Long getRevisionCode() {
-        return this.revisionCode;
-    }
-
-    public String getSharedUserId() {
-        return this.sharedUserId;
-    }
-
-    public String getSharedUserLabel() {
-        return this.sharedUserLabel;
-    }
-
-    public String getSplit() {
-        return this.split;
-    }
-
-    public String getConfigForSplit() {
-        return this.configForSplit;
-    }
-
-    public boolean isFeatureSplit() {
-        return this.isFeatureSplit;
-    }
-
-    public boolean isSplitRequired() {
-        return this.isSplitRequired;
-    }
-
-    public boolean isIsolatedSplits() {
-        return this.isolatedSplits;
-    }
-
-    public String getMinSdkVersion() {
-        return this.minSdkVersion;
-    }
-
-    public String getTargetSdkVersion() {
-        return this.targetSdkVersion;
-    }
-
-    @Nullable
-    public String getMaxSdkVersion() {
-        return this.maxSdkVersion;
-    }
-
-    @Nullable
-    public String getCompileSdkVersion() {
-        return this.compileSdkVersion;
-    }
-
-    @Nullable
-    public String getCompileSdkVersionCodename() {
-        return this.compileSdkVersionCodename;
-    }
-
-    @Nullable
-    public String getPlatformBuildVersionCode() {
-        return this.platformBuildVersionCode;
-    }
-
-    @Nullable
-    public String getPlatformBuildVersionName() {
-        return this.platformBuildVersionName;
-    }
-
-    public List<String> getUsesPermissions() {
-        return this.usesPermissions;
-    }
-
     public void addUsesPermission(final String permission) {
         this.usesPermissions.add(permission);
-    }
-
-    /**
-     * alias for getLabel
-     */
-    public String getName() {
-        return this.label;
-    }
-
-    /**
-     * get the apk's title(name)
-     */
-    public String getLabel() {
-        return this.label;
-    }
-
-    public boolean isAnyDensity() {
-        return this.anyDensity;
-    }
-
-    public boolean isSmallScreens() {
-        return this.smallScreens;
-    }
-
-    public boolean isNormalScreens() {
-        return this.normalScreens;
-    }
-
-    public boolean isLargeScreens() {
-        return this.largeScreens;
-    }
-
-    public boolean isDebuggable() {
-        return this.debuggable;
-    }
-
-    public GlEsVersion getGlEsVersion() {
-        return this.glEsVersion;
-    }
-
-    public List<UseFeature> getUsesFeatures() {
-        return this.usesFeatures;
     }
 
     public void addUseFeatures(final UseFeature useFeature) {
         this.usesFeatures.add(useFeature);
     }
 
-    public String getInstallLocation() {
-        return this.installLocation;
-    }
-
     public void addPermission(final Permission permission) {
         this.permissions.add(permission);
-    }
-
-    public List<Permission> getPermissions() {
-        return this.permissions;
     }
 
     @NonNull

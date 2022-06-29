@@ -60,7 +60,7 @@ public final class Asn1BerParser {
      * @throws Asn1DecodingException if the input could not be decoded into the specified Java
      *                               object
      */
-    public static <T> T parse(final ByteBuffer encoded, final Class<T> containerClass)
+    public static <T> T parse(final @NonNull ByteBuffer encoded, final Class<T> containerClass)
             throws Asn1DecodingException {
         final BerDataValue containerDataValue;
         try {
@@ -95,7 +95,7 @@ public final class Asn1BerParser {
      * @throws Asn1DecodingException if the input could not be decoded into the specified Java
      *                               object
      */
-    public static <T> List<T> parseImplicitSetOf(final ByteBuffer encoded, final Class<T> elementClass)
+    public static <T> List<T> parseImplicitSetOf(final @NonNull ByteBuffer encoded, final Class<T> elementClass)
             throws Asn1DecodingException {
         final BerDataValue containerDataValue;
         try {
@@ -124,14 +124,14 @@ public final class Asn1BerParser {
             case Sequence: {
                 final int expectedTagClass = BerEncoding.TAG_CLASS_UNIVERSAL;
                 final int expectedTagNumber = BerEncoding.getTagNumber(dataType);
-                if ((container.getTagClass() != expectedTagClass)
-                        || (container.getTagNumber() != expectedTagNumber)) {
+                if ((container.tagClass != expectedTagClass)
+                        || (container.tagNumber != expectedTagNumber)) {
                     throw new Asn1UnexpectedTagException(
                             "Unexpected data value read as " + containerClass.getName()
                                     + ". Expected " + BerEncoding.tagClassAndNumberToString(
                                     expectedTagClass, expectedTagNumber)
                                     + ", but read: " + BerEncoding.tagClassAndNumberToString(
-                                    container.getTagClass(), container.getTagNumber()));
+                                    container.tagClass, container.tagNumber));
                 }
                 return Asn1BerParser.parseSequence(container, containerClass);
             }
@@ -151,18 +151,18 @@ public final class Asn1BerParser {
         // Check that class + tagNumber don't clash between the choices
         for (int i = 0; i < fields.size() - 1; i++) {
             final AnnotatedField f1 = fields.get(i);
-            final int tagNumber1 = f1.getBerTagNumber();
-            final int tagClass1 = f1.getBerTagClass();
+            final int tagNumber1 = f1.berTagNumber;
+            final int tagClass1 = f1.berTagClass;
             for (int j = i + 1; j < fields.size(); j++) {
                 final AnnotatedField f2 = fields.get(j);
-                final int tagNumber2 = f2.getBerTagNumber();
-                final int tagClass2 = f2.getBerTagClass();
+                final int tagNumber2 = f2.berTagNumber;
+                final int tagClass2 = f2.berTagClass;
                 if ((tagNumber1 == tagNumber2) && (tagClass1 == tagClass2)) {
                     throw new Asn1DecodingException(
                             "CHOICE fields are indistinguishable because they have the same tag"
                                     + " class and number: " + containerClass.getName()
-                                    + "." + f1.getField().getName()
-                                    + " and ." + f2.getField().getName());
+                                    + "." + f1.field.getName()
+                                    + " and ." + f2.field.getName());
                 }
             }
         }
@@ -190,17 +190,17 @@ public final class Asn1BerParser {
             throws Asn1DecodingException {
         final List<AnnotatedField> fields = Asn1BerParser.getAnnotatedFields(containerClass);
         Collections.sort(
-                fields, Comparator.comparingInt(f -> f.getAnnotation().index()));
+                fields, Comparator.comparingInt(f -> f.annotation.index()));
         // Check that there are no fields with the same index
         if (fields.size() > 1) {
             AnnotatedField lastField = null;
             for (final AnnotatedField field : fields) {
                 if ((lastField != null)
-                        && (lastField.getAnnotation().index() == field.getAnnotation().index())) {
+                        && (lastField.annotation.index() == field.annotation.index())) {
                     throw new Asn1DecodingException(
                             "Fields have the same index: " + containerClass.getName()
-                                    + "." + lastField.getField().getName()
-                                    + " and ." + field.getField().getName());
+                                    + "." + lastField.field.getName()
+                                    + " and ." + field.field.getName());
                 }
                 lastField = field;
             }
@@ -228,7 +228,7 @@ public final class Asn1BerParser {
             for (int i = nextUnreadFieldIndex; i < fields.size(); i++) {
                 final AnnotatedField field = fields.get(i);
                 try {
-                    if (field.isOptional()) {
+                    if (field.isOptional) {
                         // Optional field -- might not be present and we may thus be trying to set
                         // it from the wrong tag.
                         try {
@@ -249,7 +249,7 @@ public final class Asn1BerParser {
                 } catch (final Asn1DecodingException e) {
                     throw new Asn1DecodingException(
                             "Failed to parse " + containerClass.getName()
-                                    + "." + field.getField().getName(),
+                                    + "." + field.field.getName(),
                             e);
                 }
             }
@@ -326,18 +326,18 @@ public final class Asn1BerParser {
     }
 
     private static final class AnnotatedField {
-        private final Field mField;
-        private final Asn1Field mAnnotation;
-        private final Asn1Type mDataType;
-        private final int mBerTagClass;
-        private final int mBerTagNumber;
-        private final Asn1Tagging mTagging;
-        private final boolean mOptional;
+        public final Field field;
+        public final Asn1Field annotation;
+        private final Asn1Type dataType;
+        public final int berTagClass;
+        public final int berTagNumber;
+        private final Asn1Tagging tagging;
+        public final boolean isOptional;
 
-        public AnnotatedField(final Field field, final Asn1Field annotation) throws Asn1DecodingException {
-            this.mField = field;
-            this.mAnnotation = annotation;
-            this.mDataType = annotation.type();
+        public AnnotatedField(@NonNull final Field field, @NonNull final Asn1Field annotation) throws Asn1DecodingException {
+            this.field = field;
+            this.annotation = annotation;
+            this.dataType = annotation.type();
             Asn1TagClass tagClass = annotation.cls();
             if (tagClass == Asn1TagClass.Automatic) {
                 if (annotation.tagNumber() != -1) {
@@ -346,66 +346,46 @@ public final class Asn1BerParser {
                     tagClass = Asn1TagClass.Universal;
                 }
             }
-            this.mBerTagClass = BerEncoding.getTagClass(tagClass);
+            this.berTagClass = BerEncoding.getTagClass(tagClass);
             final int tagNumber;
             if (annotation.tagNumber() != -1) {
                 tagNumber = annotation.tagNumber();
-            } else if ((this.mDataType == Asn1Type.Choice) || (this.mDataType == Asn1Type.Any)) {
+            } else if ((this.dataType == Asn1Type.Choice) || (this.dataType == Asn1Type.Any)) {
                 tagNumber = -1;
             } else {
-                tagNumber = BerEncoding.getTagNumber(this.mDataType);
+                tagNumber = BerEncoding.getTagNumber(this.dataType);
             }
-            this.mBerTagNumber = tagNumber;
-            this.mTagging = annotation.tagging();
-            if (((this.mTagging == Asn1Tagging.Explicit) || (this.mTagging == Asn1Tagging.Implicit))
+            this.berTagNumber = tagNumber;
+            this.tagging = annotation.tagging();
+            if (((this.tagging == Asn1Tagging.Explicit) || (this.tagging == Asn1Tagging.Implicit))
                     && (annotation.tagNumber() == -1)) {
                 throw new Asn1DecodingException(
-                        "Tag number must be specified when tagging mode is " + this.mTagging);
+                        "Tag number must be specified when tagging mode is " + this.tagging);
             }
-            this.mOptional = annotation.optional();
-        }
-
-        public Field getField() {
-            return this.mField;
-        }
-
-        public Asn1Field getAnnotation() {
-            return this.mAnnotation;
-        }
-
-        public boolean isOptional() {
-            return this.mOptional;
-        }
-
-        public int getBerTagClass() {
-            return this.mBerTagClass;
-        }
-
-        public int getBerTagNumber() {
-            return this.mBerTagNumber;
+            this.isOptional = annotation.optional();
         }
 
         public void setValueFrom(@NonNull BerDataValue dataValue, final Object obj) throws Asn1DecodingException {
-            final int readTagClass = dataValue.getTagClass();
-            if (this.mBerTagNumber != -1) {
-                final int readTagNumber = dataValue.getTagNumber();
-                if ((readTagClass != this.mBerTagClass) || (readTagNumber != this.mBerTagNumber)) {
+            final int readTagClass = dataValue.tagClass;
+            if (this.berTagNumber != -1) {
+                final int readTagNumber = dataValue.tagNumber;
+                if ((readTagClass != this.berTagClass) || (readTagNumber != this.berTagNumber)) {
                     throw new Asn1UnexpectedTagException(
                             "Tag mismatch. Expected: "
-                                    + BerEncoding.tagClassAndNumberToString(this.mBerTagClass, this.mBerTagNumber)
+                                    + BerEncoding.tagClassAndNumberToString(this.berTagClass, this.berTagNumber)
                                     + ", but found "
                                     + BerEncoding.tagClassAndNumberToString(readTagClass, readTagNumber));
                 }
             } else {
-                if (readTagClass != this.mBerTagClass) {
+                if (readTagClass != this.berTagClass) {
                     throw new Asn1UnexpectedTagException(
                             "Tag mismatch. Expected class: "
-                                    + BerEncoding.tagClassToString(this.mBerTagClass)
+                                    + BerEncoding.tagClassToString(this.berTagClass)
                                     + ", but found "
                                     + BerEncoding.tagClassToString(readTagClass));
                 }
             }
-            if (this.mTagging == Asn1Tagging.Explicit) {
+            if (this.tagging == Asn1Tagging.Explicit) {
                 try {
                     dataValue = dataValue.contentsReader().readDataValue();
                 } catch (final BerDataValueFormatException e) {
@@ -413,7 +393,7 @@ public final class Asn1BerParser {
                             "Failed to read contents of EXPLICIT data value", e);
                 }
             }
-            BerToJavaConverter.setFieldValue(obj, this.mField, this.mDataType, dataValue);
+            BerToJavaConverter.setFieldValue(obj, this.field, this.dataType, dataValue);
         }
     }
 

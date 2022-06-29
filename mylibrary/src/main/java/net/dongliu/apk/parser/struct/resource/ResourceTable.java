@@ -1,6 +1,7 @@
 package net.dongliu.apk.parser.struct.resource;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import net.dongliu.apk.parser.struct.ResourceValue;
 import net.dongliu.apk.parser.struct.StringPool;
@@ -19,24 +20,21 @@ import java.util.Map;
  */
 public class ResourceTable {
     private final Map<Short, ResourcePackage> packageMap = new HashMap<>();
-    private StringPool stringPool;
+    public final StringPool stringPool;
     @NonNull
     public static final Map<Integer, String> sysStyle = ResourceLoader.loadSystemStyles();
 
-    public void addPackage(final ResourcePackage resourcePackage) {
+    public ResourceTable(@Nullable final StringPool stringPool) {
+        this.stringPool = stringPool;
+    }
+
+    public void addPackage(final @NonNull ResourcePackage resourcePackage) {
         this.packageMap.put(resourcePackage.getId(), resourcePackage);
     }
 
+    @Nullable
     public ResourcePackage getPackage(final short id) {
         return this.packageMap.get(id);
-    }
-
-    public StringPool getStringPool() {
-        return this.stringPool;
-    }
-
-    public void setStringPool(final StringPool stringPool) {
-        this.stringPool = stringPool;
     }
 
     /**
@@ -90,26 +88,18 @@ public class ResourceTable {
      * contains all info for one resource
      */
     public static class Resource {
-        private final TypeSpec typeSpec;
-        private final Type type;
-        private final ResourceEntry resourceEntry;
+        @Nullable
+        public final TypeSpec typeSpec;
+        @NonNull
+        public final Type type;
+        @NonNull
+        public final ResourceEntry resourceEntry;
 
-        public Resource(final TypeSpec typeSpec, final Type type, final ResourceEntry resourceEntry) {
+        public Resource(final @Nullable TypeSpec typeSpec, final @NonNull Type type, final @NonNull ResourceEntry resourceEntry) {
             this.typeSpec = typeSpec;
             this.type = type;
             this.resourceEntry = resourceEntry;
         }
 
-        public TypeSpec getTypeSpec() {
-            return this.typeSpec;
-        }
-
-        public Type getType() {
-            return this.type;
-        }
-
-        public ResourceEntry getResourceEntry() {
-            return this.resourceEntry;
-        }
     }
 }

@@ -84,13 +84,13 @@ public final class Asn1DerEncoder {
         }
         AnnotatedField resultField = null;
         for (final AnnotatedField field : fields) {
-            final Object fieldValue = Asn1DerEncoder.getMemberFieldValue(container, field.getField());
+            final Object fieldValue = Asn1DerEncoder.getMemberFieldValue(container, field.field);
             if (fieldValue != null) {
                 if (resultField != null) {
                     throw new Asn1EncodingException(
                             "Multiple non-null fields in CHOICE class " + containerClass.getName()
-                                    + ": " + resultField.getField().getName()
-                                    + ", " + field.getField().getName());
+                                    + ": " + resultField.field.getName()
+                                    + ", " + field.field.getName());
                 }
                 resultField = field;
             }
@@ -106,16 +106,16 @@ public final class Asn1DerEncoder {
         final Class<?> containerClass = container.getClass();
         final List<AnnotatedField> fields = Asn1DerEncoder.getAnnotatedFields(container);
         Collections.sort(
-                fields, Comparator.comparingInt(f -> f.getAnnotation().index()));
+                fields, Comparator.comparingInt(f -> f.annotation.index()));
         if (fields.size() > 1) {
             AnnotatedField lastField = null;
             for (final AnnotatedField field : fields) {
                 if ((lastField != null)
-                        && (lastField.getAnnotation().index() == field.getAnnotation().index())) {
+                        && (lastField.annotation.index() == field.annotation.index())) {
                     throw new Asn1EncodingException(
                             "Fields have the same index: " + containerClass.getName()
-                                    + "." + lastField.getField().getName()
-                                    + " and ." + field.getField().getName());
+                                    + "." + lastField.field.getName()
+                                    + " and ." + field.field.getName());
                 }
                 lastField = field;
             }
@@ -128,7 +128,7 @@ public final class Asn1DerEncoder {
             } catch (final Asn1EncodingException e) {
                 throw new Asn1EncodingException(
                         "Failed to encode " + containerClass.getName()
-                                + "." + field.getField().getName(),
+                                + "." + field.field.getName(),
                         e);
             }
             if (serializedField != null) {
@@ -176,7 +176,7 @@ public final class Asn1DerEncoder {
         }
     }
 
-    private static List<AnnotatedField> getAnnotatedFields(final Object container)
+    private static List<AnnotatedField> getAnnotatedFields(@NonNull final Object container)
             throws Asn1EncodingException {
         final Class<?> containerClass = container.getClass();
         final Field[] declaredFields = containerClass.getDeclaredFields();
@@ -294,9 +294,9 @@ public final class Asn1DerEncoder {
     }
 
     private static final class AnnotatedField {
-        private final Field mField;
+        public final Field field;
         private final Object mObject;
-        private final Asn1Field mAnnotation;
+        public final Asn1Field annotation;
         private final Asn1Type mDataType;
         private final Asn1Type mElementDataType;
         private final int mDerTagClass;
@@ -304,11 +304,11 @@ public final class Asn1DerEncoder {
         private final Asn1Tagging mTagging;
         private final boolean mOptional;
 
-        public AnnotatedField(final Object obj, final Field field, final Asn1Field annotation)
+        public AnnotatedField(@NonNull final Object obj, @NonNull final Field field, @NonNull final Asn1Field annotation)
                 throws Asn1EncodingException {
             this.mObject = obj;
-            this.mField = field;
-            this.mAnnotation = annotation;
+            this.field = field;
+            this.annotation = annotation;
             this.mDataType = annotation.type();
             this.mElementDataType = annotation.elementType();
             Asn1TagClass tagClass = annotation.cls();
@@ -338,17 +338,9 @@ public final class Asn1DerEncoder {
             this.mOptional = annotation.optional();
         }
 
-        public Field getField() {
-            return this.mField;
-        }
-
-        public Asn1Field getAnnotation() {
-            return this.mAnnotation;
-        }
-
         @Nullable
         public byte[] toDer() throws Asn1EncodingException {
-            final Object fieldValue = Asn1DerEncoder.getMemberFieldValue(this.mObject, this.mField);
+            final Object fieldValue = Asn1DerEncoder.getMemberFieldValue(this.mObject, this.field);
             if (fieldValue == null) {
                 if (this.mOptional) {
                     return null;

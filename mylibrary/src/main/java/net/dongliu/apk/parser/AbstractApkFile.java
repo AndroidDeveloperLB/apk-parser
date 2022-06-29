@@ -119,9 +119,9 @@ public abstract class AbstractApkFile implements Closeable {
     private void parseCertificates() throws IOException, CertificateException {
         this.apkSigners = new ArrayList<>();
         for (final CertificateFile file : this.getAllCertificateData()) {
-            final CertificateParser parser = CertificateParser.getInstance(file.getData());
+            final CertificateParser parser = CertificateParser.getInstance(file.data);
             final List<CertificateMeta> certificateMetas = parser.parse();
-            this.apkSigners.add(new ApkSigner(file.getPath(), certificateMetas));
+            this.apkSigners.add(new ApkSigner(file.path, certificateMetas));
         }
     }
 
@@ -142,8 +142,8 @@ public abstract class AbstractApkFile implements Closeable {
         if (apkSignBlockBuf != null) {
             final ApkSignBlockParser parser = new ApkSignBlockParser(apkSignBlockBuf);
             final ApkSigningBlock apkSigningBlock = parser.parse();
-            for (final SignerBlock signerBlock : apkSigningBlock.getSignerBlocks()) {
-                final List<X509Certificate> certificates = signerBlock.getCertificates();
+            for (final SignerBlock signerBlock : apkSigningBlock.signerBlocks) {
+                final List<X509Certificate> certificates = signerBlock.certificates;
                 final List<CertificateMeta> certificateMetas = CertificateMetas.from(certificates);
                 final ApkV2Signer apkV2Signer = new ApkV2Signer(certificateMetas);
                 list.add(apkV2Signer);
@@ -157,23 +157,13 @@ public abstract class AbstractApkFile implements Closeable {
 
     protected static class CertificateFile {
         @NonNull
-        private final String path;
+        public final String path;
         @NonNull
-        private final byte[] data;
+        public final byte[] data;
 
         public CertificateFile(@NonNull final String path, @NonNull final byte[] data) {
             this.path = path;
             this.data = data;
-        }
-
-        @NonNull
-        public String getPath() {
-            return this.path;
-        }
-
-        @NonNull
-        public byte[] getData() {
-            return this.data;
         }
     }
 
@@ -250,7 +240,7 @@ public abstract class AbstractApkFile implements Closeable {
         }
         final List<IconFace> iconFaces = new ArrayList<>(iconPaths.size());
         for (final IconPath iconPath : iconPaths) {
-            final String filePath = iconPath.getPath();
+            final String filePath = iconPath.path;
             if (filePath != null && filePath.endsWith(".xml")) {
                 // adaptive icon?
                 final byte[] data = this.getFileData(filePath);
@@ -263,17 +253,17 @@ public abstract class AbstractApkFile implements Closeable {
                 Icon backgroundIcon = null;
                 final String background = iconParser.getBackground();
                 if (background != null) {
-                    backgroundIcon = this.newFileIcon(background, iconPath.getDensity());
+                    backgroundIcon = this.newFileIcon(background, iconPath.density);
                 }
                 Icon foregroundIcon = null;
                 final String foreground = iconParser.getForeground();
                 if (foreground != null) {
-                    foregroundIcon = this.newFileIcon(foreground, iconPath.getDensity());
+                    foregroundIcon = this.newFileIcon(foreground, iconPath.density);
                 }
                 final AdaptiveIcon icon = new AdaptiveIcon(foregroundIcon, backgroundIcon);
                 iconFaces.add(icon);
             } else {
-                final Icon icon = this.newFileIcon(filePath, iconPath.getDensity());
+                final Icon icon = this.newFileIcon(filePath, iconPath.density);
                 iconFaces.add(icon);
             }
         }
@@ -338,7 +328,7 @@ public abstract class AbstractApkFile implements Closeable {
         final byte[] data = this.getFileData(AndroidConstants.RESOURCE_FILE);
         if (data == null) {
             // if no resource entry has been found, we assume it is not needed by this APK
-            this.resourceTable = new ResourceTable();
+            this.resourceTable = new ResourceTable(null);
             this.locales = Collections.emptySet();
             return;
         }
@@ -346,7 +336,7 @@ public abstract class AbstractApkFile implements Closeable {
         final ResourceTableParser resourceTableParser = new ResourceTableParser(buffer);
         resourceTableParser.parse();
         this.resourceTable = resourceTableParser.getResourceTable();
-        this.locales = resourceTableParser.getLocales();
+        this.locales = resourceTableParser.locales;
     }
 
     /**

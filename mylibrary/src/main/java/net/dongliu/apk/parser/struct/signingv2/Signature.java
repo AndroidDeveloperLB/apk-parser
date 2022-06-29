@@ -1,19 +1,14 @@
 package net.dongliu.apk.parser.struct.signingv2;
 
-public class Signature {
-    private final int algorithmID;
-    private final byte[] data;
+import androidx.annotation.NonNull;
 
-    public Signature(final int algorithmID, final byte[] data) {
+public class Signature {
+    public final int algorithmID;
+    public final byte[] data;
+
+    public Signature(final int algorithmID, final @NonNull byte[] data) {
         this.algorithmID = algorithmID;
         this.data = data;
     }
 
-    public int getAlgorithmID() {
-        return this.algorithmID;
-    }
-
-    public byte[] getData() {
-        return this.data;
-    }
 }

@@ -1,6 +1,5 @@
 package net.dongliu.apk.parser.bean;
 
-
 import androidx.annotation.NonNull;
 
 /**
@@ -9,27 +8,14 @@ import androidx.annotation.NonNull;
  * @author dongliu
  */
 public class GlEsVersion {
-    private final int major;
-    private final int minor;
-    private final boolean required;
+    public final int major;
+    public final int minor;
+    public final boolean isRequired;
 
-    public GlEsVersion(final int major, final int minor, final boolean required) {
+    public GlEsVersion(final int major, final int minor, final boolean isRequired) {
         this.major = major;
         this.minor = minor;
-        this.required = required;
-    }
-
-
-    public int getMajor() {
-        return this.major;
-    }
-
-    public int getMinor() {
-        return this.minor;
-    }
-
-    public boolean isRequired() {
-        return this.required;
+        this.isRequired = isRequired;
     }
 
     @NonNull

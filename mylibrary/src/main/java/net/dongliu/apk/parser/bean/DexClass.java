@@ -1,9 +1,9 @@
 package net.dongliu.apk.parser.bean;
 
-import net.dongliu.apk.parser.struct.dex.DexClassStruct;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+
+import net.dongliu.apk.parser.struct.dex.DexClassStruct;
 
 /**
  * @author dongliu
@@ -12,8 +12,9 @@ public class DexClass {
     /**
      * the class name
      */
-    private final String classType;
-    private final String superClass;
+    public final String classType;
+    @Nullable
+    public final String superClass;
     private final int accessFlags;
 
     public DexClass(final String classType, final String superClass, final int accessFlags) {
@@ -38,15 +39,6 @@ public class DexClass {
             }
         }
         return packageName.replace('/', '.');
-    }
-
-    public String getClassType() {
-        return this.classType;
-    }
-
-    @Nullable
-    public String getSuperClass() {
-        return this.superClass;
     }
 
     public boolean isInterface() {
