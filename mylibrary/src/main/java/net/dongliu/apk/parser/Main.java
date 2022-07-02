@@ -25,7 +25,7 @@ public class Main {
                     System.out.println(apkFile.getManifestXml());
                     break;
                 case "signer":
-                    System.out.println(apkFile.getApkSingers());
+                    System.out.println(apkFile.getApkSigners());
                     break;
                 default:
             }

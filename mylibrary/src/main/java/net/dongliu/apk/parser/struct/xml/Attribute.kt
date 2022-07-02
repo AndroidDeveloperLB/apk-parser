@@ -1,49 +1,43 @@
-package net.dongliu.apk.parser.struct.xml;
+package net.dongliu.apk.parser.struct.xml
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
-import net.dongliu.apk.parser.struct.ResourceValue;
-import net.dongliu.apk.parser.struct.resource.ResourceTable;
-import net.dongliu.apk.parser.utils.ResourceLoader;
-
-import java.util.Locale;
-import java.util.Map;
+import net.dongliu.apk.parser.struct.ResourceValue
+import net.dongliu.apk.parser.struct.resource.ResourceTable
+import net.dongliu.apk.parser.utils.ResourceLoader
+import java.util.*
 
 /**
  * xml node attribute
  *
  * @author dongliu
  */
-public class Attribute {
-    private String namespace;
-    private String name;
+class Attribute(
+    @JvmField val namespace: String, @JvmField val name: String,
     /**
      * The original raw string value of Attribute
      */
-    private String rawValue;
+    @JvmField val rawValue: String?,
     /**
      * Processed typed value of Attribute
      */
-    private ResourceValue typedValue;
+    @JvmField val typedValue: ResourceValue?
+) {
     /**
      * the final value as string
      */
-    @Nullable
-    private String value;
+    @JvmField
+    var value: String? = null
 
-    @Nullable
-    public String toStringValue(final ResourceTable resourceTable, final Locale locale) {
-        final String rawValue = this.rawValue;
-        if (rawValue != null) {
-            return rawValue;
+    fun toStringValue(resourceTable: ResourceTable, locale: Locale): String? {
+        val rawValue = rawValue
+        return if (rawValue != null) {
+            rawValue
         } else {
-            final ResourceValue typedValue = this.typedValue;
+            val typedValue = typedValue
             if (typedValue != null) {
-                return typedValue.toStringValue(resourceTable, locale);
+                typedValue.toStringValue(resourceTable, locale)
             } else {
                 // something happen;
-                return "";
+                ""
             }
         }
     }
@@ -53,68 +47,19 @@ public class Attribute {
      *
      * @author dongliu
      */
-    public static class AttrIds {
-        @NonNull
-        private static final Map<Integer, String> ids = ResourceLoader.loadSystemAttrIds();
+    object AttrIds {
+        private val ids = ResourceLoader.loadSystemAttrIds()
 
-        @NonNull
-        public static String getString(final long id) {
-            String value = AttrIds.ids.get((int) id);
-            if (value == null) {
-                value = "AttrId:0x" + Long.toHexString(id);
-            }
-            return value;
+        @JvmStatic
+        fun getString(id: Long): String {
+            return ids[id.toInt()] ?: "AttrId:0x${java.lang.Long.toHexString(id)}"
         }
-
     }
 
-    public String getNamespace() {
-        return this.namespace;
-    }
-
-    public void setNamespace(final String namespace) {
-        this.namespace = namespace;
-    }
-
-    public String getName() {
-        return this.name;
-    }
-
-    public void setName(final String name) {
-        this.name = name;
-    }
-
-    public String getRawValue() {
-        return this.rawValue;
-    }
-
-    public void setRawValue(final String rawValue) {
-        this.rawValue = rawValue;
-    }
-
-    public ResourceValue getTypedValue() {
-        return this.typedValue;
-    }
-
-    public void setTypedValue(final @Nullable ResourceValue typedValue) {
-        this.typedValue = typedValue;
-    }
-
-    @Nullable
-    public String getValue() {
-        return this.value;
-    }
-
-    public void setValue(final @Nullable String value) {
-        this.value = value;
-    }
-
-    @NonNull
-    @Override
-    public String toString() {
+    override fun toString(): String {
         return "Attribute{" +
-                "name='" + this.name + '\'' +
-                ", namespace='" + this.namespace + '\'' +
-                '}';
+                "name='" + name + '\'' +
+                ", namespace='" + namespace + '\'' +
+                '}'
     }
 }

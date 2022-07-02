@@ -1,34 +1,24 @@
-package net.dongliu.apk.parser.bean;
+package net.dongliu.apk.parser.bean
 
-import androidx.annotation.NonNull;
-
-import java.util.List;
+import net.dongliu.apk.parser.bean.CertificateMeta
 
 /**
  * ApkSignV1 certificate file.
  */
-public class ApkSigner {
+class ApkSigner(
     /**
      * The cert file path in apk file
      */
-    public final String path;
+    val path: String,
     /**
      * The meta info of certificate contained in this cert file.
      */
-    @NonNull
-    public final List<CertificateMeta> certificateMetas;
-
-    public ApkSigner(@NonNull final String path, final @NonNull List<CertificateMeta> certificateMetas) {
-        this.path = path;
-        this.certificateMetas = certificateMetas;
-    }
-
-    @NonNull
-    @Override
-    public String toString() {
+    val certificateMetas: List<CertificateMeta>
+) {
+    override fun toString(): String {
         return "ApkSigner{" +
-                "path='" + this.path + '\'' +
-                ", certificateMetas=" + this.certificateMetas +
-                '}';
+                "path='" + path + '\'' +
+                ", certificateMetas=" + certificateMetas +
+                '}'
     }
 }

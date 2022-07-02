@@ -1,82 +1,73 @@
-package net.dongliu.apk.parser.parser;
+package net.dongliu.apk.parser.parser
 
-import androidx.annotation.NonNull;
+import net.dongliu.apk.parser.bean.CertificateMeta
+import java.math.BigInteger
+import java.nio.charset.StandardCharsets
+import java.security.*
+import java.security.cert.*
+import java.util.*
 
-import net.dongliu.apk.parser.bean.CertificateMeta;
-
-import java.math.BigInteger;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.security.cert.CertificateEncodingException;
-import java.security.cert.X509Certificate;
-import java.util.ArrayList;
-import java.util.List;
-
-public class CertificateMetas {
-
-    @NonNull
-    public static List<CertificateMeta> from(final @NonNull List<X509Certificate> certificates) throws CertificateEncodingException {
-        final List<CertificateMeta> certificateMetas = new ArrayList<>(certificates.size());
-        for (final X509Certificate certificate : certificates) {
-            final CertificateMeta certificateMeta = CertificateMetas.from(certificate);
-            certificateMetas.add(certificateMeta);
+object CertificateMetas {
+    @Throws(CertificateEncodingException::class)
+    @JvmStatic
+    fun from(certificates: List<X509Certificate>): List<CertificateMeta> {
+        val certificateMetas: MutableList<CertificateMeta> = ArrayList(certificates.size)
+        for (certificate in certificates) {
+            val certificateMeta = from(certificate)
+            certificateMetas.add(certificateMeta)
         }
-        return certificateMetas;
+        return certificateMetas
     }
 
-    @NonNull
-    public static CertificateMeta from(final @NonNull X509Certificate certificate) throws CertificateEncodingException {
-        final byte[] bytes = certificate.getEncoded();
-        final String certMd5 = CertificateMetas.md5Digest(bytes);
-        final String publicKeyString = CertificateMetas.byteToHexString(bytes);
-        final String certBase64Md5 = CertificateMetas.md5Digest(publicKeyString);
-        return new CertificateMeta(
-                certificate.getSigAlgName().toUpperCase(),
-                certificate.getSigAlgOID(),
-                certificate.getNotBefore(),
-                certificate.getNotAfter(),
-                bytes, certBase64Md5, certMd5);
+    @Throws(CertificateEncodingException::class)
+    fun from(certificate: X509Certificate): CertificateMeta {
+        val bytes = certificate.encoded
+        val certMd5 = md5Digest(bytes)
+        val publicKeyString = byteToHexString(bytes)
+        val certBase64Md5 = md5Digest(publicKeyString)
+        return CertificateMeta(
+            certificate.sigAlgName.uppercase(Locale.getDefault()),
+            certificate.sigAlgOID,
+            certificate.notBefore,
+            certificate.notAfter,
+            bytes, certBase64Md5, certMd5
+        )
     }
 
-    @NonNull
-    private static String md5Digest(final byte[] input) {
-        final MessageDigest digest = CertificateMetas.getDigest("md5");
-        digest.update(input);
-        return CertificateMetas.getHexString(digest.digest());
+    private fun md5Digest(input: ByteArray): String {
+        val digest = getDigest("md5")
+        digest.update(input)
+        return getHexString(digest.digest())
     }
 
-    @NonNull
-    private static String md5Digest(final String input) {
-        final MessageDigest digest = CertificateMetas.getDigest("md5");
-        digest.update(input.getBytes(StandardCharsets.UTF_8));
-        return CertificateMetas.getHexString(digest.digest());
+    private fun md5Digest(input: String): String {
+        val digest = getDigest("md5")
+        digest.update(input.toByteArray(StandardCharsets.UTF_8))
+        return getHexString(digest.digest())
     }
 
-    private static String byteToHexString(final byte[] bArray) {
-        final StringBuilder sb = new StringBuilder(bArray.length);
-        String sTemp;
-        for (final byte aBArray : bArray) {
-            sTemp = Integer.toHexString(0xFF & (char) aBArray);
-            if (sTemp.length() < 2) {
-                sb.append(0);
+    private fun byteToHexString(bArray: ByteArray): String {
+        val sb = StringBuilder(bArray.size)
+        for (aBArray in bArray) {
+            val sTemp = Integer.toHexString(0xFF and Char(aBArray.toUShort()).code)
+            if (sTemp.length < 2) {
+                sb.append(0)
             }
-            sb.append(sTemp.toUpperCase());
+            sb.append(sTemp.uppercase(Locale.getDefault()))
         }
-        return sb.toString();
+        return sb.toString()
     }
 
-    @NonNull
-    private static String getHexString(final byte[] digest) {
-        final BigInteger bi = new BigInteger(1, digest);
-        return String.format("%032x", bi);
+    private fun getHexString(digest: ByteArray): String {
+        val bi = BigInteger(1, digest)
+        return String.format("%032x", bi)
     }
 
-    private static MessageDigest getDigest(final String algorithm) {
-        try {
-            return MessageDigest.getInstance(algorithm);
-        } catch (final NoSuchAlgorithmException e) {
-            throw new RuntimeException(e.getMessage());
+    private fun getDigest(algorithm: String): MessageDigest {
+        return try {
+            MessageDigest.getInstance(algorithm)
+        } catch (e: NoSuchAlgorithmException) {
+            throw RuntimeException(e.message)
         }
     }
 }

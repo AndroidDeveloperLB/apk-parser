@@ -1,8 +1,7 @@
 package com.lb.apkparserdemo.apk_info
 
 import android.content.Context
-import org.xmlpull.v1.XmlPullParser
-import org.xmlpull.v1.XmlPullParserFactory
+import org.xmlpull.v1.*
 import java.io.StringReader
 import java.util.*
 
@@ -23,7 +22,7 @@ class XmlTag(val tagName: String) {
         @JvmStatic
         fun getXmlFromString(input: String): XmlTag? {
             val factory = XmlPullParserFactory.newInstance()
-            factory.isNamespaceAware = true
+            factory.isNamespaceAware = false
             val xpp = factory.newPullParser()
             xpp.setInput(StringReader(input))
             return getXmlRootTagOfXmlPullParser(

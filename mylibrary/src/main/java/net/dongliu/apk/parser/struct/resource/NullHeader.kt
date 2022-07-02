@@ -1,10 +1,6 @@
-package net.dongliu.apk.parser.struct.resource;
+package net.dongliu.apk.parser.struct.resource
 
-import net.dongliu.apk.parser.struct.ChunkHeader;
-import net.dongliu.apk.parser.struct.ChunkType;
+import net.dongliu.apk.parser.struct.*
 
-public class NullHeader extends ChunkHeader {
-    public NullHeader(final int headerSize, final int chunkSize) {
-        super(ChunkType.NULL, headerSize, chunkSize);
-    }
-}
+class NullHeader(headerSize: Int, chunkSize: Int) :
+    ChunkHeader(ChunkType.NULL, headerSize, chunkSize.toLong())

@@ -20,7 +20,7 @@ public class Buffers {
     /**
      * get one unsigned byte as short type
      */
-    public static short readUByte(final ByteBuffer buffer) {
+    public static short readUByte(final @NonNull ByteBuffer buffer) {
         final byte b = buffer.get();
         return (short) (b & 0xff);
     }
@@ -36,7 +36,7 @@ public class Buffers {
     /**
      * get one unsigned int as long type
      */
-    public static long readUInt(final ByteBuffer buffer) {
+    public static long readUInt(final @NonNull ByteBuffer buffer) {
         final int i = buffer.getInt();
         return i & 0xffffffffL;
     }
@@ -45,7 +45,7 @@ public class Buffers {
      * get bytes
      */
     @NonNull
-    public static byte[] readBytes(final ByteBuffer buffer, final int size) {
+    public static byte[] readBytes(final @NonNull ByteBuffer buffer, final int size) {
         final byte[] bytes = new byte[size];
         buffer.get(bytes);
         return bytes;
@@ -55,7 +55,7 @@ public class Buffers {
      * get all bytes remains
      */
     @NonNull
-    public static byte[] readBytes(final ByteBuffer buffer) {
+    public static byte[] readBytes(final @NonNull ByteBuffer buffer) {
         return Buffers.readBytes(buffer, buffer.remaining());
     }
 
@@ -63,7 +63,7 @@ public class Buffers {
      * Read ascii string ,by len
      */
     @NonNull
-    public static String readAsciiString(final ByteBuffer buffer, final int strLen) {
+    public static String readAsciiString(final @NonNull ByteBuffer buffer, final int strLen) {
         final byte[] bytes = new byte[strLen];
         buffer.get(bytes);
         return new String(bytes);
@@ -72,7 +72,8 @@ public class Buffers {
     /**
      * read utf16 strings, use strLen, not ending 0 char.
      */
-    public static String readString(final ByteBuffer buffer, final int strLen) {
+    @NonNull
+    public static String readString(final @NonNull ByteBuffer buffer, final int strLen) {
         final StringBuilder sb = new StringBuilder(strLen);
         for (int i = 0; i < strLen; i++) {
             sb.append(buffer.getChar());
@@ -83,7 +84,8 @@ public class Buffers {
     /**
      * read utf16 strings, ending with 0 char.
      */
-    public static String readZeroTerminatedString(final ByteBuffer buffer, final int strLen) {
+    @NonNull
+    public static String readZeroTerminatedString(final @NonNull ByteBuffer buffer, final int strLen) {
         final StringBuilder sb = new StringBuilder(strLen);
         for (int i = 0; i < strLen; i++) {
             final char c = buffer.getChar();
@@ -99,21 +101,21 @@ public class Buffers {
     /**
      * skip count bytes
      */
-    public static void skip(final ByteBuffer buffer, final int count) {
+    public static void skip(final @NonNull ByteBuffer buffer, final int count) {
         Buffers.position(buffer, buffer.position() + count);
     }
 
     /**
      * set position
      */
-    public static void position(final ByteBuffer buffer, final int position) {
+    public static void position(final @NonNull ByteBuffer buffer, final int position) {
         buffer.position(position);
     }
 
     /**
      * set position
      */
-    public static void position(final ByteBuffer buffer, final long position) {
+    public static void position(final @NonNull ByteBuffer buffer, final long position) {
         Buffers.position(buffer, Unsigned.ensureUInt(position));
     }
 
@@ -121,7 +123,8 @@ public class Buffers {
      * Return one new ByteBuffer from current position, with size, the byte order of new buffer will be set to little endian;
      * And advance the original buffer with size.
      */
-    public static ByteBuffer sliceAndSkip(final ByteBuffer buffer, final int size) {
+    @NonNull
+    public static ByteBuffer sliceAndSkip(final @NonNull ByteBuffer buffer, final int size) {
         final ByteBuffer buf = buffer.slice().order(ByteOrder.LITTLE_ENDIAN);
         final ByteBuffer slice = (ByteBuffer) buf.limit(buf.position() + size);
         Buffers.skip(buffer, size);

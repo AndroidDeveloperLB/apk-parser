@@ -63,15 +63,15 @@ public class XmlTranslator implements XmlStreamer {
 
     private void onAttribute(final Attribute attribute) {
         this.sb.append(" ");
-        String namespace = this.namespaces.getPrefixViaUri(attribute.getNamespace());
+        String namespace = this.namespaces.getPrefixViaUri(attribute.namespace);
         if (namespace == null) {
-            namespace = attribute.getNamespace();
+            namespace = attribute.namespace;
         }
-        if (namespace != null && !namespace.isEmpty()) {
+        if (!namespace.isEmpty()) {
             this.sb.append(namespace).append(':');
         }
-        final String escapedFinalValue = XmlEscaper.escapeXml10(attribute.getValue());
-        this.sb.append(attribute.getName()).append('=').append('"')
+        final String escapedFinalValue = XmlEscaper.escapeXml10(attribute.value);
+        this.sb.append(attribute.name).append('=').append('"')
                 .append(escapedFinalValue).append('"');
     }
 

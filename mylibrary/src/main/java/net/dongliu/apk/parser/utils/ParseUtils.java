@@ -24,7 +24,8 @@ public class ParseUtils {
     /**
      * read string from input buffer. if get EOF before read enough data, throw IOException.
      */
-    public static String readString(final ByteBuffer buffer, final boolean utf8) {
+    @NonNull
+    public static String readString(@NonNull final ByteBuffer buffer, final boolean utf8) {
         if (utf8) {
             //  The lengths are encoded in the same way as for the 16-bit format
             // but using 8-bit rather than 16-bit integers.
@@ -48,7 +49,8 @@ public class ParseUtils {
     /**
      * read utf-16 encoding str, use zero char to end str.
      */
-    public static String readStringUTF16(final ByteBuffer buffer, final int strLen) {
+    @NonNull
+    public static String readStringUTF16(@NonNull final ByteBuffer buffer, final int strLen) {
         final String str = Buffers.readString(buffer, strLen);
         for (int i = 0; i < str.length(); i++) {
             final char c = str.charAt(i);
@@ -63,7 +65,7 @@ public class ParseUtils {
      * read encoding len.
      * see StringPool.cpp ENCODE_LENGTH
      */
-    private static int readLen(final ByteBuffer buffer) {
+    private static int readLen(@NonNull final ByteBuffer buffer) {
         int len = 0;
         final int i = Buffers.readUByte(buffer);
         if ((i & 0x80) != 0) {
@@ -80,7 +82,7 @@ public class ParseUtils {
      * read encoding len.
      * see Stringpool.cpp ENCODE_LENGTH
      */
-    private static int readLen16(final ByteBuffer buffer) {
+    private static int readLen16(@NonNull final ByteBuffer buffer) {
         int len = 0;
         final int i = Buffers.readUShort(buffer);
         if ((i & 0x8000) != 0) {

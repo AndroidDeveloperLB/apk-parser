@@ -1,80 +1,70 @@
-package net.dongliu.apk.parser.struct.xml;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+package net.dongliu.apk.parser.struct.xml
 
 /**
  * xml node attributes
  *
  * @author dongliu
  */
-public class Attributes {
+class Attributes(size: Int) {
     /**
      * return all attributes
      */
-    public final Attribute[] attributes;
+    @JvmField
+    val attributes: Array<Attribute?>
 
-    public Attributes(final int size) {
-        this.attributes = new Attribute[size];
+    init {
+        attributes = arrayOfNulls(size)
     }
 
-    public void set(final int i, final @NonNull Attribute attribute) {
-        this.attributes[i] = attribute;
+    operator fun set(i: Int, attribute: Attribute) {
+        attributes[i] = attribute
     }
 
-    @Nullable
-    public Attribute get(final @NonNull String name) {
-        for (final Attribute attribute : this.attributes) {
-            if (attribute.getName().equals(name)) {
-                return attribute;
+    operator fun get(name: String): Attribute? {
+        //TODO this is an inefficient search. Should probably be using HashMap
+        var result: Attribute? = null
+        for (attribute in attributes) {
+            if (attribute!!.name == name) {
+                val namespace = attribute.namespace
+                if (namespace.isEmpty() || namespace == "android" || namespace == "http://schemas.android.com/apk/res/android") {
+                    //prefer default namespace of android.
+                    result = attribute
+                    break
+                }
+                if (result == null)
+                    result = attribute
             }
         }
-        return null;
+        return result
     }
 
     /**
      * Get attribute with name, return value as string
      */
-    @Nullable
-    public String getString(final @NonNull String name) {
-        final Attribute attribute = this.get(name);
-        if (attribute == null) {
-            return null;
-        }
-        return attribute.getValue();
+    fun getString(name: String): String? {
+        return this[name]?.value
     }
 
-    public int size() {
-        return this.attributes.length;
+    fun size(): Int {
+        return attributes.size
     }
 
-    public boolean getBoolean(final @NonNull String name, final boolean b) {
-        final String value = this.getString(name);
-        return value == null ? b : Boolean.parseBoolean(value);
+    fun getBoolean(name: String, b: Boolean): Boolean {
+        val value = getString(name)
+        return if (value == null) b else java.lang.Boolean.parseBoolean(value)
     }
 
-    @Nullable
-    public Integer getInt(final @NonNull String name) {
-        final String value = this.getString(name);
-        if (value == null) {
-            return null;
-        }
-        if (value.startsWith("0x")) {
-            return Integer.valueOf(value.substring(2), 16);
-        }
-        return Integer.valueOf(value);
+    fun getInt(name: String): Int? {
+        val value = getString(name) ?: return null
+        return if (value.startsWith("0x")) {
+            Integer.valueOf(value.substring(2), 16)
+        } else Integer.valueOf(value)
     }
 
-    @Nullable
-    public Long getLong(final @NonNull String name) {
-        final String value = this.getString(name);
-        if (value == null) {
-            return null;
-        }
-        if (value.startsWith("0x")) {
-            return Long.valueOf(value.substring(2), 16);
-        }
-        return Long.valueOf(value);
+    fun getLong(name: String): Long? {
+        val value = getString(name) ?: return null
+        return if (value.startsWith("0x")) {
+            java.lang.Long.valueOf(value.substring(2), 16)
+        } else java.lang.Long.valueOf(value)
     }
-
 }

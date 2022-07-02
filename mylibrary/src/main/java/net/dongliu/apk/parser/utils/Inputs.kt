@@ -1,29 +1,24 @@
-package net.dongliu.apk.parser.utils;
+package net.dongliu.apk.parser.utils
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*
 
-import androidx.annotation.NonNull;
-
-public class Inputs {
-
-    @NonNull
-    public static byte[] readAll(final InputStream in) throws IOException {
-        final byte[] buf = new byte[1024 * 8];
-        try (final ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
-            int len;
-            while ((len = in.read(buf)) != -1) {
-                bos.write(buf, 0, len);
+object Inputs {
+    @JvmStatic
+    @Throws(IOException::class)
+    fun readAll(inputStream: InputStream): ByteArray {
+        val buf = ByteArray(1024 * 8)
+        ByteArrayOutputStream().use { bos ->
+            var len: Int
+            while (inputStream.read(buf).also { len = it } != -1) {
+                bos.write(buf, 0, len)
             }
-            return bos.toByteArray();
+            return bos.toByteArray()
         }
     }
 
-    @NonNull
-    public static byte[] readAllAndClose(final @NonNull InputStream in) throws IOException {
-        try (in) {
-            return Inputs.readAll(in);
-        }
+    @JvmStatic
+    @Throws(IOException::class)
+    fun readAllAndClose(inputStream: InputStream): ByteArray {
+        inputStream.use { return readAll(inputStream) }
     }
 }

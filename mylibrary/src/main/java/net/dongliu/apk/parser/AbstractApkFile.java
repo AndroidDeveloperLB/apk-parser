@@ -109,7 +109,7 @@ public abstract class AbstractApkFile implements Closeable {
      * Get the apk's all cert file info, of apk v1 signing.
      * If cert faile not exist, return empty list.
      */
-    public List<ApkSigner> getApkSingers() throws IOException, CertificateException {
+    public List<ApkSigner> getApkSigners() throws IOException, CertificateException {
         if (this.apkSigners == null) {
             this.parseCertificates();
         }
@@ -221,7 +221,7 @@ public abstract class AbstractApkFile implements Closeable {
         final ByteBuffer buffer = ByteBuffer.wrap(data);
         final BinaryXmlParser binaryXmlParser = new BinaryXmlParser(buffer, this.resourceTable);
         binaryXmlParser.setLocale(this.preferredLocale);
-        binaryXmlParser.setXmlStreamer(xmlStreamer);
+        binaryXmlParser.xmlStreamer = xmlStreamer;
         binaryXmlParser.parse();
     }
 

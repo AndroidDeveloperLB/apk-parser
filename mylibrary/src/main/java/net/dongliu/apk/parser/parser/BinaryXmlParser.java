@@ -52,14 +52,16 @@ public class BinaryXmlParser {
     private String[] resourceMap;
     @NonNull
     private final ByteBuffer buffer;
-    private XmlStreamer xmlStreamer;
+    public XmlStreamer xmlStreamer;
+    @NonNull
     private final ResourceTable resourceTable;
     /**
      * default locale.
      */
+    @NonNull
     private Locale locale = Locales.any;
 
-    public BinaryXmlParser(final @NonNull ByteBuffer buffer, final ResourceTable resourceTable) {
+    public BinaryXmlParser(final @NonNull ByteBuffer buffer, final @NonNull ResourceTable resourceTable) {
         this.buffer = buffer.duplicate();
         this.buffer.order(ByteOrder.LITTLE_ENDIAN);
         this.resourceTable = resourceTable;
@@ -102,9 +104,6 @@ public class BinaryXmlParser {
             chunkHeader = this.readChunkHeader();
         }
         while (chunkHeader != null) {
-            //if (chunkHeader.chunkType == ChunkType.XML_END_NAMESPACE) {
-            //     break;
-            // }
             final long beginPos = this.buffer.position();
             switch ((int) chunkHeader.chunkType) {
                 case ChunkType.XML_END_NAMESPACE:
@@ -185,15 +184,16 @@ public class BinaryXmlParser {
         final Attributes attributes = new Attributes(attributeCount);
         for (int count = 0; count < attributeCount; count++) {
             final Attribute attribute = this.readAttribute();
+            final String attributeName = attribute.name;
             if (this.xmlStreamer != null) {
                 String value = attribute.toStringValue(this.resourceTable, this.locale);
-                if (BinaryXmlParser.intAttributes.contains(attribute.getName()) && Strings.isNumeric(value)) {
+                if (BinaryXmlParser.intAttributes.contains(attributeName) && Strings.isNumeric(value)) {
                     try {
-                        value = this.getFinalValueAsString(attribute.getName(), value);
+                        value = this.getFinalValueAsString(attributeName, value);
                     } catch (final Exception ignore) {
                     }
                 }
-                attribute.setValue(value);
+                attribute.value = value;
                 attributes.set(count, attribute);
             }
         }
@@ -232,28 +232,24 @@ public class BinaryXmlParser {
     }
 
     private Attribute readAttribute() {
-        final int nsRef = this.buffer.getInt();
+        final int namespaceRef = this.buffer.getInt();
         final int nameRef = this.buffer.getInt();
-        final Attribute attribute = new Attribute();
-        if (nsRef > 0) {
-            final String namespace = this.stringPool.get(nsRef);
-            //TODO fix this part in a better way. Workaround for this: https://github.com/hsiafan/apk-parser/issues/122
-            if (!namespace.equals("http://schemas.android.com/apk/res/android"))
-                attribute.setNamespace(namespace);
-        }
-        attribute.setName(this.stringPool.get(nameRef));
-        if (attribute.getName().isEmpty() && this.resourceMap != null && nameRef < this.resourceMap.length) {
+        String name = this.stringPool.get(nameRef);
+        if (name.isEmpty() && this.resourceMap != null && nameRef < this.resourceMap.length) {
             // some processed apk file make the string pool value empty, if it is a xmlmap attr.
-            attribute.setName(this.resourceMap[nameRef]);
-            //TODO: how to get the namespace of attribute
+            name = this.resourceMap[nameRef];
+        }
+        String namespace = namespaceRef > 0 ? this.stringPool.get(namespaceRef) : null;
+        if (namespace == null || namespace.isEmpty() || "http://schemas.android.com/apk/res/android".equals(namespace)) {
+            //TODO parse namespaces better
+            //workaround for a weird case that there is no namespace found: https://github.com/hsiafan/apk-parser/issues/122
+            // Log.d("AppLog", "Got a weird namespace, so setting as empty (namespace isn't supposed to be a URL): " + attribute.getName());
+            namespace = "android";
         }
         final int rawValueRef = this.buffer.getInt();
-        if (rawValueRef > 0) {
-            attribute.setRawValue(this.stringPool.get(rawValueRef));
-        }
+        final String rawValue = rawValueRef > 0 ? this.stringPool.get(rawValueRef) : null;
         final ResourceValue resValue = ParseUtils.readResValue(this.buffer, this.stringPool);
-        attribute.setTypedValue(resValue);
-        return attribute;
+        return new Attribute(namespace, name, rawValue, resValue);
     }
 
     @NonNull
@@ -331,15 +327,9 @@ public class BinaryXmlParser {
         }
     }
 
+    @NonNull
     public Locale getLocale() {
         return this.locale;
     }
 
-    public XmlStreamer getXmlStreamer() {
-        return this.xmlStreamer;
-    }
-
-    public void setXmlStreamer(final XmlStreamer xmlStreamer) {
-        this.xmlStreamer = xmlStreamer;
-    }
 }

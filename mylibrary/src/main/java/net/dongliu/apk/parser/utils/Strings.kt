@@ -1,81 +1,71 @@
-package net.dongliu.apk.parser.utils;
+package net.dongliu.apk.parser.utils
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
-import java.util.Iterator;
-
-public class Strings {
-
+object Strings {
     /**
      * Copied fom commons StringUtils
-     * <p>Joins the elements of the provided {@code Iterable} into
-     * a single String containing the provided elements.</p>
+     *
+     * Joins the elements of the provided `Iterable` into
+     * a single String containing the provided elements.
      */
-    @Nullable
-    public static String join(final @NonNull Iterable<?> iterable, final @NonNull String separator) {
-        return Strings.join(iterable.iterator(), separator);
+    @JvmStatic
+    fun join(iterable: Iterable<*>, separator: String): String? {
+        return join(iterable.iterator(), separator)
     }
 
     /**
      * Copied fom commons StringUtils
      */
-    @Nullable
-    public static String join(final @NonNull Iterator<?> iterator, final @Nullable String separator) {
+    fun join(iterator: Iterator<*>, separator: String?): String? {
         if (!iterator.hasNext()) {
-            return "";
+            return ""
         }
-        final Object first = iterator.next();
+        val first = iterator.next()
         if (!iterator.hasNext()) {
-            return first == null ? null : first.toString();
+            return first?.toString()
         }
         // two or more elements
-        final StringBuilder buf = new StringBuilder(256);
+        val buf = StringBuilder(256)
         // Java default is 16, probably too small
         if (first != null) {
-            buf.append(first);
+            buf.append(first)
         }
         while (iterator.hasNext()) {
             if (separator != null) {
-                buf.append(separator);
+                buf.append(separator)
             }
-            final Object obj = iterator.next();
+            val obj = iterator.next()
             if (obj != null) {
-                buf.append(obj);
+                buf.append(obj)
             }
         }
-        return buf.toString();
+        return buf.toString()
     }
 
-    public static boolean isNumeric(final @Nullable CharSequence cs) {
-        if (Strings.isEmpty(cs)) {
-            return false;
+    @JvmStatic
+    fun isNumeric(cs: CharSequence?): Boolean {
+        if (cs.isNullOrEmpty()) {
+            return false
         }
-        final int sz = cs.length();
-        for (int i = 0; i < sz; i++) {
-            if (!Character.isDigit(cs.charAt(i))) {
-                return false;
+        val sz = cs.length
+        for (i in 0 until sz) {
+            if (!Character.isDigit(cs[i])) {
+                return false
             }
         }
-        return true;
+        return true
     }
 
-    public static boolean isEmpty(final @Nullable CharSequence cs) {
-        return cs == null || cs.length() == 0;
-    }
-
-    @NonNull
-    public static String substringBefore(final @NonNull String str, final @NonNull String separator) {
+    @JvmStatic
+    fun substringBefore(str: String, separator: String): String {
         if (str.isEmpty()) {
-            return str;
+            return str
         }
         if (separator.isEmpty()) {
-            return "";
+            return ""
         }
-        final int pos = str.indexOf(separator);
-        if (pos == -1) {
-            return str;
-        }
-        return str.substring(0, pos);
+        val pos = str.indexOf(separator)
+        return if (pos == -1) {
+            str
+        } else str.substring(0, pos)
     }
 }
