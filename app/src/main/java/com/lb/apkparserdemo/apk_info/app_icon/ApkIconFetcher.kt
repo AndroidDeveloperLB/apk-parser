@@ -1,18 +1,13 @@
 package com.lb.apkparserdemo.apk_info.app_icon
 
 import android.content.Context
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.graphics.drawable.AdaptiveIconDrawable
-import android.graphics.drawable.BitmapDrawable
+import android.graphics.*
+import android.graphics.drawable.*
 import android.os.Build
 import androidx.core.graphics.drawable.toBitmap
-import com.lb.apkparserdemo.apk_info.AbstractZipFilter
-import com.lb.apkparserdemo.apk_info.ApkInfo
-import com.lb.apkparserdemo.apk_info.XmlDrawableParser
+import com.lb.apkparserdemo.apk_info.*
 import net.dongliu.apk.parser.bean.IconPath
-import net.dongliu.apk.parser.parser.AdaptiveIconParser
-import net.dongliu.apk.parser.parser.BinaryXmlParser
+import net.dongliu.apk.parser.parser.*
 import java.nio.ByteBuffer
 import java.util.*
 import kotlin.math.abs
@@ -40,7 +35,7 @@ object ApkIconFetcher {
         var bestDensityDiff = -1
         val xmlIconsPaths = HashSet<String>()
         for (iconPath in iconPaths) {
-            if (iconPath.path!!.endsWith(".xml", true)) {
+            if (iconPath.path?.endsWith(".xml", true) == true) {
                 xmlIconsPaths.add(iconPath.path!!)
                 continue
             }
