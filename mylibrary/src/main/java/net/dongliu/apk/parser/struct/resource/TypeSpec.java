@@ -7,40 +7,18 @@ import androidx.annotation.NonNull;
  */
 public class TypeSpec {
 
-    private long[] entryFlags;
-    private String name;
-    private short id;
+    public final long[] entryFlags;
+    public final String name;
+    public final short id;
 
-    public TypeSpec(final TypeSpecHeader header) {
+    public TypeSpec(final @NonNull TypeSpecHeader header, @NonNull final long[] entryFlags, final String name) {
         this.id = header.getId();
+        this.entryFlags = entryFlags;
+        this.name = name;
     }
 
     public boolean exists(final int id) {
         return id < this.entryFlags.length;
-    }
-
-    public long[] getEntryFlags() {
-        return this.entryFlags;
-    }
-
-    public void setEntryFlags(final long[] entryFlags) {
-        this.entryFlags = entryFlags;
-    }
-
-    public String getName() {
-        return this.name;
-    }
-
-    public void setName(final String name) {
-        this.name = name;
-    }
-
-    public short getId() {
-        return this.id;
-    }
-
-    public void setId(final short id) {
-        this.id = id;
     }
 
     @NonNull

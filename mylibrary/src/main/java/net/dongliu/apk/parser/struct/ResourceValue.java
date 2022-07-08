@@ -188,7 +188,7 @@ public abstract class ResourceValue {
             if (selected == null) {
                 result = raw;
             } else if (locale == null) {
-                result = "@" + typeSpec.getName() + "/" + selected.getKey();
+                result = "@" + typeSpec.name + "/" + selected.key;
             } else {
                 result = selected.toStringValue(resourceTable, locale);
             }

@@ -68,7 +68,7 @@ public class ResourceTable {
             if (resourceEntry == null) {
                 continue;
             }
-            final ResourceValue currentResourceValue = resourceEntry.getValue();
+            final ResourceValue currentResourceValue = resourceEntry.value;
             if (currentResourceValue == null) {
                 continue;
             }

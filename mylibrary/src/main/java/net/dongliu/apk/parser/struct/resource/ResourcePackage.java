@@ -38,7 +38,7 @@ public class ResourcePackage {
     private Map<Short, List<Type>> typesMap = new HashMap<>();
 
     public void addTypeSpec(final @NonNull TypeSpec typeSpec) {
-        this.typeSpecMap.put(typeSpec.getId(), typeSpec);
+        this.typeSpecMap.put(typeSpec.id, typeSpec);
     }
 
     @Nullable

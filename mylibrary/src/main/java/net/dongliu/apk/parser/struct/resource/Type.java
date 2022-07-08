@@ -3,6 +3,7 @@ package net.dongliu.apk.parser.struct.resource;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import net.dongliu.apk.parser.struct.ResourceValue;
 import net.dongliu.apk.parser.struct.StringPool;
 import net.dongliu.apk.parser.utils.Buffers;
 import net.dongliu.apk.parser.utils.ParseUtils;
@@ -52,30 +53,28 @@ public class Type {
 
     private ResourceEntry readResourceEntry() {
         final long beginPos = this.buffer.position();
-        final ResourceEntry resourceEntry = new ResourceEntry();
         // size is always 8(simple), or 16(complex)
-        resourceEntry.setSize(Buffers.readUShort(this.buffer));
-        resourceEntry.setFlags(Buffers.readUShort(this.buffer));
+        final int resourceEntrySize = Buffers.readUShort(this.buffer);
+        final int resourceEntryFlags = Buffers.readUShort(this.buffer);
         final long keyRef = this.buffer.getInt();
-        final String key = this.keyStringPool.get((int) keyRef);
-        resourceEntry.setKey(key);
-        if ((resourceEntry.getFlags() & ResourceEntry.FLAG_COMPLEX) != 0) {
-            final ResourceMapEntry resourceMapEntry = new ResourceMapEntry(resourceEntry);
+        final String resourceEntryKey = this.keyStringPool.get((int) keyRef);
+        if ((resourceEntryFlags & ResourceEntry.FLAG_COMPLEX) != 0) {
             // Resource identifier of the parent mapping, or 0 if there is none.
-            resourceMapEntry.setParent(Buffers.readUInt(this.buffer));
-            resourceMapEntry.setCount(Buffers.readUInt(this.buffer));
-            Buffers.position(this.buffer, beginPos + resourceEntry.getSize());
+            final long parent = Buffers.readUInt(this.buffer);
+            final long count = Buffers.readUInt(this.buffer);
+//            resourceMapEntry.setParent(parent);
+//            resourceMapEntry.setCount(count);
+            Buffers.position(this.buffer, beginPos + resourceEntrySize);
             //An individual complex Resource entry comprises an entry immediately followed by one or more fields.
-            final ResourceTableMap[] resourceTableMaps = new ResourceTableMap[(int) resourceMapEntry.getCount()];
-            for (int i = 0; i < resourceMapEntry.getCount(); i++) {
+            final ResourceTableMap[] resourceTableMaps = new ResourceTableMap[(int) count];
+            for (int i = 0; i < count; i++) {
                 resourceTableMaps[i] = this.readResourceTableMap();
             }
-            resourceMapEntry.setResourceTableMaps(resourceTableMaps);
-            return resourceMapEntry;
+            return new ResourceMapEntry(resourceEntrySize, resourceEntryFlags, resourceEntryKey, parent, count, resourceTableMaps);
         } else {
-            Buffers.position(this.buffer, beginPos + resourceEntry.getSize());
-            resourceEntry.setValue(ParseUtils.readResValue(this.buffer, this.stringPool));
-            return resourceEntry;
+            Buffers.position(this.buffer, beginPos + resourceEntrySize);
+            final ResourceValue resourceEntryValue = ParseUtils.readResValue(this.buffer, this.stringPool);
+            return new ResourceEntry(resourceEntrySize, resourceEntryFlags, resourceEntryKey, resourceEntryValue);
         }
     }
 

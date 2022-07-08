@@ -8,6 +8,7 @@ import net.dongliu.apk.parser.struct.xml.XmlNamespaceStartTag;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * the xml file's namespaces.
@@ -72,18 +73,15 @@ class XmlNamespaces {
         @Override
         public boolean equals(final Object o) {
             if (this == o) return true;
-            if (o == null || this.getClass() != o.getClass()) return false;
-            final XmlNamespace namespace = (XmlNamespace) o;
-            if (this.prefix == null && namespace.prefix != null) return false;
-            if (this.uri == null && namespace.uri != null) return false;
-            if (this.prefix != null && !this.prefix.equals(namespace.prefix)) return false;
-            return this.uri == null || this.uri.equals(namespace.uri);
+            if (!(o instanceof XmlNamespace)) return false;
+            final XmlNamespace that = (XmlNamespace) o;
+            return Objects.equals(this.prefix, that.prefix) && Objects.equals(this.uri, that.uri);
         }
 
         @Override
         public int hashCode() {
-            int result = this.prefix.hashCode();
-            result = 31 * result + this.uri.hashCode();
+            int result = this.prefix == null ? 0 : this.prefix.hashCode();
+            result = 31 * result + (this.uri == null ? 0 : this.uri.hashCode());
             return result;
         }
     }

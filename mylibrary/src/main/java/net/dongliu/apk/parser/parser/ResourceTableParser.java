@@ -111,11 +111,10 @@ public class ResourceTableParser {
                     for (int i = 0; i < typeSpecHeader.getEntryCount(); i++) {
                         entryFlags[i] = Buffers.readUInt(this.buffer);
                     }
-                    final TypeSpec typeSpec = new TypeSpec(typeSpecHeader);
-                    typeSpec.setEntryFlags(entryFlags);
                     //id start from 1
-                    typeSpec.setName(resourcePackage.getTypeStringPool()
-                            .get(typeSpecHeader.getId() - 1));
+                    final String typeSpecName = resourcePackage.getTypeStringPool()
+                            .get(typeSpecHeader.getId() - 1);
+                    final TypeSpec typeSpec = new TypeSpec(typeSpecHeader, entryFlags, typeSpecName);
                     resourcePackage.addTypeSpec(typeSpec);
                     Buffers.position(this.buffer, chunkBegin + typeSpecHeader.getBodySize());
                     break;

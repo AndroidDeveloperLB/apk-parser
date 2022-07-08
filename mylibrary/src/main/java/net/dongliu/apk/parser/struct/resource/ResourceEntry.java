@@ -17,34 +17,41 @@ public class ResourceEntry {
     /**
      * Number of bytes in this structure. uint16_t
      */
-    private int size;
+    public final int size;
 
     /**
      * If set, this is a complex entry, holding a set of name/value
      * mappings.  It is followed by an array of ResTable_map structures.
      */
     public static final int FLAG_COMPLEX = 0x0001;
-    /**
-     * If set, this resource has been declared public, so libraries
-     * are allowed to reference it.
-     */
-    public static final int FLAG_PUBLIC = 0x0002;
+//    /**
+//     * If set, this resource has been declared public, so libraries
+//     * are allowed to reference it.
+//     */
+//    public static final int FLAG_PUBLIC = 0x0002;
     /**
      * uint16_t
      */
-    private int flags;
+    public final int flags;
 
     /**
      * Reference into ResTable_package::keyStrings identifying this entry.
      * public long keyRef;
      */
-    private String key;
+    public final String key;
 
     /**
      * the resvalue following this resource entry.
      */
     @Nullable
-    private ResourceValue value;
+    public final ResourceValue value;
+
+    public ResourceEntry(final int size, final int flags, final String key, @Nullable final ResourceValue value) {
+        this.size = size;
+        this.flags = flags;
+        this.key = key;
+        this.value = value;
+    }
 
     /**
      * get value as string
@@ -57,39 +64,6 @@ public class ResourceEntry {
         } else {
             return "null";
         }
-    }
-
-    public int getSize() {
-        return this.size;
-    }
-
-    public void setSize(final int size) {
-        this.size = size;
-    }
-
-    public int getFlags() {
-        return this.flags;
-    }
-
-    public void setFlags(final int flags) {
-        this.flags = flags;
-    }
-
-    public String getKey() {
-        return this.key;
-    }
-
-    public void setKey(final String key) {
-        this.key = key;
-    }
-
-    @Nullable
-    public ResourceValue getValue() {
-        return this.value;
-    }
-
-    public void setValue(@Nullable final ResourceValue value) {
-        this.value = value;
     }
 
     @NonNull

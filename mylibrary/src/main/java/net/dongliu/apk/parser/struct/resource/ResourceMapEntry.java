@@ -15,42 +15,19 @@ public class ResourceMapEntry extends ResourceEntry {
      * ResTable_ref specifies the parent Resource, if any, of this Resource.
      * struct ResTable_ref { uint32_t ident; };
      */
-    private long parent;
+    public final long parent;
 
     /**
      * Number of name/value pairs that follow for FLAG_COMPLEX. uint32_t
      */
-    private long count;
+    public final long count;
+    @NonNull
+    public final ResourceTableMap[] resourceTableMaps;
 
-    private ResourceTableMap[] resourceTableMaps;
-
-    public ResourceMapEntry(final ResourceEntry resourceEntry) {
-        this.setSize(resourceEntry.getSize());
-        this.setFlags(resourceEntry.getFlags());
-        this.setKey(resourceEntry.getKey());
-    }
-
-    public long getParent() {
-        return this.parent;
-    }
-
-    public void setParent(final long parent) {
+    public ResourceMapEntry(final int size, final int flags, final String key, final long parent, final long count, final @NonNull ResourceTableMap[] resourceTableMaps) {
+        super(size, flags, key, null);
         this.parent = parent;
-    }
-
-    public long getCount() {
-        return this.count;
-    }
-
-    public void setCount(final long count) {
         this.count = count;
-    }
-
-    public ResourceTableMap[] getResourceTableMaps() {
-        return this.resourceTableMaps;
-    }
-
-    public void setResourceTableMaps(final ResourceTableMap[] resourceTableMaps) {
         this.resourceTableMaps = resourceTableMaps;
     }
 

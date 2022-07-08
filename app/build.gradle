@@ -52,10 +52,13 @@ dependencies {
 //    https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-android
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.3'
     //    https://developer.android.com/jetpack/androidx/releases/lifecycle#declaring_dependencies
-    final def lifecycle_version = "2.5.0-rc02"
+    final def lifecycle_version = "2.6.0-alpha01"
     implementation "androidx.lifecycle:lifecycle-runtime-ktx:$lifecycle_version"
     implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycle_version"
     implementation "androidx.lifecycle:lifecycle-common-java8:$lifecycle_version"
     implementation "androidx.lifecycle:lifecycle-process:$lifecycle_version"
     implementation "androidx.lifecycle:lifecycle-service:$lifecycle_version"
+
+    //  https://developer.android.com/jetpack/androidx/releases/fragment  https://mvnrepository.com/artifact/androidx.fragment/fragment
+    implementation 'androidx.fragment:fragment-ktx:1.5.0'
 }

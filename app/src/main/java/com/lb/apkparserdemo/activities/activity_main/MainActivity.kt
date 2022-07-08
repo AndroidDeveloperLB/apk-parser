@@ -4,7 +4,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.view.*
-import androidx.core.view.isVisible
+import androidx.core.view.*
 import androidx.lifecycle.ViewModelProvider
 import com.lb.apkparserdemo.R
 import com.lb.apkparserdemo.databinding.ActivityMainBinding
@@ -62,34 +62,32 @@ class MainActivity : BoundActivity<ActivityMainBinding>(ActivityMainBinding::inf
                         + viewModel.wrongLabelErrorsLiveData.value + viewModel.failedGettingAppIconErrorsLiveData.value + viewModel.wrongPackageNameErrorsLiveData.value
                         + viewModel.wrongApkTypeErrorsLiveData.value + viewModel.parsingErrorsLiveData.value)
             binding.summaryNoteTextView.isVisible = isSystemAppCountAllWeGot
-
-
         }
-    }
+        addMenuProvider(object : MenuProvider {
+            override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
+                menuInflater.inflate(R.menu.main, menu)
+            }
 
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        menuInflater.inflate(R.menu.main, menu)
-        return true
+            override fun onMenuItemSelected(item: MenuItem): Boolean {
+                var url: String? = null
+                when (item.itemId) {
+                    R.id.menuItem_all_my_apps -> url =
+                        "https://play.google.com/store/apps/developer?id=AndroidDeveloperLB"
+                    R.id.menuItem_all_my_repositories -> url =
+                        "https://github.com/AndroidDeveloperLB"
+                    R.id.menuItem_current_repository_website -> url =
+                        "https://github.com/AndroidDeveloperLB/apk-parser"
+                }
+                if (url == null)
+                    return true
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                @Suppress("DEPRECATION")
+                intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY or Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET)
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_MULTIPLE_TASK)
+                startActivity(intent)
+                return true
+            }
+        })
     }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        var url: String? = null
-        when (item.itemId) {
-            R.id.menuItem_all_my_apps -> url =
-                "https://play.google.com/store/apps/developer?id=AndroidDeveloperLB"
-            R.id.menuItem_all_my_repositories -> url = "https://github.com/AndroidDeveloperLB"
-            R.id.menuItem_current_repository_website -> url =
-                "https://github.com/AndroidDeveloperLB/apk-parser"
-        }
-        if (url == null)
-            return true
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-        @Suppress("DEPRECATION")
-        intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY or Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET)
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_MULTIPLE_TASK)
-        startActivity(intent)
-        return true
-    }
-
 
 }
