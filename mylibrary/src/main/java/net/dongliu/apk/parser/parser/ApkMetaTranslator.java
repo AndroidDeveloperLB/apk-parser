@@ -50,8 +50,9 @@ public class ApkMetaTranslator implements XmlStreamer {
     @Override
     public void onStartTag(final @NonNull XmlNodeStartTag xmlNodeStartTag) {
         final Attributes attributes = xmlNodeStartTag.attributes;
-        switch (xmlNodeStartTag.name) {
-            case "application":
+        final String xmlNodeStartTagName = xmlNodeStartTag.name;
+        switch (xmlNodeStartTagName) {
+            case "application": {
                 this.apkMetaBuilder.setDebuggable(attributes.getBoolean("debuggable", false));
                 //TODO fix this part in a better way. Workaround for this: https://github.com/hsiafan/apk-parser/issues/119
                 if (this.apkMetaBuilder.split == null)
@@ -103,7 +104,8 @@ public class ApkMetaTranslator implements XmlStreamer {
                     }
                 }
                 break;
-            case "manifest":
+            }
+            case "manifest": {
                 this.apkMetaBuilder.setPackageName(attributes.getString("package"));
                 this.apkMetaBuilder.setVersionName(attributes.getString("versionName"));
                 this.apkMetaBuilder.setRevisionCode(attributes.getLong("revisionCode"));
@@ -138,7 +140,8 @@ public class ApkMetaTranslator implements XmlStreamer {
                 this.apkMetaBuilder.setPlatformBuildVersionCode(attributes.getString("platformBuildVersionCode"));
                 this.apkMetaBuilder.setPlatformBuildVersionName(attributes.getString("platformBuildVersionName"));
                 break;
-            case "uses-sdk":
+            }
+            case "uses-sdk": {
                 final String minSdkVersion = attributes.getString("minSdkVersion");
                 if (minSdkVersion != null) {
                     this.apkMetaBuilder.setMinSdkVersion(minSdkVersion);
@@ -152,13 +155,15 @@ public class ApkMetaTranslator implements XmlStreamer {
                     this.apkMetaBuilder.setMaxSdkVersion(maxSdkVersion);
                 }
                 break;
-            case "supports-screens":
+            }
+            case "supports-screens": {
                 this.apkMetaBuilder.setAnyDensity(attributes.getBoolean("anyDensity", false));
                 this.apkMetaBuilder.setSmallScreens(attributes.getBoolean("smallScreens", false));
                 this.apkMetaBuilder.setNormalScreens(attributes.getBoolean("normalScreens", false));
                 this.apkMetaBuilder.setLargeScreens(attributes.getBoolean("largeScreens", false));
                 break;
-            case "uses-feature":
+            }
+            case "uses-feature": {
                 final String name = attributes.getString("name");
                 final boolean required = attributes.getBoolean("required", false);
                 if (name != null) {
@@ -173,10 +178,12 @@ public class ApkMetaTranslator implements XmlStreamer {
                     }
                 }
                 break;
-            case "uses-permission":
+            }
+            case "uses-permission": {
                 this.apkMetaBuilder.addUsesPermission(attributes.getString("name"));
                 break;
-            case "permission":
+            }
+            case "permission": {
                 final Permission permission = new Permission(
                         attributes.getString("name"),
                         attributes.getString("label"),
@@ -186,8 +193,9 @@ public class ApkMetaTranslator implements XmlStreamer {
                         attributes.getString("android:protectionLevel"));
                 this.apkMetaBuilder.addPermissions(permission);
                 break;
+            }
         }
-        this.tagStack[this.depth++] = xmlNodeStartTag.name;
+        this.tagStack[this.depth++] = xmlNodeStartTagName;
     }
 
     @Override

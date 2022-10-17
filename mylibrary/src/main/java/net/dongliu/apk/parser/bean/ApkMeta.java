@@ -91,18 +91,6 @@ public class ApkMeta {
         return new Builder();
     }
 
-    public void addUsesPermission(final String permission) {
-        this.usesPermissions.add(permission);
-    }
-
-    public void addUseFeatures(final UseFeature useFeature) {
-        this.usesFeatures.add(useFeature);
-    }
-
-    public void addPermission(final Permission permission) {
-        this.permissions.add(permission);
-    }
-
     @NonNull
     @Override
     public String toString() {

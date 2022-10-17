@@ -57,10 +57,12 @@ class MainActivity : BoundActivity<ActivityMainBinding>(ActivityMainBinding::inf
                 binding.summaryNoteTextView.isVisible = false
                 return@observe
             }
+            val systemAppErrorsCount = viewModel.systemAppsErrorsCountLiveData.value
             val isSystemAppCountAllWeGot =
-                viewModel.systemAppsErrorsCountLiveData.value == (viewModel.wrongVersionNameErrorsLiveData.value + viewModel.wrongVersionCodeErrorsLiveData.value
-                        + viewModel.wrongLabelErrorsLiveData.value + viewModel.failedGettingAppIconErrorsLiveData.value + viewModel.wrongPackageNameErrorsLiveData.value
-                        + viewModel.wrongApkTypeErrorsLiveData.value + viewModel.parsingErrorsLiveData.value)
+                systemAppErrorsCount > 0
+                        && systemAppErrorsCount == viewModel.wrongVersionNameErrorsLiveData.value + viewModel.wrongVersionCodeErrorsLiveData.value + viewModel.wrongLabelErrorsLiveData.value +
+                        viewModel.failedGettingAppIconErrorsLiveData.value + viewModel.wrongPackageNameErrorsLiveData.value +
+                        viewModel.wrongApkTypeErrorsLiveData.value + viewModel.parsingErrorsLiveData.value
             binding.summaryNoteTextView.isVisible = isSystemAppCountAllWeGot
         }
         addMenuProvider(object : MenuProvider {
@@ -73,8 +75,10 @@ class MainActivity : BoundActivity<ActivityMainBinding>(ActivityMainBinding::inf
                 when (item.itemId) {
                     R.id.menuItem_all_my_apps -> url =
                         "https://play.google.com/store/apps/developer?id=AndroidDeveloperLB"
+
                     R.id.menuItem_all_my_repositories -> url =
                         "https://github.com/AndroidDeveloperLB"
+
                     R.id.menuItem_current_repository_website -> url =
                         "https://github.com/AndroidDeveloperLB/apk-parser"
                 }

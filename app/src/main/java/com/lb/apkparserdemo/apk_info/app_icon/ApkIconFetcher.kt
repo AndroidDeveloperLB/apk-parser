@@ -9,7 +9,7 @@ import com.lb.apkparserdemo.apk_info.*
 import net.dongliu.apk.parser.bean.IconPath
 import net.dongliu.apk.parser.parser.*
 import java.nio.ByteBuffer
-import java.util.*
+import java.util.Locale
 import kotlin.math.abs
 
 object ApkIconFetcher {
@@ -74,9 +74,11 @@ object ApkIconFetcher {
                     try {
                         val adaptiveIconParser = AdaptiveIconParser()
                         val buffer = ByteBuffer.wrap(bytes)
-                        val binaryXmlParser = BinaryXmlParser(buffer, apkInfo.resourceTable)
-                        binaryXmlParser.locale = locale
-                        binaryXmlParser.xmlStreamer = adaptiveIconParser
+                        val binaryXmlParser =
+                            BinaryXmlParser(
+                                buffer, apkInfo.resourceTable,
+                                adaptiveIconParser, locale
+                            )
                         binaryXmlParser.parse()
                         val backgroundPath: String? = adaptiveIconParser.background
                         val foregroundPath: String? = adaptiveIconParser.foreground

@@ -1,11 +1,14 @@
 package net.dongliu.apk.parser.parser;
 
+import androidx.annotation.NonNull;
+
 import net.dongliu.apk.parser.bean.CertificateMeta;
 
 import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
 import org.bouncycastle.cms.CMSException;
 import org.bouncycastle.cms.CMSSignedData;
+import org.bouncycastle.cms.SignerId;
 import org.bouncycastle.cms.SignerInformation;
 import org.bouncycastle.cms.SignerInformationStore;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
@@ -17,8 +20,6 @@ import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-
-import androidx.annotation.NonNull;
 
 /**
  * Parser certificate info using BouncyCastle.
@@ -51,9 +52,11 @@ class BCCertificateParser extends CertificateParser {
         final Collection<SignerInformation> signers = signerInfos.getSigners();
         final List<X509Certificate> certificates = new ArrayList<>();
         for (final SignerInformation signer : signers) {
-            final Collection<X509CertificateHolder> matches = certStore.getMatches(signer.getSID());
+            final SignerId sid = signer.getSID();
+            final Collection<X509CertificateHolder> matches = certStore.getMatches(sid);
             for (final X509CertificateHolder holder : matches) {
-                certificates.add(new JcaX509CertificateConverter().setProvider(BCCertificateParser.provider).getCertificate(holder));
+                certificates.add(new JcaX509CertificateConverter().setProvider(BCCertificateParser.provider)
+                        .getCertificate(holder));
             }
         }
         return CertificateMetas.from(certificates);

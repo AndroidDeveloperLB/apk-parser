@@ -27,7 +27,7 @@ public class DexParser {
 
     private static final int NO_INDEX = 0xffffffff;
 
-    public DexParser(final ByteBuffer buffer) {
+    public DexParser(final @NonNull ByteBuffer buffer) {
         this.buffer = buffer.duplicate();
         this.buffer.order(ByteOrder.LITTLE_ENDIAN);
     }

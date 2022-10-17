@@ -33,7 +33,7 @@ public class Type {
 
     public Type(final @NonNull TypeHeader header) {
         this.id = header.getId();
-        final ResTableConfig config = header.getConfig();
+        final ResTableConfig config = header.config;
         this.locale = new Locale(config.getLanguage(), config.getCountry());
         this.density = config.getDensity();
     }

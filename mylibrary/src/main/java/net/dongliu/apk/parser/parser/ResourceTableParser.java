@@ -1,6 +1,7 @@
 package net.dongliu.apk.parser.parser;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import net.dongliu.apk.parser.exception.ParserException;
 import net.dongliu.apk.parser.struct.ChunkHeader;
@@ -11,7 +12,6 @@ import net.dongliu.apk.parser.struct.resource.LibraryEntry;
 import net.dongliu.apk.parser.struct.resource.LibraryHeader;
 import net.dongliu.apk.parser.struct.resource.NullHeader;
 import net.dongliu.apk.parser.struct.resource.PackageHeader;
-import net.dongliu.apk.parser.struct.resource.ResTableConfig;
 import net.dongliu.apk.parser.struct.resource.ResourcePackage;
 import net.dongliu.apk.parser.struct.resource.ResourceTable;
 import net.dongliu.apk.parser.struct.resource.ResourceTableHeader;
@@ -121,13 +121,13 @@ public class ResourceTableParser {
                 case ChunkType.TABLE_TYPE:
                     final TypeHeader typeHeader = (TypeHeader) chunkHeader;
                     // read offsets table
-                    final long[] offsets = new long[typeHeader.getEntryCount()];
-                    for (int i = 0; i < typeHeader.getEntryCount(); i++) {
+                    final long[] offsets = new long[typeHeader.entryCount];
+                    for (int i = 0; i < typeHeader.entryCount; i++) {
                         offsets[i] = Buffers.readUInt(this.buffer);
                     }
                     final Type type = new Type(typeHeader);
                     type.setName(resourcePackage.getTypeStringPool().get(typeHeader.getId() - 1));
-                    final long entryPos = chunkBegin + typeHeader.getEntriesStart() - (int) typeHeader.headerSize;
+                    final long entryPos = chunkBegin + typeHeader.entriesStart - (int) typeHeader.headerSize;
                     Buffers.position(this.buffer, entryPos);
                     final ByteBuffer b = this.buffer.slice();
                     b.order(this.byteOrder);
@@ -173,58 +173,42 @@ public class ResourceTableParser {
         final int headerSize = Buffers.readUShort(this.buffer);
         final int chunkSize = (int) Buffers.readUInt(this.buffer);
         switch (chunkType) {
-            case ChunkType.TABLE:
-                final ResourceTableHeader resourceTableHeader = new ResourceTableHeader(headerSize, chunkSize);
-                resourceTableHeader.setPackageCount(Buffers.readUInt(this.buffer));
+            case ChunkType.TABLE: {
+                final ResourceTableHeader resourceTableHeader = new ResourceTableHeader(headerSize, chunkSize, this.buffer);
                 Buffers.position(this.buffer, begin + headerSize);
                 return resourceTableHeader;
-            case ChunkType.STRING_POOL:
-                final StringPoolHeader stringPoolHeader = new StringPoolHeader(headerSize, chunkSize);
-                stringPoolHeader.setStringCount(Buffers.readUInt(this.buffer));
-                stringPoolHeader.setStyleCount(Buffers.readUInt(this.buffer));
-                stringPoolHeader.setFlags(Buffers.readUInt(this.buffer));
-                stringPoolHeader.setStringsStart(Buffers.readUInt(this.buffer));
-                stringPoolHeader.setStylesStart(Buffers.readUInt(this.buffer));
+            }
+            case ChunkType.STRING_POOL: {
+                final StringPoolHeader stringPoolHeader = new StringPoolHeader(headerSize, chunkSize, this.buffer);
                 Buffers.position(this.buffer, begin + headerSize);
                 return stringPoolHeader;
-            case ChunkType.TABLE_PACKAGE:
-                final PackageHeader packageHeader = new PackageHeader(headerSize, chunkSize);
-                packageHeader.setId(Buffers.readUInt(this.buffer));
-                packageHeader.setName(ParseUtils.readStringUTF16(this.buffer, 128));
-                packageHeader.setTypeStrings(Buffers.readUInt(this.buffer));
-                packageHeader.setLastPublicType(Buffers.readUInt(this.buffer));
-                packageHeader.setKeyStrings(Buffers.readUInt(this.buffer));
-                packageHeader.setLastPublicKey(Buffers.readUInt(this.buffer));
+            }
+            case ChunkType.TABLE_PACKAGE: {
+                final PackageHeader packageHeader = new PackageHeader(headerSize, chunkSize, this.buffer);
                 Buffers.position(this.buffer, begin + headerSize);
                 return packageHeader;
-            case ChunkType.TABLE_TYPE_SPEC:
-                final TypeSpecHeader typeSpecHeader = new TypeSpecHeader(headerSize, chunkSize);
-                typeSpecHeader.setId(Buffers.readUByte(this.buffer));
-                typeSpecHeader.setRes0(Buffers.readUByte(this.buffer));
-                typeSpecHeader.setRes1(Buffers.readUShort(this.buffer));
-                typeSpecHeader.setEntryCount(Buffers.readUInt(this.buffer));
+            }
+            case ChunkType.TABLE_TYPE_SPEC: {
+                final TypeSpecHeader typeSpecHeader = new TypeSpecHeader(headerSize, chunkSize, this.buffer);
                 Buffers.position(this.buffer, begin + headerSize);
                 return typeSpecHeader;
-            case ChunkType.TABLE_TYPE:
-                final TypeHeader typeHeader = new TypeHeader(headerSize, chunkSize);
-                typeHeader.setId(Buffers.readUByte(this.buffer));
-                typeHeader.setRes0(Buffers.readUByte(this.buffer));
-                typeHeader.setRes1(Buffers.readUShort(this.buffer));
-                typeHeader.setEntryCount(Buffers.readUInt(this.buffer));
-                typeHeader.setEntriesStart(Buffers.readUInt(this.buffer));
-                typeHeader.setConfig(this.readResTableConfig());
+            }
+            case ChunkType.TABLE_TYPE: {
+                final TypeHeader typeHeader = new TypeHeader(headerSize, chunkSize, this.buffer);
                 Buffers.position(this.buffer, begin + headerSize);
                 return typeHeader;
-            case ChunkType.TABLE_LIBRARY:
+            }
+            case ChunkType.TABLE_LIBRARY: {
                 //DynamicRefTable
-                final LibraryHeader libraryHeader = new LibraryHeader(headerSize, chunkSize);
-                libraryHeader.setCount(Buffers.readUInt(this.buffer));
+                final LibraryHeader libraryHeader = new LibraryHeader(headerSize, chunkSize, this.buffer);
                 Buffers.position(this.buffer, begin + headerSize);
                 return libraryHeader;
+            }
             case ChunkType.TABLE_OVERLAYABLE:
-            case ChunkType.NULL:
+            case ChunkType.NULL: {
                 Buffers.position(this.buffer, begin + headerSize);
                 return new NullHeader(headerSize, chunkSize);
+            }
             case ChunkType.TABLE_STAGED_ALIAS:
                 //unknown how to handle this, and it causes a crash when being treated as NullHeader : https://github.com/AndroidDeveloperLB/apk-parser/issues/1#issuecomment-1152937896
             default:
@@ -232,26 +216,7 @@ public class ResourceTableParser {
         }
     }
 
-    private ResTableConfig readResTableConfig() {
-        final long beginPos = this.buffer.position();
-        final ResTableConfig config = new ResTableConfig();
-        final long size = Buffers.readUInt(this.buffer);
-        // imsi
-        config.setMcc(this.buffer.getShort());
-        config.setMnc(this.buffer.getShort());
-        //read locale
-        config.setLanguage(new String(Buffers.readBytes(this.buffer, 2)).replace("\0", ""));
-        config.setCountry(new String(Buffers.readBytes(this.buffer, 2)).replace("\0", ""));
-        //screen type
-        config.setOrientation(Buffers.readUByte(this.buffer));
-        config.setTouchscreen(Buffers.readUByte(this.buffer));
-        config.setDensity(Buffers.readUShort(this.buffer));
-        // now just skip the others...
-        final long endPos = this.buffer.position();
-        Buffers.skip(this.buffer, (int) (size - (endPos - beginPos)));
-        return config;
-    }
-
+    @Nullable
     public ResourceTable getResourceTable() {
         return this.resourceTable;
     }

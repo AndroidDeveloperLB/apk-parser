@@ -3,7 +3,7 @@ package net.dongliu.apk.parser.struct.xml
 import net.dongliu.apk.parser.struct.ResourceValue
 import net.dongliu.apk.parser.struct.resource.ResourceTable
 import net.dongliu.apk.parser.utils.ResourceLoader
-import java.util.*
+import java.util.Locale
 
 /**
  * xml node attribute
@@ -42,24 +42,24 @@ class Attribute(
         }
     }
 
+    override fun toString(): String {
+        return "Attribute{" +
+                "name='" + name + '\'' +
+                ", namespace='" + namespace + '\'' +
+                '}'
+    }
+
     /**
      * These are attribute resource constants for the platform; as found in android.R.attr
      *
      * @author dongliu
      */
-    object AttrIds {
+    companion object {
         private val ids = ResourceLoader.loadSystemAttrIds()
 
         @JvmStatic
         fun getString(id: Long): String {
             return ids[id.toInt()] ?: "AttrId:0x${java.lang.Long.toHexString(id)}"
         }
-    }
-
-    override fun toString(): String {
-        return "Attribute{" +
-                "name='" + name + '\'' +
-                ", namespace='" + namespace + '\'' +
-                '}'
     }
 }

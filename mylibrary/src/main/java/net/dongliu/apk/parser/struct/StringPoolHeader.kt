@@ -1,45 +1,45 @@
 package net.dongliu.apk.parser.struct
 
-import net.dongliu.apk.parser.struct.ChunkType
-import net.dongliu.apk.parser.utils.Unsigned
+import net.dongliu.apk.parser.utils.*
+import java.nio.ByteBuffer
 
 /**
  * String pool chunk header.
  *
  * @author dongliu
  */
-class StringPoolHeader(headerSize: Int, chunkSize: Long) :
+@Suppress("MemberVisibilityCanBePrivate")
+class StringPoolHeader(headerSize: Int, chunkSize: Long, buffer: ByteBuffer) :
     ChunkHeader(ChunkType.STRING_POOL, headerSize, chunkSize) {
     /**
      * Number of style span arrays in the pool (number of uint32_t indices
      * follow the string indices).
      */
-    var stringCount = 0
-        private set
+    val stringCount: Int
 
     /**
      * Number of style span arrays in the pool (number of uint32_t indices
      * follow the string indices).
      */
-    var styleCount = 0
-        private set
-    var flags: Long = 0
+    val styleCount: Int
+    val flags: Long
 
     /**
      * Index from header of the string data.
      */
-    var stringsStart: Long = 0
+    val stringsStart: Long
 
     /**
      * Index from header of the style data.
      */
-    var stylesStart: Long = 0
-    fun setStringCount(stringCount: Long) {
-        this.stringCount = Unsigned.ensureUInt(stringCount)
-    }
+    val stylesStart: Long
 
-    fun setStyleCount(styleCount: Long) {
-        this.styleCount = Unsigned.ensureUInt(styleCount)
+    init {
+        stringCount = Unsigned.ensureUInt(Buffers.readUInt(buffer))
+        this.styleCount = Unsigned.ensureUInt(Buffers.readUInt(buffer))
+        flags = Buffers.readUInt(buffer)
+        stringsStart = Buffers.readUInt(buffer)
+        stylesStart = Buffers.readUInt(buffer)
     }
 
     companion object {

@@ -20,6 +20,7 @@ import java.util.Map;
  */
 public class ResourceTable {
     private final Map<Short, ResourcePackage> packageMap = new HashMap<>();
+    @Nullable
     public final StringPool stringPool;
     @NonNull
     public static final Map<Integer, String> sysStyle = ResourceLoader.loadSystemStyles();

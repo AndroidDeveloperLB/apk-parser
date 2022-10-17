@@ -12,7 +12,7 @@ import com.lb.common_utils.BaseViewModel
 import kotlinx.coroutines.*
 import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream
 import java.io.FileInputStream
-import java.util.*
+import java.util.Locale
 import java.util.concurrent.Executors
 import java.util.zip.*
 
@@ -58,7 +58,8 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
         val packageManager = context.packageManager
         Log.d("AppLog", "getting all package infos:")
         var startTime = System.currentTimeMillis()
-        val installedPackages = packageManager.getInstalledPackages(PackageManager.GET_META_DATA)
+        val installedPackages =
+            packageManager.getInstalledPackagesCompat(PackageManager.GET_META_DATA)
         var endTime = System.currentTimeMillis()
         Log.d("AppLog", "time taken: ${endTime - startTime}")
         startTime = endTime
@@ -79,6 +80,7 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
                         )
                         frameworkErrorsOfApkTypeLiveData.inc()
                     }
+
                     apkType == ApkInfo.ApkType.BASE_OF_SPLIT && !hasSplitApks -> {
                         Log.e(
                             "AppLog",
@@ -86,6 +88,7 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
                         )
                         frameworkErrorsOfApkTypeLiveData.inc()
                     }
+
                     apkType == ApkInfo.ApkType.SPLIT -> {
                         Log.e(
                             "AppLog",
@@ -147,6 +150,7 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
                                 "can\'t get apk type for \"$packageName\" in: \"$apkFilePath\" isSystemApp?$isSystemApp"
                             )
                         }
+
                         GET_APK_TYPE && apkInfo.apkType == ApkInfo.ApkType.STANDALONE && hasSplitApks -> {
                             wrongApkTypeErrorsLiveData.inc()
                             if (isSystemApp) systemAppsErrorsCountLiveData.inc()
@@ -155,6 +159,7 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
                                 "detected as standalone, but in fact is base of split apks, for \"$packageName\" in: \"$apkFilePath\" isSystemApp?$isSystemApp"
                             )
                         }
+
                         GET_APK_TYPE && apkInfo.apkType == ApkInfo.ApkType.BASE_OF_SPLIT && !hasSplitApks -> {
                             wrongApkTypeErrorsLiveData.inc()
                             if (isSystemApp) systemAppsErrorsCountLiveData.inc()
@@ -163,6 +168,7 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
                                 "detected as base of split apks, but in fact is standalone, for \"$packageName\" in: \"$apkFilePath\" isSystemApp?$isSystemApp"
                             )
                         }
+
                         GET_APK_TYPE && apkInfo.apkType == ApkInfo.ApkType.SPLIT -> {
                             wrongApkTypeErrorsLiveData.inc()
                             if (isSystemApp) systemAppsErrorsCountLiveData.inc()
@@ -171,6 +177,7 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
                                 "detected as split apk, but in fact a main apk, for \"$packageName\" in: \"$apkFilePath\" isSystemApp?$isSystemApp"
                             )
                         }
+
                         else -> {
                             val apkMeta = apkInfo.apkMetaTranslator.apkMeta
                             //compare app label using library vs framework
@@ -203,7 +210,7 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
                                 if (isSystemApp) systemAppsErrorsCountLiveData.inc()
                                 Log.e(
                                     "AppLog",
-                                    "apk version code is different for \"$packageName\" on $apkFilePath : " + "correct one is: " + "${
+                                    "apk version code is different for \"$packageName\" on $apkFilePath : correct one is: " + "${
                                         versionCodeCompat(packageInfo)
                                     } vs found: ${apkMeta.versionCode} isSystemApp?$isSystemApp"
                                 )
@@ -267,6 +274,7 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
                                     "can\'t get apk type: $apkFilePath isSystemApp?$isSystemApp"
                                 )
                             }
+
                             GET_APK_TYPE && apkInfo.apkType == ApkInfo.ApkType.STANDALONE -> {
                                 wrongApkTypeErrorsLiveData.inc()
                                 if (isSystemApp) systemAppsErrorsCountLiveData.inc()
@@ -275,6 +283,7 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
                                     "detected as standalone, but in fact is split apk: $apkFilePath isSystemApp?$isSystemApp"
                                 )
                             }
+
                             GET_APK_TYPE && apkInfo.apkType == ApkInfo.ApkType.BASE_OF_SPLIT -> {
                                 wrongApkTypeErrorsLiveData.inc()
                                 if (isSystemApp) systemAppsErrorsCountLiveData.inc()
@@ -283,6 +292,7 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
                                     "detected as base of split apks, but in fact is split apk: $apkFilePath isSystemApp?$isSystemApp"
                                 )
                             }
+
                             GET_APK_TYPE && apkInfo.apkType == ApkInfo.ApkType.BASE_OF_SPLIT_OR_STANDALONE -> {
                                 wrongApkTypeErrorsLiveData.inc()
                                 if (isSystemApp) systemAppsErrorsCountLiveData.inc()
@@ -291,6 +301,7 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
                                     "detected as base/standalone apk, but in fact is split apk: $apkFilePath isSystemApp?$isSystemApp"
                                 )
                             }
+
                             else -> {
                                 val apkMeta = apkInfo.apkMetaTranslator.apkMeta
                                 val apkMetaTranslator = apkInfo.apkMetaTranslator
@@ -356,6 +367,7 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
                         apkFilePath
                     )
                 )
+
                 ZipFilterType.ApacheZipArchiveInputStreamFilter -> ApacheZipArchiveInputStreamFilter(
                     ZipArchiveInputStream(
                         FileInputStream(
@@ -363,6 +375,7 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
                         ), "UTF8", true, true
                     )
                 )
+
                 ZipFilterType.ZipInputStreamFilter -> ZipInputStreamFilter(
                     ZipInputStream(
                         FileInputStream(apkFilePath)

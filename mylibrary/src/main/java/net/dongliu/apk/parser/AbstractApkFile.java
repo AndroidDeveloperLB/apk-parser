@@ -216,12 +216,10 @@ public abstract class AbstractApkFile implements Closeable {
         return xmlTranslator.getXml();
     }
 
-    private void transBinaryXml(final byte[] data, final XmlStreamer xmlStreamer) throws IOException {
+    private void transBinaryXml(final byte[] data, @NonNull final XmlStreamer xmlStreamer) throws IOException {
         this.parseResourceTable();
         final ByteBuffer buffer = ByteBuffer.wrap(data);
-        final BinaryXmlParser binaryXmlParser = new BinaryXmlParser(buffer, this.resourceTable);
-        binaryXmlParser.setLocale(this.preferredLocale);
-        binaryXmlParser.xmlStreamer = xmlStreamer;
+        final BinaryXmlParser binaryXmlParser = new BinaryXmlParser(buffer, this.resourceTable, xmlStreamer, this.preferredLocale);
         binaryXmlParser.parse();
     }
 

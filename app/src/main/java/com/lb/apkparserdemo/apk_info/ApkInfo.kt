@@ -6,7 +6,7 @@ import net.dongliu.apk.parser.parser.*
 import net.dongliu.apk.parser.struct.AndroidConstants
 import net.dongliu.apk.parser.struct.resource.ResourceTable
 import java.nio.ByteBuffer
-import java.util.*
+import java.util.Locale
 
 class ApkInfo(
     val xmlTranslator: XmlTranslator,
@@ -60,9 +60,10 @@ class ApkInfo(
                     //                this.locales = resourceTableParser.locales
                 }
             val apkMetaTranslator = ApkMetaTranslator(resourceTable, locale)
-            val binaryXmlParser = BinaryXmlParser(ByteBuffer.wrap(manifestBytes), resourceTable)
-            binaryXmlParser.locale = locale
-            binaryXmlParser.xmlStreamer = CompositeXmlStreamer(xmlTranslator, apkMetaTranslator)
+            val binaryXmlParser = BinaryXmlParser(
+                ByteBuffer.wrap(manifestBytes), resourceTable,
+                CompositeXmlStreamer(xmlTranslator, apkMetaTranslator), locale
+            )
             binaryXmlParser.parse()
             var apkType: ApkType = ApkType.UNKNOWN
             if (requestParseManifestXmlTagForApkType) {
@@ -80,31 +81,37 @@ class ApkInfo(
                         apkType = ApkType.STANDALONE
                         try {
                             XmlTag.getXmlFromString(manifestXml)?.innerTagsAndContent?.forEach { manifestXmlItem: Any ->
-                                if (manifestXmlItem is XmlTag && manifestXmlItem.tagName == "application") {
-                                    val innerTagsAndContent = manifestXmlItem.innerTagsAndContent
-                                        ?: return@forEach
-                                    for (applicationXmlItem: Any in innerTagsAndContent) {
-                                        if (applicationXmlItem is XmlTag && applicationXmlItem.tagName == "meta-data"
-                                            && applicationXmlItem.tagAttributes?.get("name") == "com.android.vending.splits"
-                                        ) {
+                                //reach the "application" xml tag, and then iterate over its children
+                                if (manifestXmlItem !is XmlTag || manifestXmlItem.tagName != "application")
+                                    return@forEach
+                                // find the value of `<meta-data android:name=""` or `<meta-data name=""` , and later perhaps of `android:value="` or `value="`
+                                val innerTagsAndContent = manifestXmlItem.innerTagsAndContent
+                                    ?: return@forEach
+                                for (applicationXmlItem: Any in innerTagsAndContent) {
+                                    // find the value of `<meta-data android:name=""` or `<meta-data name=""` , and later perhaps of `android:value="` or `value="`
+                                    if (applicationXmlItem !is XmlTag || applicationXmlItem.tagName != "meta-data")
+                                        continue
+                                    val tagAttributes = applicationXmlItem.tagAttributes ?: continue
+                                    val attributeValueForName = tagAttributes["android:name"]
+                                        ?: tagAttributes["name"] ?: continue
+                                    when (attributeValueForName) {
+                                        "com.android.vending.splits" -> {
                                             apkType = ApkType.BASE_OF_SPLIT_OR_STANDALONE
                                         }
-                                        if (applicationXmlItem is XmlTag && applicationXmlItem.tagName == "meta-data"
-                                            && applicationXmlItem.tagAttributes?.get("name") == "instantapps.clients.allowed" &&
-                                            applicationXmlItem.tagAttributes!!["value"] != "false"
-                                        ) {
-                                            apkType = ApkType.BASE_OF_SPLIT_OR_STANDALONE
+
+                                        "instantapps.clients.allowed" -> {
+                                            val value = tagAttributes["android:value"]
+                                                ?: tagAttributes["value"] ?: continue
+                                            if (value != "false")
+                                                apkType = ApkType.BASE_OF_SPLIT_OR_STANDALONE
                                         }
-                                        if (applicationXmlItem is XmlTag && applicationXmlItem.tagName == "meta-data"
-                                            && applicationXmlItem.tagAttributes?.get("name") == "com.android.vending.splits.required"
-                                        ) {
-                                            val isSplitRequired =
-                                                applicationXmlItem.tagAttributes!!["value"] != "false"
-//                                        if (!isSplitRequired)
-//                                            Log.e("AppLog", "!isSplitRequired")
+
+                                        "com.android.vending.splits.required" -> {
+                                            val value = tagAttributes["android:value"]
+                                                ?: tagAttributes["value"] ?: continue
+                                            val isSplitRequired = value != "false"
                                             apkType =
                                                 if (isSplitRequired) ApkType.BASE_OF_SPLIT else ApkType.BASE_OF_SPLIT_OR_STANDALONE
-//                                            apkType = ApkInfo.ApkType.BASE_OF_SPLIT
                                             break
                                         }
                                     }

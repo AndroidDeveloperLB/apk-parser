@@ -1,8 +1,13 @@
 package net.dongliu.apk.parser.struct.resource;
 
+import androidx.annotation.NonNull;
+
 import net.dongliu.apk.parser.struct.ChunkHeader;
 import net.dongliu.apk.parser.struct.ChunkType;
+import net.dongliu.apk.parser.utils.Buffers;
 import net.dongliu.apk.parser.utils.Unsigned;
+
+import java.nio.ByteBuffer;
 
 /**
  * @author dongliu
@@ -16,81 +21,73 @@ public class TypeHeader extends ChunkHeader {
      * of the type bits in a resource identifier).  0 is invalid.
      * uint8_t
      */
-    private byte id;
+    private final byte id;
 
     /**
      * Must be 0. uint8_t
      */
-    private byte res0;
+    private final byte res0;
     /**
      * Must be 0. uint16_t
      */
-    private short res1;
+    private final short res1;
 
     /**
      * Number of uint32_t entry indices that follow. uint32
      */
-    private int entryCount;
+    public final int entryCount;
 
     /**
      * Offset from header where ResTable_entry data starts.uint32_t
      */
-    private int entriesStart;
+    public final int entriesStart;
 
     /**
      * Configuration this collection of entries is designed for.
      */
-    private ResTableConfig config;
+    @NonNull
+    public final ResTableConfig config;
 
-    public TypeHeader(final int headerSize, final long chunkSize) {
+    public TypeHeader(final int headerSize, final long chunkSize, @NonNull final ByteBuffer buffer) {
         super(ChunkType.TABLE_TYPE, headerSize, chunkSize);
+        this.id = Unsigned.toUByte(Buffers.readUByte(buffer));
+        this.res0 = Unsigned.toUByte(Buffers.readUByte(buffer));
+        this.res1 = Unsigned.toUShort(Buffers.readUShort(buffer));
+        this.entryCount = Unsigned.ensureUInt(Buffers.readUInt(buffer));
+        this.entriesStart = Unsigned.ensureUInt(Buffers.readUInt(buffer));
+        this.config = this.readResTableConfig(buffer);
     }
 
     public short getId() {
         return Unsigned.toShort(this.id);
     }
 
-    public void setId(final short id) {
-        this.id = Unsigned.toUByte(id);
-    }
-
     public short getRes0() {
         return Unsigned.toUShort(this.res0);
-    }
-
-    public void setRes0(final short res0) {
-        this.res0 = Unsigned.toUByte(res0);
     }
 
     public int getRes1() {
         return Unsigned.toInt(this.res1);
     }
 
-    public void setRes1(final int res1) {
-        this.res1 = Unsigned.toUShort(res1);
-    }
-
-    public int getEntryCount() {
-        return this.entryCount;
-    }
-
-    public void setEntryCount(final long entryCount) {
-        this.entryCount = Unsigned.ensureUInt(entryCount);
-    }
-
-    public int getEntriesStart() {
-        return this.entriesStart;
-    }
-
-    public void setEntriesStart(final long entriesStart) {
-        this.entriesStart = Unsigned.ensureUInt(entriesStart);
-    }
-
-    public ResTableConfig getConfig() {
-        return this.config;
-    }
-
-    public void setConfig(final ResTableConfig config) {
-        this.config = config;
+    @NonNull
+    private ResTableConfig readResTableConfig(final ByteBuffer buffer) {
+        final long beginPos = buffer.position();
+        final ResTableConfig config = new ResTableConfig();
+        final long size = Buffers.readUInt(buffer);
+        // imsi
+        config.setMcc(buffer.getShort());
+        config.setMnc(buffer.getShort());
+        //read locale
+        config.setLanguage(new String(Buffers.readBytes(buffer, 2)).replace("\0", ""));
+        config.setCountry(new String(Buffers.readBytes(buffer, 2)).replace("\0", ""));
+        //screen type
+        config.setOrientation(Buffers.readUByte(buffer));
+        config.setTouchscreen(Buffers.readUByte(buffer));
+        config.setDensity(Buffers.readUShort(buffer));
+        // now just skip the others...
+        final long endPos = buffer.position();
+        Buffers.skip(buffer, (int) (size - (endPos - beginPos)));
+        return config;
     }
 }

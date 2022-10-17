@@ -1,38 +1,49 @@
-package net.dongliu.apk.parser.utils;
+package net.dongliu.apk.parser.utils
 
-import androidx.annotation.Nullable;
-
-import java.util.Locale;
+import java.util.Locale
 
 /**
  * @author dongliu
  */
-public class Locales {
-
+object Locales {
     /**
      * when do localize, any locale will match this
      */
-    public static final Locale any = new Locale("", "");
+    @JvmField
+    val any = Locale("", "")
 
     /**
      * How much the given locale match the expected locale.
      */
-    public static int match(final @Nullable Locale locale, final Locale targetLocale) {
+    @JvmStatic
+    fun match(locale: Locale?, targetLocale: Locale): Int {
         if (locale == null) {
-            return -1;
+            return -1
         }
-        if (locale.getLanguage().equals(targetLocale.getLanguage())) {
-            if (locale.getCountry().equals(targetLocale.getCountry())) {
-                return 3;
-            } else if (targetLocale.getCountry().isEmpty()) {
-                return 2;
-            } else {
-                return 0;
+        return when {
+            locale.language == targetLocale.language -> {
+                when {
+                    locale.country == targetLocale.country -> {
+                        3
+                    }
+
+                    targetLocale.country.isEmpty() -> {
+                        2
+                    }
+
+                    else -> {
+                        0
+                    }
+                }
             }
-        } else if (targetLocale.getCountry().isEmpty() || targetLocale.getLanguage().isEmpty()) {
-            return 1;
-        } else {
-            return 0;
+
+            targetLocale.country.isEmpty() || targetLocale.language.isEmpty() -> {
+                1
+            }
+
+            else -> {
+                0
+            }
         }
     }
 }

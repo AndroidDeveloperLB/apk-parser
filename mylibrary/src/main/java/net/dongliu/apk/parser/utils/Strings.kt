@@ -42,17 +42,11 @@ object Strings {
     }
 
     @JvmStatic
-    fun isNumeric(cs: CharSequence?): Boolean {
-        if (cs.isNullOrEmpty()) {
+    fun isNumeric(cs: CharSequence): Boolean {
+        if (cs.isEmpty()) {
             return false
         }
-        val sz = cs.length
-        for (i in 0 until sz) {
-            if (!Character.isDigit(cs[i])) {
-                return false
-            }
-        }
-        return true
+        return cs.find { !it.isDigit() } == null
     }
 
     @JvmStatic
