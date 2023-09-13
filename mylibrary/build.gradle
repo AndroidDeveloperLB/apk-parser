@@ -1,15 +1,15 @@
 plugins {
     id 'com.android.library'
     id 'kotlin-android'
-    id 'maven-publish'
+//    id 'maven-publish'
 }
 
 android {
-    compileSdk  33
+    compileSdk  34
 
     defaultConfig {
         minSdk  19
-        targetSdk  33
+        targetSdk  34
         consumerProguardFiles "consumer-rules.pro"
         multiDexEnabled true
     }
