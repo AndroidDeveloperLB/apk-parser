@@ -31,6 +31,16 @@ android {
     namespace 'net.dongliu.apk.parser'
 }
 
+afterEvaluate {
+    publishing {
+        publications {
+            release(MavenPublication) {
+                from components.release
+            }
+        }
+    }
+}
+
 dependencies {
     implementation fileTree(dir: "libs", include: ["*.jar"])
     // https://www.bouncycastle.org/latest_releases.html https://mvnrepository.com/artifact/org.bouncycastle/bcprov-jdk15on
