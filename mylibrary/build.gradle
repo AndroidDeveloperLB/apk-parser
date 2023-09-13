@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    compileSdkVersion 32
+    compileSdkVersion 33
 
     defaultConfig {
         minSdkVersion 19
-        targetSdkVersion 32
+        targetSdkVersion 33
         consumerProguardFiles "consumer-rules.pro"
         multiDexEnabled true
     }
@@ -22,7 +22,7 @@ android {
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_11
         targetCompatibility JavaVersion.VERSION_11
-//        coreLibraryDesugaringEnabled true
+        coreLibraryDesugaringEnabled true
     }
     kotlinOptions {
         jvmTarget = "11"
@@ -33,12 +33,11 @@ android {
 dependencies {
     implementation fileTree(dir: "libs", include: ["*.jar"])
     // https://www.bouncycastle.org/latest_releases.html https://mvnrepository.com/artifact/org.bouncycastle/bcprov-jdk15on
-    implementation 'org.bouncycastle:bcprov-jdk15on:1.76'
-    implementation 'org.bouncycastle:bcpkix-jdk15on:1.76'
+    implementation 'org.bouncycastle:bcprov-jdk15on:1.70'
+    implementation 'org.bouncycastle:bcpkix-jdk15on:1.70'
 //    https://developer.android.com/studio/build/multidex
     implementation("androidx.multidex:multidex:2.0.1")
 //https://developer.android.com/jetpack/androidx/releases/annotation https://androidx.tech/artifacts/annotation/annotation/    https://mvnrepository.com/artifact/androidx.annotation/annotation?repo=google
-    implementation 'androidx.annotation:annotation:1.7.0'
-//    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.3'
+    implementation 'androidx.annotation:annotation:1.5.0'
 
 }
