@@ -1,7 +1,7 @@
 plugins {
     id 'com.android.library'
     id 'kotlin-android'
-//    id 'maven-publish'
+    id 'maven-publish'
 }
 
 android {
@@ -40,5 +40,8 @@ dependencies {
     implementation("androidx.multidex:multidex:2.0.1")
 //https://developer.android.com/jetpack/androidx/releases/annotation https://androidx.tech/artifacts/annotation/annotation/    https://mvnrepository.com/artifact/androidx.annotation/annotation?repo=google
     implementation 'androidx.annotation:annotation:1.7.0'
+
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.3'
+
 
 }
