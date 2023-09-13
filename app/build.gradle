@@ -4,12 +4,12 @@ plugins {
 }
 
 android {
-    compileSdkVersion 33
+    compileSdk 34
 
     defaultConfig {
         applicationId "com.lb.apkparserdemo"
         minSdkVersion 19
-        targetSdkVersion 33
+        targetSdk 34
         versionCode 1
         versionName "1.0"
         multiDexEnabled true
@@ -46,7 +46,7 @@ dependencies {
     implementation 'androidx.multidex:multidex:2.0.1'
 
     //  https://github.com/AndroidDeveloperLB/CommonUtils  https://jitpack.io/#AndroidDeveloperLB/CommonUtils/
-    implementation 'com.github.AndroidDeveloperLB:CommonUtils:11'
+    implementation 'com.github.AndroidDeveloperLB:CommonUtils:21'
     //    https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-core
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3'
 //    https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-android

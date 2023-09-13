@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    compileSdkVersion 33
+    compileSdk 34
 
     defaultConfig {
         minSdkVersion 19
-        targetSdkVersion 33
+        targetSdk 34
         consumerProguardFiles "consumer-rules.pro"
         multiDexEnabled true
     }
