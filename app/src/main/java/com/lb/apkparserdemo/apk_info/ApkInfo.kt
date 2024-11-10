@@ -20,7 +20,7 @@ class ApkInfo(
 
     companion object {
         fun getApkType(packageInfo: PackageInfo): ApkType {
-            val metaData: Bundle = packageInfo.applicationInfo.metaData ?: return ApkType.UNKNOWN
+            val metaData: Bundle = packageInfo.applicationInfo!!.metaData ?: return ApkType.UNKNOWN
             if (metaData.containsKey("com.android.vending.splits.required")) {
                 val isSplitRequired =
                     metaData.getBoolean("com.android.vending.splits.required", false)

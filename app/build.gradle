@@ -5,15 +5,14 @@ plugins {
 }
 
 android {
-    compileSdk  34
+    compileSdk  35
 
     defaultConfig {
         applicationId "com.lb.apkparserdemo"
-        minSdk  19
-        targetSdk  34
+        minSdk  21
+        targetSdk  35
         versionCode 1
         versionName "1.0"
-        multiDexEnabled true
     }
 
     buildTypes {
@@ -36,15 +35,12 @@ android {
 }
 
 dependencies {
-    implementation 'androidx.core:core-ktx:1.12.0'
-    implementation 'com.google.android.material:material:1.9.0'
+    implementation 'androidx.core:core-ktx:1.15.0'
+    implementation 'com.google.android.material:material:1.12.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     implementation project(path: ':mylibrary')
 //    https://mvnrepository.com/artifact/org.apache.commons/commons-compress
     implementation 'org.apache.commons:commons-compress:1.24.0'
-    //    TODO don't use when minSdk is at least API 21
-    // https://developer.android.com/jetpack/androidx/releases/multidex   https://mvnrepository.com/artifact/com.android.support/multidex
-    implementation 'androidx.multidex:multidex:2.0.1'
 
     //  https://github.com/AndroidDeveloperLB/CommonUtils  https://jitpack.io/#AndroidDeveloperLB/CommonUtils/
     implementation 'com.github.AndroidDeveloperLB:CommonUtils:21'

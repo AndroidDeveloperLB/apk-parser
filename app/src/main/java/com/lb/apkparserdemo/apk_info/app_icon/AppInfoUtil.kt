@@ -8,7 +8,7 @@ import androidx.core.content.getSystemService
 
 fun ApplicationInfo.isSystemApp() = this.flags and ApplicationInfo.FLAG_SYSTEM != 0
 
-fun PackageInfo.isSystemApp() = this.applicationInfo.isSystemApp()
+fun PackageInfo.isSystemApp() = this.applicationInfo!!.isSystemApp()
 
 fun PackageManager.getInstalledPackagesCompat(flags: Int = 0): MutableList<PackageInfo> {
     if (VERSION.SDK_INT >= VERSION_CODES.TIRAMISU)

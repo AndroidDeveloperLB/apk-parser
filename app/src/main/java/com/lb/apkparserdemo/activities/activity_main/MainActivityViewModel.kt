@@ -66,11 +66,11 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
         var apksHandledSoFar = 0
         for (packageInfo in installedPackages) {
             val hasSplitApks =
-                Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && !packageInfo.applicationInfo.splitPublicSourceDirs.isNullOrEmpty()
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && !packageInfo.applicationInfo!!.splitPublicSourceDirs.isNullOrEmpty()
             val packageName = packageInfo.packageName
             Log.d("AppLog", "checking files of $packageName")
             val isSystemApp = packageInfo.isSystemApp()
-            packageInfo.applicationInfo.publicSourceDir.let { apkFilePath ->
+            packageInfo.applicationInfo!!.publicSourceDir.let { apkFilePath ->
                 val apkType = ApkInfo.getApkType(packageInfo)
                 when {
                     (apkType == ApkInfo.ApkType.STANDALONE || apkType == ApkInfo.ApkType.UNKNOWN) && hasSplitApks -> {
@@ -132,7 +132,7 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
                                     getZipFilter(apkFilePath, ZIP_FILTER_TYPE)
                             }, apkInfo, appIconSize
                         )
-                        if (packageInfo.applicationInfo.icon != 0 && appIcon == null) {
+                        if (packageInfo.applicationInfo!!.icon != 0 && appIcon == null) {
                             failedGettingAppIconErrorsLiveData.inc()
                             if (isSystemApp) systemAppsErrorsCountLiveData.inc()
                             Log.e(
@@ -185,7 +185,7 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
                                 ?: apkMeta.packageName
                             val apkMetaTranslator = apkInfo.apkMetaTranslator
                             val label =
-                                if (VALIDATE_RESOURCES) packageInfo.applicationInfo.loadLabel(
+                                if (VALIDATE_RESOURCES) packageInfo.applicationInfo!!.loadLabel(
                                     packageManager
                                 ) else ""
                             if (packageInfo.packageName != apkMeta.packageName) {
@@ -236,7 +236,7 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
             }
             //done with base APK. Now parsing the split APK files of the app, if possible:
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                packageInfo.applicationInfo.splitPublicSourceDirs?.forEach { apkFilePath ->
+                packageInfo.applicationInfo!!.splitPublicSourceDirs?.forEach { apkFilePath ->
                     getZipFilter(apkFilePath, ZIP_FILTER_TYPE).use {
                         var throwable: Throwable? = null
                         val apkInfo = try {
