@@ -164,6 +164,7 @@ public class ParseUtils {
                     return null;
                 }
             case ResValue.ResType.REFERENCE:
+            case ResValue.ResType.TYPE_DYNAMIC_REFERENCE:
                 return ResourceValue.reference(buffer.getInt());
             case ResValue.ResType.INT_BOOLEAN:
                 return ResourceValue.bool(buffer.getInt());

@@ -39,42 +39,55 @@ public class Type {
     }
 
     @Nullable
-    public ResourceEntry getResourceEntry(final int id) {
-        if (id >= this.offsets.length) {
+    public ResourceEntry getResourceEntry(final int resId) {
+        if (resId >= this.offsets.length) {
             return null;
         }
-        if (this.offsets[id] == TypeHeader.NO_ENTRY) {
+        if (this.offsets[resId] == TypeHeader.NO_ENTRY) {
+            return null;
+        }
+        if( offsets[resId] >= buffer.limit() ) {
+            //System.out.println( "invalid offset: " + offsets[resId] );
             return null;
         }
         // read Resource Entries
-        Buffers.position(this.buffer, this.offsets[id]);
+        Buffers.position(this.buffer, this.offsets[resId]);
         return this.readResourceEntry();
     }
 
     private ResourceEntry readResourceEntry() {
-        final long beginPos = this.buffer.position();
+        long beginPos = buffer.position();
+//        ResourceEntry resourceEntry = new ResourceEntry();
         // size is always 8(simple), or 16(complex)
-        final int resourceEntrySize = Buffers.readUShort(this.buffer);
-        final int resourceEntryFlags = Buffers.readUShort(this.buffer);
-        final long keyRef = this.buffer.getInt();
-        final String resourceEntryKey = this.keyStringPool.get((int) keyRef);
-        if ((resourceEntryFlags & ResourceEntry.FLAG_COMPLEX) != 0) {
+        final int size = Buffers.readUShort(buffer);
+        final int flags = Buffers.readUShort(buffer);
+        long keyRef = buffer.getInt();
+
+        if ((flags & ResourceEntry.FLAG_COMPLEX) != 0) {
+            String key = keyStringPool.get((int) keyRef);
+
             // Resource identifier of the parent mapping, or 0 if there is none.
-            final long parent = Buffers.readUInt(this.buffer);
-            final long count = Buffers.readUInt(this.buffer);
-//            resourceMapEntry.setParent(parent);
-//            resourceMapEntry.setCount(count);
-            Buffers.position(this.buffer, beginPos + resourceEntrySize);
+            final long parent = Buffers.readUInt(buffer);
+            final long count = Buffers.readUInt(buffer);
+
+            Buffers.position(buffer, beginPos + size);
+
             //An individual complex Resource entry comprises an entry immediately followed by one or more fields.
-            final ResourceTableMap[] resourceTableMaps = new ResourceTableMap[(int) count];
+            ResourceTableMap[] resourceTableMaps = new ResourceTableMap[(int) count];
             for (int i = 0; i < count; i++) {
-                resourceTableMaps[i] = this.readResourceTableMap();
+                resourceTableMaps[i] = readResourceTableMap();
             }
-            return new ResourceMapEntry(resourceEntrySize, resourceEntryFlags, resourceEntryKey, parent, count, resourceTableMaps);
+//            ResourceEntry resourceEntry = new ResourceEntry(size,flags,key,resourceTableMaps);
+            ResourceMapEntry resourceMapEntry = new ResourceMapEntry(size,flags,key,parent,count,resourceTableMaps);
+            return resourceMapEntry;
+        } else if ((flags & ResourceEntry.FLAG_COMPACT) != 0) {
+            final ResourceValue value = ResourceValue.string((int) keyRef, stringPool);
+            return new ResourceEntry(size,flags,null,value);
         } else {
-            Buffers.position(this.buffer, beginPos + resourceEntrySize);
-            final ResourceValue resourceEntryValue = ParseUtils.readResValue(this.buffer, this.stringPool);
-            return new ResourceEntry(resourceEntrySize, resourceEntryFlags, resourceEntryKey, resourceEntryValue);
+            String key = keyStringPool.get((int) keyRef);
+            Buffers.position(buffer, beginPos + size);
+            final ResourceValue value = ParseUtils.readResValue(buffer, stringPool);
+            return new ResourceEntry(size,flags,key,value);
         }
     }
 

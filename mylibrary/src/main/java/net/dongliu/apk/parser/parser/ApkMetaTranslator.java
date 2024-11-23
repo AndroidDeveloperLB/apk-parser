@@ -1,5 +1,7 @@
 package net.dongliu.apk.parser.parser;
 
+import android.text.TextUtils;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -68,6 +70,19 @@ public class ApkMetaTranslator implements XmlStreamer {
                 final String label = attributes.getString("label");
                 if (label != null) {
                     this.apkMetaBuilder.setLabel(label);
+                } else {
+                    //workaround in case the real label can't be found, so we at least try to use the package name with the application class
+                    final String packageName = this.apkMetaBuilder.getPackageName();
+                    if (!TextUtils.isEmpty(packageName)) {
+                        final String applicationClassRelativePath = attributes.getString("name");
+                        if (TextUtils.isEmpty(applicationClassRelativePath)) {
+                            this.apkMetaBuilder.setLabel(packageName);
+                        } else {
+                            this.apkMetaBuilder.applicationClassRelativePath = applicationClassRelativePath;
+                            final String newLabel = packageName + applicationClassRelativePath;
+                            this.apkMetaBuilder.setLabel(newLabel);
+                        }
+                    }
                 }
                 final Attribute iconAttr = attributes.get("icon");
                 if (iconAttr != null) {
@@ -106,7 +121,18 @@ public class ApkMetaTranslator implements XmlStreamer {
                 break;
             }
             case "manifest": {
-                this.apkMetaBuilder.setPackageName(attributes.getString("package"));
+                final String packageName = attributes.getString("package");
+                this.apkMetaBuilder.setPackageName(packageName);
+                if (TextUtils.isEmpty(this.apkMetaBuilder.getLabel()) && !TextUtils.isEmpty(packageName)) {
+                    //workaround in case the real label can't be found, so we at least try to use the package name with the application class
+                    final String applicationClassRelativePath = this.apkMetaBuilder.applicationClassRelativePath;
+                    if (TextUtils.isEmpty(applicationClassRelativePath)) {
+                        this.apkMetaBuilder.setLabel(packageName);
+                    } else {
+                        final String newLabel = packageName + applicationClassRelativePath;
+                        this.apkMetaBuilder.setLabel(newLabel);
+                    }
+                }
                 this.apkMetaBuilder.setVersionName(attributes.getString("versionName"));
                 this.apkMetaBuilder.setRevisionCode(attributes.getLong("revisionCode"));
                 this.apkMetaBuilder.setSharedUserId(attributes.getString("sharedUserId"));

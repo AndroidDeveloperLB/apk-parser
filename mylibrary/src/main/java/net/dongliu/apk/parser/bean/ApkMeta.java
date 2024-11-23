@@ -105,6 +105,7 @@ public class ApkMeta {
     }
 
     public static final class Builder {
+        public String applicationClassRelativePath;
         private String packageName;
         private String label;
         private String icon;
@@ -145,10 +146,18 @@ public class ApkMeta {
             return this;
         }
 
+        public String getPackageName() {
+            return packageName;
+        }
+
         @NonNull
         public Builder setLabel(final @NonNull String label) {
             this.label = label;
             return this;
+        }
+
+        public String getLabel() {
+            return label;
         }
 
         @NonNull

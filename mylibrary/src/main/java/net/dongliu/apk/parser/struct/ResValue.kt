@@ -42,6 +42,13 @@ object ResValue {
          * container.
          */
         const val FRACTION: Short = 0x06
+
+        /**
+        The 'data' holds a dynamic ResTable_ref, which needs to be
+        resolved before it can be used like a TYPE_REFERENCE.
+         */
+        const val TYPE_DYNAMIC_REFERENCE: Short = 0x07
+
         //        /**
         //         * Beginning of integer flavors...
         //         */

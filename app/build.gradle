@@ -46,7 +46,6 @@ dependencies {
     //  https://github.com/AndroidDeveloperLB/CommonUtils  https://jitpack.io/#AndroidDeveloperLB/CommonUtils/
     implementation 'com.github.AndroidDeveloperLB:CommonUtils:31'
     //    https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-core
-//    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0'
 //    https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-android
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0'

@@ -123,7 +123,13 @@ public class ResourceTableParser {
                     // read offsets table
                     final long[] offsets = new long[typeHeader.entryCount];
                     for (int i = 0; i < typeHeader.entryCount; i++) {
-                        offsets[i] = Buffers.readUInt(this.buffer);
+                        if( (typeHeader.getFlags() & 0x01 ) == 0x01 ) /* FLAG_SPARSE */ {
+                            throw new RuntimeException("FLAG_SPARSE unsupported at the moment");
+                        } else if( (typeHeader.getFlags() & 0x02 ) == 0x02 ) /* FLAG_OFFSET16 */ {
+                            offsets[i] = Buffers.readUShort(buffer) * 4L;
+                        } else {
+                            offsets[i] = Buffers.readUInt(buffer);
+                        }
                     }
                     final Type type = new Type(typeHeader);
                     type.setName(resourcePackage.getTypeStringPool().get(typeHeader.getId() - 1));

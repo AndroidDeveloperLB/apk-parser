@@ -29,6 +29,18 @@ public class ResourceEntry {
 //     * are allowed to reference it.
 //     */
 //    public static final int FLAG_PUBLIC = 0x0002;
+
+    /**
+     * If set, this is a weak resource and may be overriden by strong
+     * resources of the same name/type. This is only useful during
+     * linking with other resource tables.
+     */
+    public static final int FLAG_WEAK = 0x0004;
+    /**
+     * If set, this is a compact entry with data type and value directly
+     * encoded in this entry, see ResTable_entry::compact
+     */
+    public static final int FLAG_COMPACT = 0x0008;
     /**
      * uint16_t
      */

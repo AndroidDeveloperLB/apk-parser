@@ -26,11 +26,11 @@ public class TypeHeader extends ChunkHeader {
     /**
      * Must be 0. uint8_t
      */
-    private final byte res0;
+    private final byte flags;
     /**
      * Must be 0. uint16_t
      */
-    private final short res1;
+    private final short res;
 
     /**
      * Number of uint32_t entry indices that follow. uint32
@@ -51,8 +51,8 @@ public class TypeHeader extends ChunkHeader {
     public TypeHeader(final int headerSize, final long chunkSize, @NonNull final ByteBuffer buffer) {
         super(ChunkType.TABLE_TYPE, headerSize, chunkSize);
         this.id = Unsigned.toUByte(Buffers.readUByte(buffer));
-        this.res0 = Unsigned.toUByte(Buffers.readUByte(buffer));
-        this.res1 = Unsigned.toUShort(Buffers.readUShort(buffer));
+        this.flags = Unsigned.toUByte(Buffers.readUByte(buffer));
+        this.res = Unsigned.toUShort(Buffers.readUShort(buffer));
         this.entryCount = Unsigned.ensureUInt(Buffers.readUInt(buffer));
         this.entriesStart = Unsigned.ensureUInt(Buffers.readUInt(buffer));
         this.config = this.readResTableConfig(buffer);
@@ -62,12 +62,12 @@ public class TypeHeader extends ChunkHeader {
         return Unsigned.toShort(this.id);
     }
 
-    public short getRes0() {
-        return Unsigned.toUShort(this.res0);
+    public short getFlags() {
+        return Unsigned.toUShort(this.flags);
     }
 
-    public int getRes1() {
-        return Unsigned.toInt(this.res1);
+    public int getRes() {
+        return Unsigned.toInt(this.res);
     }
 
     @NonNull

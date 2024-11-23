@@ -1,10 +1,15 @@
-<resources>
-    <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+    <style name="AppTheme" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Customize your theme here. -->
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
+
+        <!-- Transparent system bars for edge-to-edge. -->
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar" tools:targetApi="23">?attr/isLightTheme</item>
     </style>
 
     <style name="stats_value">
@@ -24,5 +29,29 @@
         <item name="android:textSize">20sp</item>
     </style>
 
+    <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.Material3.Light" />
+
+    <style name="AppTheme.AppBarOverlay" >
+        <item name="android:background">?attr/colorPrimary</item>
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+    </style>
+
+    <style name="AppTheme.ToolbarStyle" parent="Widget.Material3.Toolbar">
+        <item name="android:background">@null</item>
+        <item name="android:minHeight">?attr/actionBarSize</item>
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="popupTheme">@style/AppTheme.PopupOverlay</item>
+        <item name="android:popupTheme">@style/AppTheme.PopupOverlay</item>
+        <item name="titleTextColor">@android:color/white</item>
+        <item name="navigationIconTint">@android:color/white</item>
+        <item name="theme">@style/MyThemeOverlay_Toolbar</item>
+    </style>
+
+    <style name="MyThemeOverlay_Toolbar" parent="ThemeOverlay.MaterialComponents.Toolbar.Primary">
+        <!--         color used by overflow icon . maybe also navigation icon-->
+        <item name="colorOnPrimary">@android:color/white</item>
+    </style>
 
 </resources>

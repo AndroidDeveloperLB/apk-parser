@@ -1,145 +1,181 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto" xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent" android:layout_height="match_parent" android:fillViewport="true" android:fitsSystemWindows="true"
-    android:overScrollMode="ifContentScrolls" android:scrollbars="vertical" android:fadeScrollbars="false"
-    tools:context=".activities.activity_main.MainActivity">
 
-    <LinearLayout
-        android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_horizontal|top"
-        android:orientation="vertical" android:padding="8dp">
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools" android:id="@+id/coordinatorLayout"
+    android:layout_width="match_parent" android:layout_height="match_parent" >
 
-        <TextView
-            android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/intro"
-            android:textSize="16sp" />
+    <com.google.android.material.appbar.AppBarLayout android:id="@+id/appBarLayout" style="@style/AppTheme.AppBarOverlay">
 
-        <TableLayout
-            android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16dp">
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbar" style="@style/AppTheme.ToolbarStyle"  />
 
-            <TableRow>
+    </com.google.android.material.appbar.AppBarLayout>
 
-                <TextView
-                    style="@style/stats_text" android:text="@string/apps_analyzed" app:autoSizeMaxTextSize="20dp"
-                    app:autoSizeMinTextSize="12sp" app:autoSizeTextType="uniform" />
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/scrollView" android:layout_width="match_parent"
+        android:layout_height="match_parent" android:fillViewport="true"
+        android:overScrollMode="ifContentScrolls" android:scrollbars="vertical"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior" >
 
-                <TextView
-                    android:id="@+id/appsCountTextView" style="@style/stats_value" />
-            </TableRow>
+        <LinearLayout
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:gravity="center_horizontal|top" android:orientation="vertical"
+            android:padding="8dp">
 
-            <TableRow>
+            <TextView
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:text="@string/intro" android:textSize="16sp" />
 
-                <TextView
-                    style="@style/stats_text" android:text="@string/apks_analyzed" app:autoSizeMaxTextSize="20dp"
-                    app:autoSizeMinTextSize="12sp" app:autoSizeTextType="uniform" />
+            <TableLayout
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:layout_marginTop="16dp">
 
-                <TextView
-                    android:id="@+id/apksCountTextView" style="@style/stats_value" />
-            </TableRow>
+                <TableRow>
 
-            <TableRow>
+                    <TextView
+                        style="@style/stats_text" android:text="@string/apps_analyzed"
+                        app:autoSizeMaxTextSize="20dp" app:autoSizeMinTextSize="12sp"
+                        app:autoSizeTextType="uniform" />
 
-                <TextView
-                    style="@style/stats_text" android:text="@string/framework_errors_getting_apk_type"
-                    app:autoSizeMaxTextSize="20dp" app:autoSizeMinTextSize="12sp" app:autoSizeTextType="uniform" />
+                    <TextView
+                        android:id="@+id/appsCountTextView" style="@style/stats_value" />
+                </TableRow>
 
-                <TextView
-                    android:id="@+id/frameworkErrorsGettingApkTypeTextView" style="@style/stats_value" />
-            </TableRow>
+                <TableRow>
 
-            <TableRow>
+                    <TextView
+                        style="@style/stats_text" android:text="@string/apks_analyzed"
+                        app:autoSizeMaxTextSize="20dp" app:autoSizeMinTextSize="12sp"
+                        app:autoSizeTextType="uniform" />
 
-                <TextView
-                    style="@style/stats_text" android:text="@string/parsing_errors" app:autoSizeMaxTextSize="20dp"
-                    app:autoSizeMinTextSize="12sp" app:autoSizeTextType="uniform" />
+                    <TextView
+                        android:id="@+id/apksCountTextView" style="@style/stats_value" />
+                </TableRow>
 
-                <TextView
-                    android:id="@+id/parsingErrorsTextView" style="@style/stats_value" />
-            </TableRow>
+                <TableRow>
 
-            <TableRow>
+                    <TextView
+                        style="@style/stats_text"
+                        android:text="@string/framework_errors_getting_apk_type"
+                        app:autoSizeMaxTextSize="20dp" app:autoSizeMinTextSize="12sp"
+                        app:autoSizeTextType="uniform" />
 
-                <TextView
-                    style="@style/stats_text" android:text="@string/apk_type_detection_errors"
-                    app:autoSizeMaxTextSize="20dp" app:autoSizeMinTextSize="12sp" app:autoSizeTextType="uniform" />
+                    <TextView
+                        android:id="@+id/frameworkErrorsGettingApkTypeTextView"
+                        style="@style/stats_value" />
+                </TableRow>
 
-                <TextView
-                    android:id="@+id/apkTypeDetectionErrorsTextView" style="@style/stats_value" />
-            </TableRow>
+                <TableRow>
 
-            <TableRow>
+                    <TextView
+                        style="@style/stats_text" android:text="@string/parsing_errors"
+                        app:autoSizeMaxTextSize="20dp" app:autoSizeMinTextSize="12sp"
+                        app:autoSizeTextType="uniform" />
 
-                <TextView
-                    style="@style/stats_text" android:text="@string/wrong_package_name_errors"
-                    app:autoSizeMaxTextSize="20dp" app:autoSizeMinTextSize="12sp" app:autoSizeTextType="uniform" />
+                    <TextView
+                        android:id="@+id/parsingErrorsTextView" style="@style/stats_value" />
+                </TableRow>
 
-                <TextView
-                    android:id="@+id/wrongPackageNameErrorsTextView" style="@style/stats_value" />
-            </TableRow>
+                <TableRow>
 
-            <TableRow>
+                    <TextView
+                        style="@style/stats_text" android:text="@string/apk_type_detection_errors"
+                        app:autoSizeMaxTextSize="20dp" app:autoSizeMinTextSize="12sp"
+                        app:autoSizeTextType="uniform" />
 
-                <TextView
-                    style="@style/stats_text" android:text="@string/icon_fetching_errors" app:autoSizeMaxTextSize="20dp"
-                    app:autoSizeMinTextSize="12sp" app:autoSizeTextType="uniform" />
+                    <TextView
+                        android:id="@+id/apkTypeDetectionErrorsTextView"
+                        style="@style/stats_value" />
+                </TableRow>
 
-                <TextView
-                    android:id="@+id/iconFetchingErrorsTextView" style="@style/stats_value" />
-            </TableRow>
+                <TableRow>
 
-            <TableRow>
+                    <TextView
+                        style="@style/stats_text" android:text="@string/wrong_package_name_errors"
+                        app:autoSizeMaxTextSize="20dp" app:autoSizeMinTextSize="12sp"
+                        app:autoSizeTextType="uniform" />
 
-                <TextView
-                    style="@style/stats_text" android:text="@string/wrong_label_errors" app:autoSizeMaxTextSize="20dp"
-                    app:autoSizeMinTextSize="12sp" app:autoSizeTextType="uniform" />
+                    <TextView
+                        android:id="@+id/wrongPackageNameErrorsTextView"
+                        style="@style/stats_value" />
+                </TableRow>
 
-                <TextView
-                    android:id="@+id/wrongLabelErrorsTextView" style="@style/stats_value" />
-            </TableRow>
+                <TableRow>
 
-            <TableRow>
+                    <TextView
+                        style="@style/stats_text" android:text="@string/icon_fetching_errors"
+                        app:autoSizeMaxTextSize="20dp" app:autoSizeMinTextSize="12sp"
+                        app:autoSizeTextType="uniform" />
 
-                <TextView
-                    style="@style/stats_text" android:text="@string/wrong_version_code_errors"
-                    app:autoSizeMaxTextSize="20dp" app:autoSizeMinTextSize="12sp" app:autoSizeTextType="uniform" />
+                    <TextView
+                        android:id="@+id/iconFetchingErrorsTextView" style="@style/stats_value" />
+                </TableRow>
 
-                <TextView
-                    android:id="@+id/wrongVersionCodeErrorsTextView" style="@style/stats_value" />
-            </TableRow>
+                <TableRow>
 
-            <TableRow>
+                    <TextView
+                        style="@style/stats_text" android:text="@string/wrong_label_errors"
+                        app:autoSizeMaxTextSize="20dp" app:autoSizeMinTextSize="12sp"
+                        app:autoSizeTextType="uniform" />
 
-                <TextView
-                    style="@style/stats_text" android:text="@string/wrong_version_name_errors"
-                    app:autoSizeMaxTextSize="20dp" app:autoSizeMinTextSize="12sp" app:autoSizeTextType="uniform" />
+                    <TextView
+                        android:id="@+id/wrongLabelErrorsTextView" style="@style/stats_value" />
+                </TableRow>
 
-                <TextView
-                    android:id="@+id/wrongVersionNameErrorsTextView" style="@style/stats_value" />
-            </TableRow>
+                <TableRow>
 
-            <TableRow>
+                    <TextView
+                        style="@style/stats_text" android:text="@string/wrong_version_code_errors"
+                        app:autoSizeMaxTextSize="20dp" app:autoSizeMinTextSize="12sp"
+                        app:autoSizeTextType="uniform" />
 
-                <TextView
-                    style="@style/stats_text" android:text="@string/system_apps_errors" app:autoSizeMaxTextSize="20dp"
-                    app:autoSizeMinTextSize="12sp" app:autoSizeTextType="uniform" />
+                    <TextView
+                        android:id="@+id/wrongVersionCodeErrorsTextView"
+                        style="@style/stats_value" />
+                </TableRow>
 
-                <TextView
-                    android:id="@+id/systemAppsErrorsTextView" style="@style/stats_value" />
-            </TableRow>
+                <TableRow>
 
-        </TableLayout>
+                    <TextView
+                        style="@style/stats_text" android:text="@string/wrong_version_name_errors"
+                        app:autoSizeMaxTextSize="20dp" app:autoSizeMinTextSize="12sp"
+                        app:autoSizeTextType="uniform" />
 
-        <TextView
-            android:id="@+id/summaryTextView" style="@style/stats_text" android:layout_width="match_parent"
-            android:layout_marginTop="8dp" android:layout_weight="0" android:text="@string/summary"
-            android:visibility="gone" app:autoSizeMaxTextSize="20dp" app:autoSizeMinTextSize="12sp"
-            app:autoSizeTextType="uniform" tools:visibility="visible" />
+                    <TextView
+                        android:id="@+id/wrongVersionNameErrorsTextView"
+                        style="@style/stats_value" />
+                </TableRow>
 
-        <TextView
-            android:id="@+id/summaryNoteTextView" style="@style/stats_text" android:layout_width="match_parent"
-            android:layout_weight="0" android:text="@string/all_are_system_errors" android:visibility="gone"
-            app:autoSizeMaxTextSize="20dp" app:autoSizeMinTextSize="12sp" app:autoSizeTextType="uniform"
-            tools:visibility="visible" />
+                <TableRow>
 
-    </LinearLayout>
+                    <TextView
+                        style="@style/stats_text" android:text="@string/system_apps_errors"
+                        app:autoSizeMaxTextSize="20dp" app:autoSizeMinTextSize="12sp"
+                        app:autoSizeTextType="uniform" />
 
-</androidx.core.widget.NestedScrollView>
+                    <TextView
+                        android:id="@+id/systemAppsErrorsTextView" style="@style/stats_value" />
+                </TableRow>
+
+            </TableLayout>
+
+            <TextView
+                android:id="@+id/summaryTextView" style="@style/stats_text"
+                android:layout_width="match_parent" android:layout_marginTop="8dp"
+                android:layout_weight="0" android:text="@string/summary" android:visibility="gone"
+                app:autoSizeMaxTextSize="20dp" app:autoSizeMinTextSize="12sp"
+                app:autoSizeTextType="uniform" tools:visibility="visible" />
+
+            <TextView
+                android:id="@+id/summaryNoteTextView" style="@style/stats_text"
+                android:layout_width="match_parent" android:layout_weight="0"
+                android:text="@string/all_are_system_errors" android:visibility="gone"
+                app:autoSizeMaxTextSize="20dp" app:autoSizeMinTextSize="12sp"
+                app:autoSizeTextType="uniform" tools:visibility="visible" />
+
+        </LinearLayout>
+
+    </androidx.core.widget.NestedScrollView>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

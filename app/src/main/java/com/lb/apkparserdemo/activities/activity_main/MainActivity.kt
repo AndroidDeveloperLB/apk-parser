@@ -1,9 +1,16 @@
 package com.lb.apkparserdemo.activities.activity_main
 
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.util.TypedValue
 import android.view.*
+import androidx.activity.SystemBarStyle
+import androidx.activity.enableEdgeToEdge
+import androidx.annotation.AttrRes
+import androidx.annotation.ColorInt
+import androidx.core.content.ContextCompat
 import androidx.core.view.*
 import androidx.lifecycle.ViewModelProvider
 import com.lb.apkparserdemo.R
@@ -13,7 +20,15 @@ class MainActivity : BoundActivity<ActivityMainBinding>(ActivityMainBinding::inf
     private lateinit var viewModel: MainActivityViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
+
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge(statusBarStyle = SystemBarStyle.dark(0))
+        ViewCompat.setOnApplyWindowInsetsListener(binding.appBarLayout) { v, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
+            binding.appBarLayout.setPadding(systemBars.left, systemBars.top, systemBars.right, 0)
+            insets
+        }
+        setSupportActionBar(binding.toolbar)
         viewModel = ViewModelProvider(this)[MainActivityViewModel::class.java]
         if (savedInstanceState == null) {
             viewModel.init()
@@ -59,13 +74,13 @@ class MainActivity : BoundActivity<ActivityMainBinding>(ActivityMainBinding::inf
             }
             val systemAppErrorsCount = viewModel.systemAppsErrorsCountLiveData.value
             val isSystemAppCountAllWeGot =
-                systemAppErrorsCount > 0
-                        && systemAppErrorsCount == viewModel.wrongVersionNameErrorsLiveData.value + viewModel.wrongVersionCodeErrorsLiveData.value + viewModel.wrongLabelErrorsLiveData.value +
-                        viewModel.failedGettingAppIconErrorsLiveData.value + viewModel.wrongPackageNameErrorsLiveData.value +
-                        viewModel.wrongApkTypeErrorsLiveData.value + viewModel.parsingErrorsLiveData.value
+                    systemAppErrorsCount > 0
+                            && systemAppErrorsCount == viewModel.wrongVersionNameErrorsLiveData.value + viewModel.wrongVersionCodeErrorsLiveData.value + viewModel.wrongLabelErrorsLiveData.value +
+                            viewModel.failedGettingAppIconErrorsLiveData.value + viewModel.wrongPackageNameErrorsLiveData.value +
+                            viewModel.wrongApkTypeErrorsLiveData.value + viewModel.parsingErrorsLiveData.value
             binding.summaryNoteTextView.isVisible = isSystemAppCountAllWeGot
         }
-        addMenuProvider(object : MenuProvider {
+      addMenuProvider(object : MenuProvider {
             override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
                 menuInflater.inflate(R.menu.main, menu)
             }
@@ -74,13 +89,13 @@ class MainActivity : BoundActivity<ActivityMainBinding>(ActivityMainBinding::inf
                 var url: String? = null
                 when (item.itemId) {
                     R.id.menuItem_all_my_apps -> url =
-                        "https://play.google.com/store/apps/developer?id=AndroidDeveloperLB"
+                            "https://play.google.com/store/apps/developer?id=AndroidDeveloperLB"
 
                     R.id.menuItem_all_my_repositories -> url =
-                        "https://github.com/AndroidDeveloperLB"
+                            "https://github.com/AndroidDeveloperLB"
 
                     R.id.menuItem_current_repository_website -> url =
-                        "https://github.com/AndroidDeveloperLB/apk-parser"
+                            "https://github.com/AndroidDeveloperLB/apk-parser"
                 }
                 if (url == null)
                     return true
@@ -94,4 +109,22 @@ class MainActivity : BoundActivity<ActivityMainBinding>(ActivityMainBinding::inf
         })
     }
 
+    companion object {
+        @JvmStatic
+        @ColorInt
+        fun getColorFromAttribute(context: Context, @AttrRes attr: Int): Int {
+            return ContextCompat.getColor(context, getResIdFromAttribute(context, attr))
+        }
+
+        fun getResIdFromAttribute(context: Context, @AttrRes attr: Int): Int {
+            if (attr == 0)
+                return 0
+            val typedValue = TypedValue()
+            context.theme.resolveAttribute(attr, typedValue, true)
+            val resourceId = typedValue.resourceId
+            return if (resourceId != 0)
+                resourceId
+            else typedValue.data
+        }
+    }
 }
