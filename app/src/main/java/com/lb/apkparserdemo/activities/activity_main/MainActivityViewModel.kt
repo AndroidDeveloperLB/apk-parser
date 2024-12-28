@@ -72,27 +72,10 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
             val isSystemApp = packageInfo.isSystemApp()
             //first check the main APK of each app
             packageInfo.applicationInfo!!.publicSourceDir.let { apkFilePath ->
-                val apkType = ApkInfo.getApkType(packageInfo)
-                when {
-                    (apkType == ApkInfo.ApkType.STANDALONE || apkType == ApkInfo.ApkType.UNKNOWN) && hasSplitApks -> {
-                        Log.e("AppLog", "detected packageInfo as standalone, but has splits, for \"$packageName\" in: \"$apkFilePath\" isSystemApp?$isSystemApp")
-                        frameworkErrorsOfApkTypeLiveData.inc()
-                    }
-
-                    apkType == ApkInfo.ApkType.BASE_OF_SPLIT && !hasSplitApks -> {
-                        Log.e("AppLog", "detected packageInfo as base of split, but doesn't have splits, for \"$packageName\" in: \"$apkFilePath\" isSystemApp?$isSystemApp")
-                        frameworkErrorsOfApkTypeLiveData.inc()
-                    }
-
-                    apkType == ApkInfo.ApkType.SPLIT -> {
-                        Log.e("AppLog", "detected packageInfo as split, but it is not, for \"$packageName\" in: \"$apkFilePath\" isSystemApp?$isSystemApp")
-                        frameworkErrorsOfApkTypeLiveData.inc()
-                    }
-                }
                 getZipFilter(apkFilePath, ZIP_FILTER_TYPE).use {
                     var throwable: Throwable? = null
                     val apkInfo = try {
-                        ApkInfo.getApkInfo(locale, it, requestParseManifestXmlTagForApkType = GET_APK_TYPE, requestParseResources = VALIDATE_RESOURCES)
+                        ApkInfo.internalGetApkInfo(locale, it, requestParseManifestXmlTagForApkType = GET_APK_TYPE, requestParseResources = VALIDATE_RESOURCES)
                     } catch (e: Throwable) {
                         throwable = e
                         e.printStackTrace()
@@ -126,18 +109,6 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
                             wrongApkTypeErrorsLiveData.inc()
                             if (isSystemApp) systemAppsErrorsCountLiveData.inc()
                             Log.e("AppLog", "can\'t get apk type for \"$packageName\" in: \"$apkFilePath\" isSystemApp?$isSystemApp")
-                        }
-
-                        GET_APK_TYPE && apkInfo.apkType == ApkInfo.ApkType.STANDALONE && hasSplitApks -> {
-                            wrongApkTypeErrorsLiveData.inc()
-                            if (isSystemApp) systemAppsErrorsCountLiveData.inc()
-                            Log.e("AppLog", "detected as standalone, but in fact is base of split apks, for \"$packageName\" in: \"$apkFilePath\" isSystemApp?$isSystemApp")
-                        }
-
-                        GET_APK_TYPE && apkInfo.apkType == ApkInfo.ApkType.BASE_OF_SPLIT && !hasSplitApks -> {
-                            wrongApkTypeErrorsLiveData.inc()
-                            if (isSystemApp) systemAppsErrorsCountLiveData.inc()
-                            Log.e("AppLog", "detected as base of split apks, but in fact is standalone, for \"$packageName\" in: \"$apkFilePath\" isSystemApp?$isSystemApp")
                         }
 
                         GET_APK_TYPE && apkInfo.apkType == ApkInfo.ApkType.SPLIT -> {
@@ -199,7 +170,7 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
                 getZipFilter(apkFilePath, ZIP_FILTER_TYPE).use {
                     var throwable: Throwable? = null
                     val apkInfo = try {
-                        ApkInfo.getApkInfo(
+                        ApkInfo.internalGetApkInfo(
                                 locale,
                                 it,
                                 requestParseManifestXmlTagForApkType = GET_APK_TYPE,
@@ -231,24 +202,6 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
                             Log.e(
                                     "AppLog",
                                     "can\'t get apk type: $apkFilePath isSystemApp?$isSystemApp"
-                            )
-                        }
-
-                        GET_APK_TYPE && apkInfo.apkType == ApkInfo.ApkType.STANDALONE -> {
-                            wrongApkTypeErrorsLiveData.inc()
-                            if (isSystemApp) systemAppsErrorsCountLiveData.inc()
-                            Log.e(
-                                    "AppLog",
-                                    "detected as standalone, but in fact is split apk: $apkFilePath isSystemApp?$isSystemApp"
-                            )
-                        }
-
-                        GET_APK_TYPE && apkInfo.apkType == ApkInfo.ApkType.BASE_OF_SPLIT -> {
-                            wrongApkTypeErrorsLiveData.inc()
-                            if (isSystemApp) systemAppsErrorsCountLiveData.inc()
-                            Log.e(
-                                    "AppLog",
-                                    "detected as base of split apks, but in fact is split apk: $apkFilePath isSystemApp?$isSystemApp"
                             )
                         }
 
