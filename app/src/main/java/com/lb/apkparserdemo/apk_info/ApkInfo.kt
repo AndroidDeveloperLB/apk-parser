@@ -1,7 +1,5 @@
 package com.lb.apkparserdemo.apk_info
 
-import android.content.pm.PackageInfo
-import android.os.Bundle
 import net.dongliu.apk.parser.parser.*
 import net.dongliu.apk.parser.struct.AndroidConstants
 import net.dongliu.apk.parser.struct.resource.ResourceTable
@@ -21,12 +19,8 @@ class ApkInfo(
     companion object {
 
         @Suppress("SameParameterValue")
-        fun internalGetApkInfo(
-                locale: Locale,
-                zipFilter: AbstractZipFilter,
-                requestParseManifestXmlTagForApkType: Boolean = false,
-                requestParseResources: Boolean = false
-        ): ApkInfo? {
+        fun internalGetApkInfo(locale: Locale, zipFilter: AbstractZipFilter, requestParseManifestXmlTagForApkType: Boolean = false,
+                               requestParseResources: Boolean = false): ApkInfo? {
             val mandatoryFilesToCheck = hashSetOf(AndroidConstants.MANIFEST_FILE)
             val extraFilesToCheck =
                     if (requestParseResources) hashSetOf(AndroidConstants.RESOURCE_FILE) else null
