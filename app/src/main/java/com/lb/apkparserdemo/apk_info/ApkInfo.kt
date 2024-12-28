@@ -76,10 +76,10 @@ class ApkInfo(
                     }
                     val splitTypesInManifestTag: String? = manifestXmlTag.tagAttributes?.get("android:splitTypes")
                     if (splitTypesInManifestTag != null) {
-                        if (splitTypesInManifestTag.isEmpty()) {
-                            apkType = ApkType.BASE_OF_SPLIT_OR_STANDALONE
+                        apkType = if (splitTypesInManifestTag.isEmpty()) {
+                            ApkType.BASE_OF_SPLIT_OR_STANDALONE
                         } else {
-                            apkType = ApkType.SPLIT
+                            ApkType.SPLIT
                         }
                     }
                     manifestXmlTag.innerTagsAndContent?.forEach { manifestXmlItem: Any ->
@@ -99,28 +99,21 @@ class ApkInfo(
                                     ?: tagAttributes["name"] ?: continue
                             when (attributeValueForName) {
                                 "com.android.vending.splits" -> {
-                                    if (apkType != ApkType.BASE_OF_SPLIT_OR_STANDALONE) {
-                                        apkType = ApkType.BASE_OF_SPLIT_OR_STANDALONE
-                                    }
+                                    apkType = ApkType.BASE_OF_SPLIT_OR_STANDALONE
+                                    break
                                 }
 
                                 "instantapps.clients.allowed" -> {
                                     val value = tagAttributes["android:value"]
                                             ?: tagAttributes["value"] ?: continue
-                                    if (value != "false" && apkType != ApkType.BASE_OF_SPLIT_OR_STANDALONE) {
+                                    if (value != "false") {
                                         apkType = ApkType.BASE_OF_SPLIT_OR_STANDALONE
+                                        break
                                     }
                                 }
 
                                 "com.android.vending.splits.required" -> {
-                                    val value = tagAttributes["android:value"]
-                                            ?: tagAttributes["value"] ?: continue
-                                    val isSplitRequired = value != "false"
-                                    if (isSplitRequired) {
-                                        apkType = ApkType.BASE_OF_SPLIT_OR_STANDALONE
-                                    } else if (apkType != ApkType.BASE_OF_SPLIT_OR_STANDALONE) {
-                                        apkType = ApkType.BASE_OF_SPLIT_OR_STANDALONE
-                                    }
+                                    apkType = ApkType.BASE_OF_SPLIT_OR_STANDALONE
                                     break
                                 }
                             }
