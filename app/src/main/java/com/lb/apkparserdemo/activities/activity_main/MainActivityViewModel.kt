@@ -60,7 +60,7 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
         var startTime = System.currentTimeMillis()
         val installedPackages =
                 packageManager.getInstalledPackagesCompat(PackageManager.GET_META_DATA)
-//                        .filter{it.packageName=="com.google.pixel.camera.services"}
+//                        .filter{it.packageName=="com.google.android.webview"}
         var endTime = System.currentTimeMillis()
         Log.d("AppLog", "time taken: ${endTime - startTime}")
         startTime = endTime
