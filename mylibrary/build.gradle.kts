@@ -14,9 +14,11 @@ android {
 
     defaultConfig {
         minSdk = 23
-        targetSdk = 36
         consumerProguardFiles("consumer-rules.pro")
         multiDexEnabled = true
+    }
+    lint {
+        targetSdk = 36
     }
 
     buildTypes {

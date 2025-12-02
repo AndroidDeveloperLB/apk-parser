@@ -49,17 +49,17 @@ dependencies {
     implementation("org.apache.commons:commons-compress:1.28.0")
 
     //  https://github.com/AndroidDeveloperLB/CommonUtils  https://jitpack.io/#AndroidDeveloperLB/CommonUtils/
-    implementation("com.github.AndroidDeveloperLB:CommonUtils:33")
+    implementation("com.github.AndroidDeveloperLB:CommonUtils:35")
     //    https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-core
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
     //    https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-android
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
     //    https://developer.android.com/jetpack/androidx/releases/lifecycle#declaring_dependencies
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.9.4")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.9.4")
-    implementation("androidx.lifecycle:lifecycle-common-java8:2.9.4")
-    implementation("androidx.lifecycle:lifecycle-process:2.9.4")
-    implementation("androidx.lifecycle:lifecycle-service:2.9.4")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.10.0")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.10.0")
+    implementation("androidx.lifecycle:lifecycle-common-java8:2.10.0")
+    implementation("androidx.lifecycle:lifecycle-process:2.10.0")
+    implementation("androidx.lifecycle:lifecycle-service:2.10.0")
 
     //  https://developer.android.com/jetpack/androidx/releases/fragment  https://mvnrepository.com/artifact/androidx.fragment/fragment
     implementation("androidx.fragment:fragment-ktx:1.8.9")
