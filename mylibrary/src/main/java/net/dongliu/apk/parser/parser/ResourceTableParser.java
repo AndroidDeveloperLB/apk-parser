@@ -25,7 +25,9 @@ import net.dongliu.apk.parser.utils.ParseUtils;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
@@ -121,14 +123,16 @@ public class ResourceTableParser {
                 case ChunkType.TABLE_TYPE:
                     final TypeHeader typeHeader = (TypeHeader) chunkHeader;
                     // read offsets table
-                    final long[] offsets = new long[typeHeader.entryCount];
+                    List<Type.EntryOffset> offsets = new ArrayList<Type.EntryOffset>();
                     for (int i = 0; i < typeHeader.entryCount; i++) {
                         // as per frameworks/base/libs/androidfw/include/androidfw/ResourceTypes.h
-                        // the table type is FLAG_SPARSE or FLAG_OFFSET16
-                        if ((typeHeader.getFlags() & 0x02) == 0x02) /* FLAG_OFFSET16 */ {
-                            offsets[i] = Buffers.readUShort(buffer) * 4L;
-                        } else {
-                            offsets[i] = Buffers.readUInt(buffer);
+                        // the table type is FLAG_SPARSE or FLAG_OFFSET16 or 0
+                        if( (typeHeader.getFlags() & 0x01 ) == 0x01 ) /* FLAG_SPARSE */ {
+                            offsets.add( new Type.EntryOffset( Buffers.readUShort(buffer), Buffers.readUShort(buffer) * 4) );
+                        } else if( (typeHeader.getFlags() & 0x02 ) == 0x02 ) /* FLAG_OFFSET16 */ {
+                            offsets.add( new Type.EntryOffset( i, Buffers.readUShort(buffer) * 4) );
+                        } else {  // no flags
+                            offsets.add( new Type.EntryOffset( i, (int)Buffers.readUInt(buffer)));
                         }
                     }
                     final Type type = new Type(typeHeader);
