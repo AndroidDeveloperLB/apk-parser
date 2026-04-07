@@ -16,7 +16,10 @@ public class StringPool {
     }
 
     public String get(final int idx) {
-        return this.pool[idx];
+        if (idx >= 0 && idx < pool.length) {
+            return this.pool[idx];
+        }
+        return null;
     }
 
     public void set(final int idx, final String value) {
