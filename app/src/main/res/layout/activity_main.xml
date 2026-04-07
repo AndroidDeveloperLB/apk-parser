@@ -22,7 +22,7 @@
         android:overScrollMode="ifContentScrolls" android:scrollbars="vertical"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-        <LinearLayout
+        <LinearLayout android:id="@+id/contentContainer"
             android:layout_width="match_parent" android:layout_height="wrap_content"
             android:gravity="center_horizontal|top" android:orientation="vertical"
             android:padding="8dp">

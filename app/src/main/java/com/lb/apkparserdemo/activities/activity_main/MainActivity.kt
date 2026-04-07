@@ -23,9 +23,11 @@ class MainActivity : BoundActivity<ActivityMainBinding>(ActivityMainBinding::inf
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge(statusBarStyle = SystemBarStyle.dark(0))
+        val contentContainerPaddingBottom=binding.contentContainer.getPaddingBottom()
         ViewCompat.setOnApplyWindowInsetsListener(binding.appBarLayout) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
             binding.appBarLayout.setPadding(systemBars.left, systemBars.top, systemBars.right, 0)
+            binding.contentContainer.updatePadding(bottom = contentContainerPaddingBottom+systemBars.bottom)
             insets
         }
         setSupportActionBar(binding.toolbar)
