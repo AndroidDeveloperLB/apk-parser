@@ -15,6 +15,7 @@ import net.dongliu.apk.parser.struct.resource.PackageHeader;
 import net.dongliu.apk.parser.struct.resource.ResourcePackage;
 import net.dongliu.apk.parser.struct.resource.ResourceTable;
 import net.dongliu.apk.parser.struct.resource.ResourceTableHeader;
+import net.dongliu.apk.parser.struct.resource.StagedAliasHeader;
 import net.dongliu.apk.parser.struct.resource.Type;
 import net.dongliu.apk.parser.struct.resource.TypeHeader;
 import net.dongliu.apk.parser.struct.resource.TypeSpec;
@@ -164,9 +165,18 @@ public class ResourceTableParser {
                     }
                     Buffers.position(this.buffer, chunkBegin + chunkHeader.getBodySize());
                     break;
+                case ChunkType.TABLE_STAGED_ALIAS:
+                    final StagedAliasHeader stagedAliasHeader = (StagedAliasHeader) chunkHeader;
+                    for (int i = 0; i < stagedAliasHeader.getCount(); i++) {
+                        final int stagedResId = this.buffer.getInt();
+                        final int finalizedResId = this.buffer.getInt();
+                        resourcePackage.addStagedAlias(stagedResId, finalizedResId);
+                    }
+                    Buffers.position(this.buffer, chunkBegin + chunkHeader.getBodySize());
+                    break;
+                case ChunkType.TABLE_OVERLAYABLE:
                 case ChunkType.NULL:
-//                    Buffers.position(buffer, chunkBegin + chunkHeader.getBodySize());
-                    Buffers.position(this.buffer, this.buffer.position() + this.buffer.remaining());
+                    Buffers.position(this.buffer, chunkBegin + chunkHeader.getBodySize());
                     break;
                 default:
                     throw new ParserException("unexpected chunk type: 0x" + (int) chunkHeader.chunkType);
@@ -214,13 +224,16 @@ public class ResourceTableParser {
                 Buffers.position(this.buffer, begin + headerSize);
                 return libraryHeader;
             }
+            case ChunkType.TABLE_STAGED_ALIAS: {
+                final StagedAliasHeader stagedAliasHeader = new StagedAliasHeader(headerSize, chunkSize, this.buffer);
+                Buffers.position(this.buffer, begin + headerSize);
+                return stagedAliasHeader;
+            }
             case ChunkType.TABLE_OVERLAYABLE:
             case ChunkType.NULL: {
                 Buffers.position(this.buffer, begin + headerSize);
-                return new NullHeader(headerSize, chunkSize);
+                return new NullHeader(chunkType, headerSize, chunkSize);
             }
-            case ChunkType.TABLE_STAGED_ALIAS:
-                //unknown how to handle this, and it causes a crash when being treated as NullHeader : https://github.com/AndroidDeveloperLB/apk-parser/issues/1#issuecomment-1152937896
             default:
                 throw new ParserException("Unexpected chunk Type: 0x" + Integer.toHexString(chunkType));
         }

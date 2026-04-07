@@ -48,12 +48,17 @@ public class ResourceTable {
         // an 8-bit Type id [bits 16-23]
         // a 16-bit Entry index [bits 0-15]
         final short packageId = (short) (resourceId >> 24 & 0xff);
-        final short typeId = (short) ((resourceId >> 16) & 0xff);
-        final int entryIndex = (int) (resourceId & 0xffff);
         final ResourcePackage resourcePackage = this.getPackage(packageId);
         if (resourcePackage == null) {
             return Collections.emptyList();
         }
+        final int resolvedResourceId = resourcePackage.resolveStagedResId((int) resourceId);
+        if (resolvedResourceId != (int) resourceId) {
+            return getResourcesById(resolvedResourceId);
+        }
+
+        final short typeId = (short) ((resourceId >> 16) & 0xff);
+        final int entryIndex = (int) (resourceId & 0xffff);
         final TypeSpec typeSpec = resourcePackage.getTypeSpec(typeId);
         final List<Type> types = resourcePackage.getTypes(typeId);
         if (typeSpec == null || types == null) {
