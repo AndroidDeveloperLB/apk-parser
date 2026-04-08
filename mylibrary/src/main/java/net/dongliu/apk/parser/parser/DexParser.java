@@ -115,24 +115,21 @@ public class DexParser {
      */
     private StringPool readStrings(final long[] offsets) {
         // read strings.
-        // buffer some apk, the strings' offsets may not well ordered. we sort it first
-        final StringPoolEntry[] entries = new StringPoolEntry[offsets.length];
-        for (int i = 0; i < offsets.length; i++) {
-            entries[i] = new StringPoolEntry(i, offsets[i]);
-        }
+        // buffer some apk, the strings' offsets may not well ordered.
         String lastStr = null;
         long lastOffset = -1;
         final StringPool stringpool = new StringPool(offsets.length);
-        for (final StringPoolEntry entry : entries) {
-            if (entry.offset == lastOffset) {
-                stringpool.set(entry.idx, lastStr);
+        for (int i = 0; i < offsets.length; i++) {
+            long offset = offsets[i];
+            if (offset == lastOffset) {
+                stringpool.set(i, lastStr);
                 continue;
             }
-            Buffers.position(this.buffer, entry.offset);
-            lastOffset = entry.offset;
+            Buffers.position(this.buffer, offset);
+            lastOffset = offset;
             final String str = this.readString();
             lastStr = str;
-            stringpool.set(entry.idx, str);
+            stringpool.set(i, str);
         }
         return stringpool;
     }

@@ -23,12 +23,11 @@ import net.dongliu.apk.parser.struct.resource.TypeSpecHeader;
 import net.dongliu.apk.parser.utils.Buffers;
 import net.dongliu.apk.parser.utils.Pair;
 import net.dongliu.apk.parser.utils.ParseUtils;
+import net.dongliu.apk.parser.utils.Unsigned;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
@@ -124,16 +123,23 @@ public class ResourceTableParser {
                 case ChunkType.TABLE_TYPE:
                     final TypeHeader typeHeader = (TypeHeader) chunkHeader;
                     // read offsets table
-                    List<Type.EntryOffset> offsets = new ArrayList<Type.EntryOffset>();
-                    for (int i = 0; i < typeHeader.entryCount; i++) {
-                        // as per frameworks/base/libs/androidfw/include/androidfw/ResourceTypes.h
-                        // the table type is FLAG_SPARSE or FLAG_OFFSET16 or 0
-                        if ((typeHeader.getFlags() & 0x01) == 0x01) /* FLAG_SPARSE */ {
-                            offsets.add(new Type.EntryOffset(buffer.getShort(), buffer.getShort() * 4));
-                        } else if ((typeHeader.getFlags() & 0x02) == 0x02) /* FLAG_OFFSET16 */ {
-                            offsets.add(new Type.EntryOffset(i, buffer.getShort() * 4));
-                        } else {  // no flags
-                            offsets.add(new Type.EntryOffset(i, buffer.getInt()));
+                    int[] offsets = new int[typeHeader.entryCount];
+                    int[] indices = null;
+                    if ((typeHeader.getFlags() & 0x01) == 0x01) /* FLAG_SPARSE */ {
+                        indices = new int[typeHeader.entryCount];
+                        for (int i = 0; i < typeHeader.entryCount; i++) {
+                            indices[i] = Unsigned.toInt(buffer.getShort());
+                            int offset = Unsigned.toInt(buffer.getShort());
+                            offsets[i] = (offset == 0xFFFF) ? -1 : offset * 4;
+                        }
+                    } else if ((typeHeader.getFlags() & 0x02) == 0x02) /* FLAG_OFFSET16 */ {
+                        for (int i = 0; i < typeHeader.entryCount; i++) {
+                            int offset = Unsigned.toInt(buffer.getShort());
+                            offsets[i] = (offset == 0xFFFF) ? -1 : offset * 4;
+                        }
+                    } else {  // no flags
+                        for (int i = 0; i < typeHeader.entryCount; i++) {
+                            offsets[i] = buffer.getInt();
                         }
                     }
                     final Type type = new Type(typeHeader);
@@ -144,7 +150,7 @@ public class ResourceTableParser {
                     b.order(this.byteOrder);
                     type.setBuffer(b);
                     type.setKeyStringPool(resourcePackage.getKeyStringPool());
-                    type.setOffsets(offsets);
+                    type.setOffsets(offsets, indices);
                     type.setStringPool(this.stringPool);
                     resourcePackage.addType(type);
                     this.locales.add(type.locale);

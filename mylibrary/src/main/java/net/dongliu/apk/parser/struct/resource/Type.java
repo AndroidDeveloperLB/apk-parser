@@ -10,28 +10,12 @@ import net.dongliu.apk.parser.utils.ParseUtils;
 
 import java.nio.ByteBuffer;
 import java.util.Locale;
-import java.util.List;
+import java.util.Arrays;
 
 /**
  * @author dongliu
  */
 public class Type {
-
-    public static class EntryOffset {
-        private final int idx;
-        private final int offset;
-
-        public EntryOffset(int idx, int offset) {
-            this.idx = idx;
-            this.offset = offset;
-        }
-        public int getIdx() {
-            return idx;
-        }
-        public int getOffset() {
-            return offset;
-        }
-    }
 
     private String name;
     public final short id;
@@ -41,7 +25,8 @@ public class Type {
 
     private StringPool keyStringPool;
     private ByteBuffer buffer;
-    private List<EntryOffset> offsets;
+    private int[] offsets;
+    private int[] indices;
     private StringPool stringPool;
 
     /**
@@ -59,29 +44,28 @@ public class Type {
     @Nullable
     public ResourceEntry getResourceEntry(final int resId) {
 
-        EntryOffset entryOffset = null;
-        for( int i = 0; i < offsets.size(); i++ ) {
-            if( offsets.get(i).idx == resId ) {
-                entryOffset = offsets.get(i);
-                break;
-
+        int offset;
+        if (indices == null) {
+            // dense
+            if (resId < 0 || resId >= offsets.length) {
+                return null;
             }
+            offset = offsets[resId];
+        } else {
+            // sparse
+            int i = Arrays.binarySearch(indices, resId);
+            if (i < 0) {
+                return null;
+            }
+            offset = offsets[i];
         }
 
-        if (entryOffset == null) {
-            return null;
-        }
-
-        if (entryOffset.offset < 0 ) {
-            return null;
-        }
-
-        if( entryOffset.offset >= buffer.limit() ) {
+        if (offset < 0 || offset >= buffer.limit()) {
             return null;
         }
 
         // read Resource Entries
-        Buffers.position(this.buffer, entryOffset.offset);
+        Buffers.position(this.buffer, offset);
         return this.readResourceEntry();
     }
 
@@ -160,8 +144,9 @@ public class Type {
         this.buffer = buffer;
     }
 
-    public void setOffsets(List<EntryOffset> offsets) {
+    public void setOffsets(int[] offsets, int[] indices) {
         this.offsets = offsets;
+        this.indices = indices;
     }
 
     public void setStringPool(final StringPool stringPool) {

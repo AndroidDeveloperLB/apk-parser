@@ -4,7 +4,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import net.dongliu.apk.parser.exception.ParserException;
-import net.dongliu.apk.parser.parser.StringPoolEntry;
 import net.dongliu.apk.parser.struct.ResValue;
 import net.dongliu.apk.parser.struct.ResourceValue;
 import net.dongliu.apk.parser.struct.StringPool;
@@ -115,23 +114,20 @@ public class ParseUtils {
         // read strings. the head and metas have 28 bytes
         final long stringPos = beginPos + stringPoolHeader.getStringsStart() - (int) stringPoolHeader.headerSize;
         Buffers.position(buffer, stringPos);
-        final StringPoolEntry[] entries = new StringPoolEntry[offsets.length];
-        for (int i = 0; i < offsets.length; i++) {
-            entries[i] = new StringPoolEntry(i, stringPos + Unsigned.toLong(offsets[i]));
-        }
         String lastStr = null;
         long lastOffset = -1;
         final StringPool stringPool = new StringPool(stringPoolHeader.getStringCount());
-        for (final StringPoolEntry entry : entries) {
-            if (entry.offset == lastOffset) {
-                stringPool.set(entry.idx, lastStr);
+        for (int i = 0; i < offsets.length; i++) {
+            long offset = stringPos + Unsigned.toLong(offsets[i]);
+            if (offset == lastOffset) {
+                stringPool.set(i, lastStr);
                 continue;
             }
-            Buffers.position(buffer, entry.offset);
-            lastOffset = entry.offset;
+            Buffers.position(buffer, offset);
+            lastOffset = offset;
             final String str = ParseUtils.readString(buffer, utf8);
             lastStr = str;
-            stringPool.set(entry.idx, str);
+            stringPool.set(i, str);
         }
         // read styles
         //noinspection StatementWithEmptyBody
