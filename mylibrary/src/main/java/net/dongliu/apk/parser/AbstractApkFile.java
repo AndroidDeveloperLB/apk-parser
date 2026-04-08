@@ -240,7 +240,6 @@ public abstract class AbstractApkFile implements Closeable {
         for (final IconPath iconPath : iconPaths) {
             final String filePath = iconPath.path;
             if (filePath != null && filePath.endsWith(".xml")) {
-                // adaptive icon?
                 final byte[] data = this.getFileData(filePath);
                 if (data == null) {
                     continue;
@@ -248,18 +247,25 @@ public abstract class AbstractApkFile implements Closeable {
                 this.parseResourceTable();
                 final AdaptiveIconParser iconParser = new AdaptiveIconParser();
                 this.transBinaryXml(data, iconParser);
-                Icon backgroundIcon = null;
-                final String background = iconParser.getBackground();
-                if (background != null) {
-                    backgroundIcon = this.newFileIcon(background, iconPath.density);
+
+                if ("adaptive-icon".equals(iconParser.getRootTag())) {
+                    Icon backgroundIcon = null;
+                    final String background = iconParser.getBackground();
+                    if (background != null) {
+                        backgroundIcon = this.newFileIcon(background, iconPath.density);
+                    }
+                    Icon foregroundIcon = null;
+                    final String foreground = iconParser.getForeground();
+                    if (foreground != null) {
+                        foregroundIcon = this.newFileIcon(foreground, iconPath.density);
+                    }
+                    final AdaptiveIcon icon = new AdaptiveIcon(foregroundIcon, backgroundIcon);
+                    iconFaces.add(icon);
+                } else {
+                    // vector or something else.
+                    final Icon icon = this.newFileIcon(filePath, iconPath.density);
+                    iconFaces.add(icon);
                 }
-                Icon foregroundIcon = null;
-                final String foreground = iconParser.getForeground();
-                if (foreground != null) {
-                    foregroundIcon = this.newFileIcon(foreground, iconPath.density);
-                }
-                final AdaptiveIcon icon = new AdaptiveIcon(foregroundIcon, backgroundIcon);
-                iconFaces.add(icon);
             } else {
                 final Icon icon = this.newFileIcon(filePath, iconPath.density);
                 iconFaces.add(icon);

@@ -8,6 +8,7 @@ import net.dongliu.apk.parser.struct.resource.ResourceEntry;
 import net.dongliu.apk.parser.struct.resource.ResourceTable;
 import net.dongliu.apk.parser.struct.resource.Type;
 import net.dongliu.apk.parser.struct.resource.TypeSpec;
+import net.dongliu.apk.parser.struct.xml.Attribute;
 import net.dongliu.apk.parser.utils.Locales;
 
 import java.util.List;
@@ -54,6 +55,16 @@ public abstract class ResourceValue {
     @NonNull
     public static ResourceValue reference(final int value) {
         return new ReferenceResourceValue(value);
+    }
+
+    @NonNull
+    public static ResourceValue attribute(final int value) {
+        return new AttributeResourceValue(value);
+    }
+
+    @NonNull
+    public static ResourceValue floatValue(final int value) {
+        return new FloatResourceValue(value);
     }
 
     @NonNull
@@ -311,6 +322,28 @@ public abstract class ResourceValue {
         @Override
         public String toStringValue(final ResourceTable resourceTable, final Locale locale) {
             return "{" + this.dataType + ":" + (this.value & 0xFFFFFFFFL) + "}";
+        }
+    }
+
+    public static class AttributeResourceValue extends ResourceValue {
+        private AttributeResourceValue(final int value) {
+            super(value);
+        }
+
+        @Override
+        public String toStringValue(final ResourceTable resourceTable, final Locale locale) {
+            return "?" + Attribute.getString(this.value & 0xFFFFFFFFL);
+        }
+    }
+
+    private static class FloatResourceValue extends ResourceValue {
+        private FloatResourceValue(final int value) {
+            super(value);
+        }
+
+        @Override
+        public String toStringValue(final ResourceTable resourceTable, final Locale locale) {
+            return String.valueOf(Float.intBitsToFloat(this.value));
         }
     }
 }

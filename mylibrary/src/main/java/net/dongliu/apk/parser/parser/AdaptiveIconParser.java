@@ -21,6 +21,8 @@ public class AdaptiveIconParser implements XmlStreamer {
     private String foreground;
     @Nullable
     private String background;
+    @Nullable
+    private String rootTag;
 
     @Nullable
     public String getForeground() {
@@ -32,8 +34,16 @@ public class AdaptiveIconParser implements XmlStreamer {
         return this.background;
     }
 
+    @Nullable
+    public String getRootTag() {
+        return rootTag;
+    }
+
     @Override
     public void onStartTag(final @NonNull XmlNodeStartTag xmlNodeStartTag) {
+        if (rootTag == null) {
+            rootTag = xmlNodeStartTag.name;
+        }
         if ("background".equals(xmlNodeStartTag.name)) {
             this.background = this.getDrawable(xmlNodeStartTag);
         } else if ("foreground".equals(xmlNodeStartTag.name)) {

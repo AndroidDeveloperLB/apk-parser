@@ -8,6 +8,16 @@ import java.io.Serializable;
 public class ColorIcon implements IconFace, Serializable {
     private static final long serialVersionUID = -7913024425268466186L;
 
+    private final String color;
+
+    public ColorIcon(String color) {
+        this.color = color;
+    }
+
+    public String getColor() {
+        return color;
+    }
+
     @Override
     public boolean isFile() {
         return false;

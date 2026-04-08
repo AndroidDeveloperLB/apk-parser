@@ -161,6 +161,10 @@ public class ParseUtils {
             case ResValue.ResType.REFERENCE:
             case ResValue.ResType.TYPE_DYNAMIC_REFERENCE:
                 return ResourceValue.reference(buffer.getInt());
+            case ResValue.ResType.ATTRIBUTE:
+                return ResourceValue.attribute(buffer.getInt());
+            case ResValue.ResType.FLOAT:
+                return ResourceValue.floatValue(buffer.getInt());
             case ResValue.ResType.INT_BOOLEAN:
                 return ResourceValue.bool(buffer.getInt());
             case ResValue.ResType.NULL:

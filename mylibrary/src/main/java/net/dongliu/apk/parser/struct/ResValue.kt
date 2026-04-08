@@ -18,19 +18,23 @@ object ResValue {
          * table entry.
          */
         const val REFERENCE: Short = 0x01
-        //        /**
-        //         * The 'data' holds an attribute resource identifier.
-        //         */
-        //        public static final short ATTRIBUTE = 0x02;
+
+        /**
+         * The 'data' holds an attribute resource identifier.
+         */
+        const val ATTRIBUTE: Short = 0x02
+
         /**
          * The 'data' holds an index into the containing resource table's
          * global value string pool.
          */
         const val STRING: Short = 0x03
-        //        /**
-        //         * The 'data' holds a single-precision floating point number.
-        //         */
-        //        public static final short FLOAT = 0x04;
+
+        /**
+         * The 'data' holds a single-precision floating point number.
+         */
+        const val FLOAT: Short = 0x04
+
         /**
          * The 'data' holds a complex number encoding a dimension value;
          * such as "100in".

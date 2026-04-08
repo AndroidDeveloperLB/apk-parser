@@ -37,17 +37,17 @@ public class AdaptiveIcon implements IconFace, Serializable {
 
     @Override
     public boolean isFile() {
-        return this.foreground.isFile();
+        return this.foreground != null && this.foreground.isFile();
     }
 
     @Override
     @Nullable
     public byte[] getData() {
-        return this.foreground.getData();
+        return this.foreground != null ? this.foreground.getData() : null;
     }
 
     @Override
     public String getPath() {
-        return this.foreground.getPath();
+        return this.foreground != null ? this.foreground.getPath() : null;
     }
 }
