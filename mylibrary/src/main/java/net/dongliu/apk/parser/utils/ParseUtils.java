@@ -113,22 +113,21 @@ public class ParseUtils {
         final boolean utf8 = (stringPoolHeader.getFlags() & StringPoolHeader.UTF8_FLAG) != 0;
         // read strings. the head and metas have 28 bytes
         final long stringPos = beginPos + stringPoolHeader.getStringsStart() - (int) stringPoolHeader.headerSize;
-        Buffers.position(buffer, stringPos);
-        String lastStr = null;
-        long lastOffset = -1;
-        final StringPool stringPool = new StringPool(stringPoolHeader.getStringCount());
-        for (int i = 0; i < offsets.length; i++) {
-            long offset = stringPos + Unsigned.toLong(offsets[i]);
-            if (offset == lastOffset) {
-                stringPool.set(i, lastStr);
-                continue;
+
+        final ByteBuffer lazyBuffer = buffer.duplicate();
+        lazyBuffer.order(buffer.order());
+
+        final StringPool.StringSource source = new StringPool.StringSource() {
+            @Override
+            public String read(int i) {
+                long offset = stringPos + Unsigned.toLong(offsets[i]);
+                Buffers.position(lazyBuffer, offset);
+                return ParseUtils.readString(lazyBuffer, utf8);
             }
-            Buffers.position(buffer, offset);
-            lastOffset = offset;
-            final String str = ParseUtils.readString(buffer, utf8);
-            lastStr = str;
-            stringPool.set(i, str);
-        }
+        };
+
+        final StringPool stringPool = new StringPool(stringPoolHeader.getStringCount(), source);
+
         // read styles
         //noinspection StatementWithEmptyBody
         if (stringPoolHeader.getStyleCount() > 0) {

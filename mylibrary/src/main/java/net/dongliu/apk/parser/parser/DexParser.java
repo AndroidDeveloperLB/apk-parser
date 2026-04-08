@@ -113,28 +113,7 @@ public class DexParser {
      * read string pool for dex file.
      * dex file string pool diff a bit with binary xml file or resource table.
      */
-    private StringPool readStrings(final long[] offsets) {
-        // read strings.
-        // buffer some apk, the strings' offsets may not well ordered.
-        String lastStr = null;
-        long lastOffset = -1;
-        final StringPool stringpool = new StringPool(offsets.length);
-        for (int i = 0; i < offsets.length; i++) {
-            long offset = offsets[i];
-            if (offset == lastOffset) {
-                stringpool.set(i, lastStr);
-                continue;
-            }
-            Buffers.position(this.buffer, offset);
-            lastOffset = offset;
-            final String str = this.readString();
-            lastStr = str;
-            stringpool.set(i, str);
-        }
-        return stringpool;
-    }
-
-    /*
+    /**
      * read string identifiers list.
      */
     private long[] readStringPool(final long stringIdsOff, final int stringIdsSize) {
@@ -146,14 +125,35 @@ public class DexParser {
         return offsets;
     }
 
-    /**
-     * read dex encoding string.
-     */
-    @NonNull
-    private String readString() {
-        // the length is char len, not byte len
-        final int strLen = this.readVarInts();
-        return this.readString(strLen);
+    private StringPool readStrings(final long[] offsets) {
+        // read strings.
+        // buffer some apk, the strings' offsets may not well ordered.
+        final ByteBuffer lazyBuffer = this.buffer.duplicate();
+        lazyBuffer.order(this.buffer.order());
+
+        final StringPool.StringSource source = new StringPool.StringSource() {
+            @Override
+            public String read(int i) {
+                long offset = offsets[i];
+                Buffers.position(lazyBuffer, offset);
+                // read varints
+                int len = 0;
+                int count = 0;
+                short s;
+                do {
+                    if (count > 4) {
+                        throw new ParserException("read varints error.");
+                    }
+                    s = Buffers.readUByte(lazyBuffer);
+                    len |= (s & 0x7f) << (count * 7);
+                    count++;
+                } while ((s & 0x80) != 0);
+
+                return readString(lazyBuffer, len);
+            }
+        };
+
+        return new StringPool(offsets.length, source);
     }
 
     /**
@@ -162,20 +162,20 @@ public class DexParser {
      * @param strLen the java-utf16-char len, not strLen nor bytes len.
      */
     @NonNull
-    private String readString(final int strLen) {
+    private String readString(final ByteBuffer buffer, final int strLen) {
         final char[] chars = new char[strLen];
         for (int i = 0; i < strLen; i++) {
-            final short a = Buffers.readUByte(this.buffer);
+            final short a = Buffers.readUByte(buffer);
             if ((a & 0x80) == 0) {
                 // ascii char
                 chars[i] = (char) a;
             } else if ((a & 0xe0) == 0xc0) {
                 // read one more
-                final short b = Buffers.readUByte(this.buffer);
+                final short b = Buffers.readUByte(buffer);
                 chars[i] = (char) (((a & 0x1F) << 6) | (b & 0x3F));
             } else if ((a & 0xf0) == 0xe0) {
-                final short b = Buffers.readUByte(this.buffer);
-                final short c = Buffers.readUByte(this.buffer);
+                final short b = Buffers.readUByte(buffer);
+                final short c = Buffers.readUByte(buffer);
                 chars[i] = (char) (((a & 0x0F) << 12) | ((b & 0x3F) << 6) | (c & 0x3F));
             } else //noinspection StatementWithEmptyBody
                 if ((a & 0xf0) == 0xf0) {
@@ -189,24 +189,6 @@ public class DexParser {
             }
         }
         return new String(chars);
-    }
-
-    /**
-     * read varints.
-     */
-    private int readVarInts() {
-        int i = 0;
-        int count = 0;
-        short s;
-        do {
-            if (count > 4) {
-                throw new ParserException("read varints error.");
-            }
-            s = Buffers.readUByte(this.buffer);
-            i |= (s & 0x7f) << (count * 7);
-            count++;
-        } while ((s & 0x80) != 0);
-        return i;
     }
 
     private DexHeader readDexHeader() {
