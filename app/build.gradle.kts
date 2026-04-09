@@ -4,6 +4,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 
 plugins {
     id("com.android.application")
+    id("org.jetbrains.kotlin.plugin.compose") version "2.3.20"
 }
 
 android {
@@ -36,12 +37,13 @@ android {
     }
     buildFeatures {
         viewBinding = true
+        compose = true
     }
 }
 
 dependencies {
     implementation("androidx.core:core-ktx:1.18.0")
-    implementation("com.google.android.material:material:1.13.0")
+    implementation("com.google.android.material:material:1.14.0-beta01")
     implementation("androidx.constraintlayout:constraintlayout:2.2.1")
     implementation(project(":mylibrary"))
     // https://mvnrepository.com/artifact/org.apache.commons/commons-compress
@@ -62,4 +64,11 @@ dependencies {
 
     //  https://developer.android.com/jetpack/androidx/releases/fragment  https://mvnrepository.com/artifact/androidx.fragment/fragment
     implementation("androidx.fragment:fragment-ktx:1.8.9")
+
+    // Compose minimal dependencies
+    val composeBom = platform("androidx.compose:compose-bom:2025.02.00")
+    implementation(composeBom)
+    implementation("androidx.compose.ui:ui")
+    implementation("androidx.compose.ui:ui-graphics")
+    implementation("androidx.compose.runtime:runtime")
 }

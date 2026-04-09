@@ -152,7 +152,7 @@ object ApkIconFetcher {
                 }
             } else {
                 // Try framework parser as a generic fallback for any other tag (vector, selector, etc.)
-                var drawable = XmlDrawableParser.tryParseDrawable(context, bytes)
+                var drawable = XmlDrawableParser.tryParseDrawable(context, bytes, apkInfo, locale)
                 if (drawable == null) {
                     // fallback to text XML translation which resolves references
                     val xmlTranslator = XmlTranslator()
