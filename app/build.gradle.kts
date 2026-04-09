@@ -8,7 +8,7 @@ plugins {
 
 android {
     namespace = "com.lb.apkparserdemo"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.lb.apkparserdemo"
@@ -40,7 +40,7 @@ android {
 }
 
 dependencies {
-    implementation("androidx.core:core-ktx:1.17.0")
+    implementation("androidx.core:core-ktx:1.18.0")
     implementation("com.google.android.material:material:1.13.0")
     implementation("androidx.constraintlayout:constraintlayout:2.2.1")
     implementation(project(":mylibrary"))
@@ -48,7 +48,7 @@ dependencies {
     implementation("org.apache.commons:commons-compress:1.28.0")
 
     //  https://github.com/AndroidDeveloperLB/CommonUtils  https://jitpack.io/#AndroidDeveloperLB/CommonUtils/
-    implementation("com.github.AndroidDeveloperLB:CommonUtils:37")
+    implementation("com.github.AndroidDeveloperLB:CommonUtils:40")
     //    https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-core
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
     //    https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-android

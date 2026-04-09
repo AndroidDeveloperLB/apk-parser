@@ -9,7 +9,7 @@ plugins {
 
 android {
     namespace = "net.dongliu.apk.parser"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         minSdk = 23
@@ -49,7 +49,7 @@ dependencies {
     implementation(fileTree("libs") { include("*.jar") })
     implementation("org.bouncycastle:bcprov-jdk15on:1.70")
     implementation("org.bouncycastle:bcpkix-jdk15on:1.70")
-    implementation("androidx.annotation:annotation:1.9.1")
+    implementation("androidx.annotation:annotation:1.10.0")
 }
 
 afterEvaluate {
