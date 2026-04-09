@@ -170,11 +170,13 @@ public class ParseUtils {
             case ResValue.ResType.NULL:
                 return ResourceValue.nullValue();
             case ResValue.ResType.INT_COLOR_RGB8:
-            case ResValue.ResType.INT_COLOR_RGB4:
                 return ResourceValue.rgb(buffer.getInt(), 6);
+            case ResValue.ResType.INT_COLOR_RGB4:
+                return ResourceValue.rgb(buffer.getInt(), 3);
             case ResValue.ResType.INT_COLOR_ARGB8:
-            case ResValue.ResType.INT_COLOR_ARGB4:
                 return ResourceValue.rgb(buffer.getInt(), 8);
+            case ResValue.ResType.INT_COLOR_ARGB4:
+                return ResourceValue.rgb(buffer.getInt(), 4);
             case ResValue.ResType.DIMENSION:
                 return ResourceValue.dimension(buffer.getInt());
             case ResValue.ResType.FRACTION:

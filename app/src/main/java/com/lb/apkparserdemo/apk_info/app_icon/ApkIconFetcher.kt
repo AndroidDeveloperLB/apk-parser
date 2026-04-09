@@ -71,86 +71,48 @@ object ApkIconFetcher {
             return null
         filterGenerator.generateZipFilter().use { filter: AbstractZipFilter ->
             val byteArrayForEntries = filter.getByteArrayForEntries(iconsToFetch) ?: emptyMap()
-//            val requestedAppIconSize = getAppIconSize(context)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 for (xmlIconsPath in xmlIconsPaths) {
-                    //prefer to try to parse XML first
                     val bytes = byteArrayForEntries[xmlIconsPath] ?: continue
                     try {
                         val adaptiveIconParser = AdaptiveIconParser()
                         val buffer = ByteBuffer.wrap(bytes)
-                        val binaryXmlParser =
-                            BinaryXmlParser(
-                                buffer, apkInfo.resourceTable,
-                                adaptiveIconParser, locale
-                            )
+                        val binaryXmlParser = BinaryXmlParser(buffer, apkInfo.resourceTable, adaptiveIconParser, locale)
                         binaryXmlParser.parse()
                         val rootTag = adaptiveIconParser.rootTag
                         if (rootTag == "adaptive-icon") {
-                            val backgroundPath: String? = adaptiveIconParser.background
-                            val foregroundPath: String? = adaptiveIconParser.foreground
+                            val backgroundPath = adaptiveIconParser.background
+                            val foregroundPath = adaptiveIconParser.foreground
                             if (!backgroundPath.isNullOrBlank() && !foregroundPath.isNullOrBlank()) {
-                                filterGenerator.generateZipFilter()
-                                    .use { adaptiveIconZipFilter: AbstractZipFilter ->
-                                        adaptiveIconZipFilter.getByteArrayForEntries(
-                                            hashSetOf(
-                                                backgroundPath,
-                                                foregroundPath
-                                            )
-                                        )?.let { adaptiveIconByteArrayForEntries ->
-                                            val backgroundIconBytes =
-                                                adaptiveIconByteArrayForEntries[backgroundPath]
-                                            val foregroundIconBytes =
-                                                adaptiveIconByteArrayForEntries[foregroundPath]
-                                            val backgroundDrawable =
-                                                fetchDrawable(
-                                                    context,
-                                                    backgroundPath,
-                                                    backgroundIconBytes,
-                                                    apkInfo,
-                                                    locale,
-                                                    requestedAppIconSize
-                                                )
-                                            val foregroundDrawable =
-                                                fetchDrawable(
-                                                    context,
-                                                    foregroundPath,
-                                                    foregroundIconBytes,
-                                                    apkInfo,
-                                                    locale,
-                                                    requestedAppIconSize
-                                                )
-                                            if (backgroundDrawable != null && foregroundDrawable != null) {
-                                                val adaptiveIconDrawable = AdaptiveIconDrawable(
-                                                    backgroundDrawable,
-                                                    foregroundDrawable
-                                                )
-                                                return adaptiveIconDrawable.toBitmap(
-                                                    requestedAppIconSize,
-                                                    requestedAppIconSize
-                                                )
-                                            }
-                                        }
+                                filterGenerator.generateZipFilter().use { adaptiveIconZipFilter ->
+                                    val pathsToFetch = hashSetOf<String>()
+                                    if (!backgroundPath.startsWith("#")) pathsToFetch.add(backgroundPath)
+                                    if (!foregroundPath.startsWith("#")) pathsToFetch.add(foregroundPath)
+                                    val adaptiveIconByteArrayForEntries = if (pathsToFetch.isNotEmpty()) adaptiveIconZipFilter.getByteArrayForEntries(pathsToFetch) ?: emptyMap() else emptyMap()
+                                    val backgroundDrawable = fetchDrawable(context, backgroundPath, adaptiveIconByteArrayForEntries[backgroundPath], apkInfo, locale, requestedAppIconSize)
+                                    val foregroundDrawable = fetchDrawable(context, foregroundPath, adaptiveIconByteArrayForEntries[foregroundPath], apkInfo, locale, requestedAppIconSize)
+                                    if (backgroundDrawable != null && foregroundDrawable != null) {
+                                        return AdaptiveIconDrawable(backgroundDrawable, foregroundDrawable).toBitmap(requestedAppIconSize, requestedAppIconSize)
                                     }
+                                }
                             }
-                        } else if (rootTag == "vector" || rootTag == "layer-list" || rootTag == "selector") {
-                            val drawable = fetchDrawable(
-                                context,
-                                xmlIconsPath,
-                                bytes,
-                                apkInfo,
-                                locale,
-                                requestedAppIconSize
-                            )
-                            if (drawable != null) {
-                                return drawable.toBitmap(
-                                    requestedAppIconSize,
-                                    requestedAppIconSize
-                                )
+                        } else if (rootTag == "layer-list") {
+                            val drawablesPaths = adaptiveIconParser.drawables
+                            if (drawablesPaths.isNotEmpty()) {
+                                filterGenerator.generateZipFilter().use { layerZipFilter ->
+                                    val pathsToFetch = drawablesPaths.filter { !it.startsWith("#") }.toHashSet()
+                                    val drawablesBytes = if (pathsToFetch.isNotEmpty()) layerZipFilter.getByteArrayForEntries(pathsToFetch) ?: emptyMap() else emptyMap()
+                                    val drawables = drawablesPaths.mapNotNull { path -> fetchDrawable(context, path, drawablesBytes[path], apkInfo, locale, requestedAppIconSize) }
+                                    if (drawables.isNotEmpty()) {
+                                        return LayerDrawable(drawables.toTypedArray()).toBitmap(requestedAppIconSize, requestedAppIconSize)
+                                    }
+                                }
                             }
+                        } else if (rootTag == "vector" || rootTag == "selector") {
+                            val drawable = fetchDrawable(context, xmlIconsPath, bytes, apkInfo, locale, requestedAppIconSize)
+                            if (drawable != null) return drawable.toBitmap(requestedAppIconSize, requestedAppIconSize)
                         }
                     } catch (e: Exception) {
-                        e.printStackTrace()
                     }
                 }
             }

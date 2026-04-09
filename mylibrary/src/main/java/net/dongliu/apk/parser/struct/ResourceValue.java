@@ -242,8 +242,11 @@ public abstract class ResourceValue {
         @Override
         public String toStringValue(final ResourceTable resourceTable, final Locale locale) {
             final StringBuilder sb = new StringBuilder();
-            for (int i = this.len / 2 - 1; i >= 0; i--) {
-                sb.append(Integer.toHexString((this.value >> i * 8) & 0xff));
+            sb.append("#");
+            for (int i = this.len - 1; i >= 0; i--) {
+                final int shift = i * 4;
+                final int bits = (this.value >> shift) & 0xf;
+                sb.append(Integer.toHexString(bits));
             }
             return sb.toString();
         }

@@ -11,6 +11,9 @@ import net.dongliu.apk.parser.struct.xml.XmlNamespaceStartTag;
 import net.dongliu.apk.parser.struct.xml.XmlNodeEndTag;
 import net.dongliu.apk.parser.struct.xml.XmlNodeStartTag;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Parse adaptive icon xml file.
  *
@@ -21,6 +24,8 @@ public class AdaptiveIconParser implements XmlStreamer {
     private String foreground;
     @Nullable
     private String background;
+    @NonNull
+    private final List<String> drawables = new ArrayList<>();
     @Nullable
     private String rootTag;
 
@@ -34,6 +39,11 @@ public class AdaptiveIconParser implements XmlStreamer {
         return this.background;
     }
 
+    @NonNull
+    public List<String> getDrawables() {
+        return drawables;
+    }
+
     @Nullable
     public String getRootTag() {
         return rootTag;
@@ -44,10 +54,14 @@ public class AdaptiveIconParser implements XmlStreamer {
         if (rootTag == null) {
             rootTag = xmlNodeStartTag.name;
         }
+        final String drawable = this.getDrawable(xmlNodeStartTag);
+        if (drawable != null) {
+            this.drawables.add(drawable);
+        }
         if ("background".equals(xmlNodeStartTag.name)) {
-            this.background = this.getDrawable(xmlNodeStartTag);
+            this.background = drawable;
         } else if ("foreground".equals(xmlNodeStartTag.name)) {
-            this.foreground = this.getDrawable(xmlNodeStartTag);
+            this.foreground = drawable;
         }
     }
 

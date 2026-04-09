@@ -84,40 +84,20 @@ public class ApkMetaTranslator implements XmlStreamer {
                         }
                     }
                 }
+                final List<IconPath> allIconPaths = new ArrayList<>();
                 final Attribute iconAttr = attributes.get("icon");
                 if (iconAttr != null) {
-                    final ResourceValue resourceValue = iconAttr.typedValue;
-                    if (resourceValue instanceof ResourceValue.ReferenceResourceValue) {
-                        final long resourceId = ((ResourceValue.ReferenceResourceValue) resourceValue).getReferenceResourceId();
-                        final List<ResourceTable.Resource> resources = this.resourceTable.getResourcesById(resourceId);
-                        if (!resources.isEmpty()) {
-                            final List<IconPath> icons = new ArrayList<>();
-                            boolean hasDefault = false;
-                            for (final ResourceTable.Resource resource : resources) {
-                                final Type type = resource.type;
-                                final ResourceEntry resourceEntry = resource.resourceEntry;
-                                final String path = resourceEntry.toStringValue(this.resourceTable, this.locale);
-                                if (type.density == Densities.DEFAULT) {
-                                    hasDefault = true;
-                                    this.apkMetaBuilder.setIcon(path);
-                                }
-                                final IconPath iconPath = new IconPath(path, type.density);
-                                icons.add(iconPath);
-                            }
-                            if (!hasDefault) {
-                                this.apkMetaBuilder.setIcon(icons.get(0).path);
-                            }
-                            this.iconPaths = icons;
-                        }
-                    } else {
-                        final String value = iconAttr.value;
-                        if (value != null) {
-                            this.apkMetaBuilder.setIcon(value);
-                            final IconPath iconPath = new IconPath(value, Densities.DEFAULT);
-                            this.iconPaths = Collections.singletonList(iconPath);
-                        }
-                    }
+                    allIconPaths.addAll(this.extractIconPaths(iconAttr, "icon"));
                 }
+                final Attribute roundIconAttr = attributes.get("roundIcon");
+                if (roundIconAttr != null) {
+                    allIconPaths.addAll(this.extractIconPaths(roundIconAttr, "roundIcon"));
+                }
+                final Attribute logoAttr = attributes.get("logo");
+                if (logoAttr != null) {
+                    allIconPaths.addAll(this.extractIconPaths(logoAttr, "logo"));
+                }
+                this.iconPaths = allIconPaths;
                 break;
             }
             case "manifest": {
@@ -249,6 +229,51 @@ public class ApkMetaTranslator implements XmlStreamer {
     @NonNull
     public List<IconPath> getIconPaths() {
         return this.iconPaths;
+    }
+
+    private List<IconPath> extractIconPaths(Attribute iconAttr, String attrName) {
+        final ResourceValue resourceValue = iconAttr.typedValue;
+        if (resourceValue instanceof ResourceValue.ReferenceResourceValue) {
+            final long resourceId = ((ResourceValue.ReferenceResourceValue) resourceValue).getReferenceResourceId();
+            final List<ResourceTable.Resource> resources = this.resourceTable.getResourcesById(resourceId);
+            if (!resources.isEmpty()) {
+                final List<IconPath> icons = new ArrayList<>();
+                boolean hasDefault = false;
+                for (final ResourceTable.Resource resource : resources) {
+                    final Type type = resource.type;
+                    final ResourceEntry resourceEntry = resource.resourceEntry;
+                    final String path = resourceEntry.toStringValue(this.resourceTable, this.locale);
+                    if (type.density == Densities.DEFAULT) {
+                        hasDefault = true;
+                        updateApkMetaIcon(path, attrName);
+                    }
+                    final IconPath iconPath = new IconPath(path, type.density);
+                    icons.add(iconPath);
+                }
+                if (!hasDefault) {
+                    updateApkMetaIcon(icons.get(0).path, attrName);
+                }
+                return icons;
+            }
+        } else {
+            final String value = iconAttr.value;
+            if (value != null) {
+                updateApkMetaIcon(value, attrName);
+                final IconPath iconPath = new IconPath(value, Densities.DEFAULT);
+                return Collections.singletonList(iconPath);
+            }
+        }
+        return Collections.emptyList();
+    }
+
+    private void updateApkMetaIcon(String path, String attrName) {
+        if ("icon".equals(attrName)) {
+            this.apkMetaBuilder.setIcon(path);
+        } else if ("roundIcon".equals(attrName)) {
+            this.apkMetaBuilder.setRoundIcon(path);
+        } else if ("logo".equals(attrName)) {
+            this.apkMetaBuilder.setLogo(path);
+        }
     }
 
     private boolean matchTagPath(final String... tags) {

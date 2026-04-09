@@ -19,6 +19,8 @@ public class ApkMeta {
      */
     public final String label;
     private final String icon;
+    private final String roundIcon;
+    private final String logo;
     public final String versionName;
     public final long versionCode;
     public final Long revisionCode;
@@ -57,6 +59,8 @@ public class ApkMeta {
         this.packageName = builder.packageName;
         this.label = builder.label;
         this.icon = builder.icon;
+        this.roundIcon = builder.roundIcon;
+        this.logo = builder.logo;
         this.versionName = builder.versionName;
         this.versionCode = builder.versionCode;
         this.revisionCode = builder.revisionCode;
@@ -97,6 +101,8 @@ public class ApkMeta {
         return "packageName: \t" + this.packageName + "\n"
                 + "label: \t" + this.label + "\n"
                 + "icon: \t" + this.icon + "\n"
+                + "roundIcon: \t" + this.roundIcon + "\n"
+                + "logo: \t" + this.logo + "\n"
                 + "versionName: \t" + this.versionName + "\n"
                 + "versionCode: \t" + this.versionCode + "\n"
                 + "minSdkVersion: \t" + this.minSdkVersion + "\n"
@@ -109,6 +115,8 @@ public class ApkMeta {
         private String packageName;
         private String label;
         private String icon;
+        private String roundIcon;
+        private String logo;
         private String versionName;
         private long versionCode = 0L;
         private Long revisionCode;
@@ -163,6 +171,18 @@ public class ApkMeta {
         @NonNull
         public Builder setIcon(final @Nullable String icon) {
             this.icon = icon;
+            return this;
+        }
+
+        @NonNull
+        public Builder setRoundIcon(final @Nullable String roundIcon) {
+            this.roundIcon = roundIcon;
+            return this;
+        }
+
+        @NonNull
+        public Builder setLogo(final @Nullable String logo) {
+            this.logo = logo;
             return this;
         }
 
