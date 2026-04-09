@@ -26,7 +26,10 @@ object ApkIconFetcher {
         requestedAppIconSize: Int = 0
     ): Bitmap? {
         val iconPaths = apkInfo.apkMetaTranslator.iconPaths
-        if (iconPaths.isEmpty()) return null
+        if (iconPaths.isEmpty()) {
+            android.util.Log.d("AppLog", "icon fetching: no icon paths found in manifest")
+            return null
+        }
 
         val densityDpi = context.resources.displayMetrics.densityDpi
 
@@ -52,22 +55,30 @@ object ApkIconFetcher {
         val otherIconPaths = sortedIconPaths.mapNotNull { it.path }.filter { !it.startsWith("#") }.distinct()
 
         for (path in otherIconPaths) {
+            android.util.Log.d("AppLog", "icon fetching: attempting path: $path")
             filterGenerator.generateZipFilter().use { filter ->
                 val bytes = filter.getByteArrayForEntries(hashSetOf(path))?.get(path)
                 if (bytes != null) {
                     try {
                         val drawable = fetchDrawable(context, path, bytes, apkInfo, locale, filterGenerator, requestedAppIconSize)
                         if (drawable != null) {
+                            android.util.Log.d("AppLog", "icon fetching: successfully decoded: $path")
                             return drawable.toBitmap(requestedAppIconSize, requestedAppIconSize)
+                        } else {
+                            android.util.Log.d("AppLog", "icon fetching: failed to decode: $path")
                         }
                     } catch (e: Exception) {
+                        android.util.Log.d("AppLog", "icon fetching: exception decoding $path: ${e.message}")
                     }
+                } else {
+                    android.util.Log.d("AppLog", "icon fetching: path not found in zip: $path")
                 }
             }
         }
 
         // Try colors if everything else failed
         for (colorPath in colorIconsPaths) {
+            android.util.Log.d("AppLog", "icon fetching: using color icon: $colorPath")
             try {
                 val color = Color.parseColor(colorPath)
                 val bitmap = Bitmap.createBitmap(requestedAppIconSize, requestedAppIconSize, Bitmap.Config.ARGB_8888)
@@ -75,8 +86,10 @@ object ApkIconFetcher {
                 canvas.drawColor(color)
                 return bitmap
             } catch (e: Exception) {
+                android.util.Log.d("AppLog", "icon fetching: failed to use color $colorPath: ${e.message}")
             }
         }
+        android.util.Log.d("AppLog", "icon fetching: all attempts failed")
         return null
     }
 
@@ -89,6 +102,7 @@ object ApkIconFetcher {
         filterGenerator: ZipFilterCreator,
         requestedAppIconSize: Int
     ): Drawable? {
+        android.util.Log.d("AppLog", "icon fetching: fetchDrawable path: $path")
         if (path.startsWith("#")) {
             return try {
                 ColorDrawable(Color.parseColor(path))
@@ -96,7 +110,10 @@ object ApkIconFetcher {
                 null
             }
         }
-        if (bytes == null) return null
+        if (bytes == null) {
+            android.util.Log.d("AppLog", "icon fetching: bytes is null for $path")
+            return null
+        }
         if (!path.endsWith(".xml", true)) {
             return getAppIconFromByteArray(bytes, requestedAppIconSize)?.let {
                 BitmapDrawable(context.resources, it)
@@ -113,23 +130,42 @@ object ApkIconFetcher {
 
             if (rootTag == "adaptive-icon" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 val backgroundPath = adaptiveIconParser.background
-                val foregroundPath = adaptiveIconParser.foreground
-                if (!backgroundPath.isNullOrBlank() && !foregroundPath.isNullOrBlank()) {
+                var foregroundPath = adaptiveIconParser.foreground
+                val monochromePath = adaptiveIconParser.monochrome
+                if (foregroundPath.isNullOrBlank() && !monochromePath.isNullOrBlank()) {
+                    android.util.Log.d("AppLog", "icon fetching: foreground missing, using monochrome as fallback: $monochromePath")
+                    foregroundPath = monochromePath
+                }
+                
+                android.util.Log.d("AppLog", "icon fetching: adaptive-icon background: $backgroundPath, foreground: $foregroundPath")
+                if (!foregroundPath.isNullOrBlank()) {
                     filterGenerator.generateZipFilter().use { filter ->
                         val pathsToFetch = hashSetOf<String>()
-                        if (!backgroundPath.startsWith("#")) pathsToFetch.add(backgroundPath)
+                        if (backgroundPath != null && !backgroundPath.startsWith("#")) pathsToFetch.add(backgroundPath)
                         if (!foregroundPath.startsWith("#")) pathsToFetch.add(foregroundPath)
                         val byteArrayForEntries = if (pathsToFetch.isNotEmpty()) filter.getByteArrayForEntries(pathsToFetch) ?: emptyMap() else emptyMap()
+                        android.util.Log.d("AppLog", "icon fetching: retrieved ${byteArrayForEntries.size} entries for adaptive icon layers")
 
-                        val backgroundDrawable = fetchDrawable(context, backgroundPath, byteArrayForEntries[backgroundPath], apkInfo, locale, filterGenerator, requestedAppIconSize)
+                        val backgroundDrawable = if (backgroundPath != null) {
+                            fetchDrawable(context, backgroundPath, byteArrayForEntries[backgroundPath], apkInfo, locale, filterGenerator, requestedAppIconSize)
+                        } else {
+                            android.util.Log.d("AppLog", "icon fetching: background missing, using transparent")
+                            ColorDrawable(Color.TRANSPARENT)
+                        }
+                        
                         val foregroundDrawable = fetchDrawable(context, foregroundPath, byteArrayForEntries[foregroundPath], apkInfo, locale, filterGenerator, requestedAppIconSize)
-                        if (backgroundDrawable != null && foregroundDrawable != null) {
-                            return AdaptiveIconDrawable(backgroundDrawable, foregroundDrawable)
+                        
+                        if (foregroundDrawable != null) {
+                            val bg = backgroundDrawable ?: ColorDrawable(Color.TRANSPARENT)
+                            return AdaptiveIconDrawable(bg, foregroundDrawable)
+                        } else {
+                            android.util.Log.d("AppLog", "icon fetching: failed to fetch foreground ($foregroundPath) for adaptive icon")
                         }
                     }
                 }
             } else if (rootTag == "layer-list") {
                 val drawablesPaths = adaptiveIconParser.drawables
+                android.util.Log.d("AppLog", "icon fetching: layer-list count: ${drawablesPaths.size}")
                 if (drawablesPaths.isNotEmpty()) {
                     filterGenerator.generateZipFilter().use { filter ->
                         val pathsToFetch = drawablesPaths.filter { !it.startsWith("#") }.toHashSet()
@@ -142,29 +178,35 @@ object ApkIconFetcher {
                         }
                     }
                 }
-            } else if (rootTag == "bitmap" || rootTag == "nine-patch") {
-                val srcPath = adaptiveIconParser.drawables.firstOrNull()
-                if (!srcPath.isNullOrBlank()) {
+            } else if (rootTag == "bitmap" || rootTag == "nine-patch" || rootTag == "inset" || rootTag == "clip" || rootTag == "scale" || rootTag == "rotate") {
+                val innerPath = adaptiveIconParser.drawables.firstOrNull()
+                android.util.Log.d("AppLog", "icon fetching: rootTag $rootTag, innerPath: $innerPath")
+                if (!innerPath.isNullOrBlank()) {
                     filterGenerator.generateZipFilter().use { filter ->
-                        val srcBytes = if (!srcPath.startsWith("#")) filter.getByteArrayForEntries(hashSetOf(srcPath))?.get(srcPath) else null
-                        return fetchDrawable(context, srcPath, srcBytes, apkInfo, locale, filterGenerator, requestedAppIconSize)
+                        val srcBytes = if (!innerPath.startsWith("#")) filter.getByteArrayForEntries(hashSetOf(innerPath))?.get(innerPath) else null
+                        return fetchDrawable(context, innerPath, srcBytes, apkInfo, locale, filterGenerator, requestedAppIconSize)
                     }
                 }
             } else {
-                // Try framework parser as a generic fallback for any other tag (vector, selector, etc.)
-                var drawable = XmlDrawableParser.tryParseDrawable(context, bytes, apkInfo, locale)
+                android.util.Log.d("AppLog", "icon fetching: fallback to XmlDrawableParser for rootTag: $rootTag")
+                val drawable = XmlDrawableParser.tryParseDrawable(context, bytes, apkInfo, locale)
                 if (drawable == null) {
-                    // fallback to text XML translation which resolves references
-                    val xmlTranslator = XmlTranslator()
-                    val fallbackBuffer = ByteBuffer.wrap(bytes)
-                    val fallbackBinaryXmlParser = BinaryXmlParser(fallbackBuffer, apkInfo.resourceTable, xmlTranslator, locale)
-                    fallbackBinaryXmlParser.parse()
-                    val xml = xmlTranslator.xml
-                    drawable = XmlDrawableParser.tryParseDrawable(context, xml)
+                    try {
+                        val xmlTranslator = XmlTranslator()
+                        val fallbackBuffer = ByteBuffer.wrap(bytes)
+                        val fallbackBinaryXmlParser = BinaryXmlParser(fallbackBuffer, apkInfo.resourceTable, xmlTranslator, locale)
+                        fallbackBinaryXmlParser.parse()
+                        val xml = xmlTranslator.xml
+                        android.util.Log.d("AppLog", "icon fetching: XML content for $path:\n$xml")
+                        return XmlDrawableParser.tryParseDrawable(context, xml)
+                    } catch (e: Exception) {
+                        android.util.Log.d("AppLog", "icon fetching: failed to log XML content: ${e.message}")
+                    }
                 }
                 return drawable
             }
         } catch (e: Exception) {
+            android.util.Log.d("AppLog", "icon fetching: exception parsing XML $path: ${e.message}")
         }
         return null
     }

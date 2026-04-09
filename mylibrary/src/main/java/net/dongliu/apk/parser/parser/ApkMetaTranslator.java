@@ -277,6 +277,7 @@ public class ApkMetaTranslator implements XmlStreamer {
     }
 
     private void updateApkMetaIcon(String path, String attrName) {
+        android.util.Log.d("AppLog", "icon fetching: discovered " + attrName + " path: " + path);
         if ("icon".equals(attrName)) {
             this.apkMetaBuilder.setIcon(path);
         } else if ("roundIcon".equals(attrName)) {

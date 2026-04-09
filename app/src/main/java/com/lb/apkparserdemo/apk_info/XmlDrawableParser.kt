@@ -27,21 +27,28 @@ import java.util.*
 object XmlDrawableParser {
 
     fun tryParseDrawable(context: Context, binXml: ByteArray, apkInfo: ApkInfo, locale: Locale): Drawable? {
+        android.util.Log.d("AppLog", "icon fetching: tryParseDrawable (Binary)")
         val streamer = VectorDrawableStreamer()
         val parser = BinaryXmlParser(ByteBuffer.wrap(binXml), apkInfo.resourceTable, streamer, locale)
         return try {
             parser.parse()
             if (streamer.isVector) {
+                android.util.Log.d("AppLog", "icon fetching: parsed as VectorDrawable")
                 streamer.imageVector?.let { imageVectorToDrawable(context, it) }
             } else {
+                // Fallback to framework for non-vector drawables (layer-list, etc.)
+                android.util.Log.d("AppLog", "icon fetching: not a vector, fallback to framework")
                 tryParseFrameworkDrawable(context, binXml)
             }
         } catch (e: Exception) {
+            android.util.Log.d("AppLog", "icon fetching: exception in BinaryXmlParser: ${e.message}")
+            // Last resort fallback
             tryParseFrameworkDrawable(context, binXml)
         }
     }
 
     fun tryParseDrawable(context: Context, xml: String): Drawable? {
+        android.util.Log.d("AppLog", "icon fetching: tryParseDrawable (String XML)")
         try {
             val parser = Xml.newPullParser()
             parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, true)
@@ -53,14 +60,16 @@ object XmlDrawableParser {
             if (type != XmlPullParser.START_TAG) return null
 
             return if (parser.name == "vector") {
+                android.util.Log.d("AppLog", "icon fetching: parsed string XML as vector")
                 val imageVector = parseVectorFromPullParser(parser)
                 imageVector?.let { imageVectorToDrawable(context, it) }
             } else {
+                android.util.Log.d("AppLog", "icon fetching: parsed string XML root: ${parser.name}, fallback to framework")
                 val attrs = Xml.asAttributeSet(parser)
                 Drawable.createFromXmlInner(context.resources, parser, attrs, context.theme)
             }
         } catch (e: Exception) {
-            // e.printStackTrace()
+            android.util.Log.d("AppLog", "icon fetching: exception parsing string XML: ${e.message}")
         }
         return null
     }
