@@ -8,6 +8,7 @@ import androidx.core.graphics.drawable.toBitmap
 import com.lb.apkparserdemo.apk_info.*
 import net.dongliu.apk.parser.bean.IconPath
 import net.dongliu.apk.parser.parser.*
+import net.dongliu.apk.parser.struct.resource.Densities
 import java.nio.ByteBuffer
 import java.util.Locale
 import kotlin.math.abs
@@ -25,117 +26,55 @@ object ApkIconFetcher {
         requestedAppIconSize: Int = 0
     ): Bitmap? {
         val iconPaths = apkInfo.apkMetaTranslator.iconPaths
-        if (iconPaths.isEmpty())
-            return null
-        val resources = context.resources
-        val densityDpi = resources.displayMetrics.densityDpi
-        var bestDividedDensityIconImage: IconPath? = null
-        var bestDivider = 0
-        var closestDensityMatchIconImage: IconPath? = null
-        var bestDensityDiff = -1
-        val xmlIconsPaths = HashSet<String>()
-        val colorIconsPaths = HashSet<String>()
-        for (iconPath in iconPaths) {
-            val path = iconPath.path ?: continue
-            if (path.startsWith("#")) {
-                colorIconsPaths.add(path)
-                continue
-            }
-            if (path.endsWith(".xml", true)) {
-                xmlIconsPaths.add(path)
-                continue
-            }
-            if (iconPath.density % densityDpi == 0) {
-                //divided nicely
-                val divider = iconPath.density / densityDpi
-                if (divider < bestDivider || bestDivider < 0) {
-                    bestDivider = divider
-                    bestDividedDensityIconImage = iconPath
-                }
-                if (bestDivider == 1)
-                    break
-            }
-            val densityDiff = abs(iconPath.density - densityDpi)
-            if (bestDensityDiff < 0 || densityDiff < bestDensityDiff) {
-                bestDensityDiff = densityDiff
-                closestDensityMatchIconImage = iconPath
-            }
-        }
-        val iconsToFetch = HashSet<String>()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
-            iconsToFetch.addAll(xmlIconsPaths)
-        val imageIconPath = bestDividedDensityIconImage?.path
-            ?: closestDensityMatchIconImage?.path
-        imageIconPath?.let { iconsToFetch.add(it) }
-        if (iconsToFetch.isEmpty() && colorIconsPaths.isEmpty())
-            return null
-        filterGenerator.generateZipFilter().use { filter: AbstractZipFilter ->
-            val byteArrayForEntries = filter.getByteArrayForEntries(iconsToFetch) ?: emptyMap()
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                for (xmlIconsPath in xmlIconsPaths) {
-                    val bytes = byteArrayForEntries[xmlIconsPath] ?: continue
+        if (iconPaths.isEmpty()) return null
+
+        val densityDpi = context.resources.displayMetrics.densityDpi
+
+        // Custom sorting for density: ANY is best, then closest to target densityDpi
+        val sortedIconPaths = iconPaths.sortedWith(Comparator { o1: IconPath, o2: IconPath ->
+            if (o1.density == o2.density) return@Comparator 0
+            if (o1.density == Densities.ANY) return@Comparator -1
+            if (o2.density == Densities.ANY) return@Comparator 1
+            if (o1.density == Densities.NONE) return@Comparator -1
+            if (o2.density == Densities.NONE) return@Comparator 1
+            if (o1.density == Densities.DEFAULT) return@Comparator 1
+            if (o2.density == Densities.DEFAULT) return@Comparator -1
+
+            val diff1 = abs(o1.density - densityDpi)
+            val diff2 = abs(o2.density - densityDpi)
+            if (diff1 != diff2) return@Comparator diff1.compareTo(diff2)
+            // if same distance, prefer higher density
+            return@Comparator o2.density.compareTo(o1.density)
+        })
+
+        // Filter out colors for now, try image/xml icons first
+        val colorIconsPaths = sortedIconPaths.mapNotNull { it.path }.filter { it.startsWith("#") }.distinct()
+        val otherIconPaths = sortedIconPaths.mapNotNull { it.path }.filter { !it.startsWith("#") }.distinct()
+
+        for (path in otherIconPaths) {
+            filterGenerator.generateZipFilter().use { filter ->
+                val bytes = filter.getByteArrayForEntries(hashSetOf(path))?.get(path)
+                if (bytes != null) {
                     try {
-                        val adaptiveIconParser = AdaptiveIconParser()
-                        val buffer = ByteBuffer.wrap(bytes)
-                        val binaryXmlParser = BinaryXmlParser(buffer, apkInfo.resourceTable, adaptiveIconParser, locale)
-                        binaryXmlParser.parse()
-                        val rootTag = adaptiveIconParser.rootTag
-                        if (rootTag == "adaptive-icon") {
-                            val backgroundPath = adaptiveIconParser.background
-                            val foregroundPath = adaptiveIconParser.foreground
-                            if (!backgroundPath.isNullOrBlank() && !foregroundPath.isNullOrBlank()) {
-                                filterGenerator.generateZipFilter().use { adaptiveIconZipFilter ->
-                                    val pathsToFetch = hashSetOf<String>()
-                                    if (!backgroundPath.startsWith("#")) pathsToFetch.add(backgroundPath)
-                                    if (!foregroundPath.startsWith("#")) pathsToFetch.add(foregroundPath)
-                                    val adaptiveIconByteArrayForEntries = if (pathsToFetch.isNotEmpty()) adaptiveIconZipFilter.getByteArrayForEntries(pathsToFetch) ?: emptyMap() else emptyMap()
-                                    val backgroundDrawable = fetchDrawable(context, backgroundPath, adaptiveIconByteArrayForEntries[backgroundPath], apkInfo, locale, requestedAppIconSize)
-                                    val foregroundDrawable = fetchDrawable(context, foregroundPath, adaptiveIconByteArrayForEntries[foregroundPath], apkInfo, locale, requestedAppIconSize)
-                                    if (backgroundDrawable != null && foregroundDrawable != null) {
-                                        return AdaptiveIconDrawable(backgroundDrawable, foregroundDrawable).toBitmap(requestedAppIconSize, requestedAppIconSize)
-                                    }
-                                }
-                            }
-                        } else if (rootTag == "layer-list") {
-                            val drawablesPaths = adaptiveIconParser.drawables
-                            if (drawablesPaths.isNotEmpty()) {
-                                filterGenerator.generateZipFilter().use { layerZipFilter ->
-                                    val pathsToFetch = drawablesPaths.filter { !it.startsWith("#") }.toHashSet()
-                                    val drawablesBytes = if (pathsToFetch.isNotEmpty()) layerZipFilter.getByteArrayForEntries(pathsToFetch) ?: emptyMap() else emptyMap()
-                                    val drawables = drawablesPaths.mapNotNull { path -> fetchDrawable(context, path, drawablesBytes[path], apkInfo, locale, requestedAppIconSize) }
-                                    if (drawables.isNotEmpty()) {
-                                        return LayerDrawable(drawables.toTypedArray()).toBitmap(requestedAppIconSize, requestedAppIconSize)
-                                    }
-                                }
-                            }
-                        } else if (rootTag == "vector" || rootTag == "selector") {
-                            val drawable = fetchDrawable(context, xmlIconsPath, bytes, apkInfo, locale, requestedAppIconSize)
-                            if (drawable != null) return drawable.toBitmap(requestedAppIconSize, requestedAppIconSize)
+                        val drawable = fetchDrawable(context, path, bytes, apkInfo, locale, filterGenerator, requestedAppIconSize)
+                        if (drawable != null) {
+                            return drawable.toBitmap(requestedAppIconSize, requestedAppIconSize)
                         }
                     } catch (e: Exception) {
                     }
                 }
             }
-            if (imageIconPath != null) {
-                val bytes = byteArrayForEntries[imageIconPath]
-                if (bytes != null) {
-                    val bitmap = getAppIconFromByteArray(bytes, requestedAppIconSize)
-                    if (bitmap != null) return bitmap
-                }
-            }
-            for (colorPath in colorIconsPaths) {
-                try {
-                    val color = Color.parseColor(colorPath)
-                    val bitmap = Bitmap.createBitmap(
-                        requestedAppIconSize,
-                        requestedAppIconSize,
-                        Bitmap.Config.ARGB_8888
-                    )
-                    val canvas = Canvas(bitmap)
-                    canvas.drawColor(color)
-                    return bitmap
-                } catch (e: Exception) {
-                }
+        }
+
+        // Try colors if everything else failed
+        for (colorPath in colorIconsPaths) {
+            try {
+                val color = Color.parseColor(colorPath)
+                val bitmap = Bitmap.createBitmap(requestedAppIconSize, requestedAppIconSize, Bitmap.Config.ARGB_8888)
+                val canvas = Canvas(bitmap)
+                canvas.drawColor(color)
+                return bitmap
+            } catch (e: Exception) {
             }
         }
         return null
@@ -147,6 +86,7 @@ object ApkIconFetcher {
         bytes: ByteArray?,
         apkInfo: ApkInfo,
         locale: Locale,
+        filterGenerator: ZipFilterCreator,
         requestedAppIconSize: Int
     ): Drawable? {
         if (path.startsWith("#")) {
@@ -162,22 +102,71 @@ object ApkIconFetcher {
                 BitmapDrawable(context.resources, it)
             }
         }
-        // first try binary parsing (can be faster but might fail if it has unresolved refs)
-        var drawable = XmlDrawableParser.tryParseDrawable(context, bytes)
-        if (drawable == null) {
-            // fallback to text XML translation which resolves references
-            try {
-                val xmlTranslator = XmlTranslator()
-                val buffer = ByteBuffer.wrap(bytes)
-                val binaryXmlParser =
-                    BinaryXmlParser(buffer, apkInfo.resourceTable, xmlTranslator, locale)
-                binaryXmlParser.parse()
-                val xml = xmlTranslator.xml
-                drawable = XmlDrawableParser.tryParseDrawable(context, xml)
-            } catch (e: Exception) {
+
+        // Handle XML
+        try {
+            val adaptiveIconParser = AdaptiveIconParser()
+            val buffer = ByteBuffer.wrap(bytes)
+            val binaryXmlParser = BinaryXmlParser(buffer, apkInfo.resourceTable, adaptiveIconParser, locale)
+            binaryXmlParser.parse()
+            val rootTag = adaptiveIconParser.rootTag
+
+            if (rootTag == "adaptive-icon" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                val backgroundPath = adaptiveIconParser.background
+                val foregroundPath = adaptiveIconParser.foreground
+                if (!backgroundPath.isNullOrBlank() && !foregroundPath.isNullOrBlank()) {
+                    filterGenerator.generateZipFilter().use { filter ->
+                        val pathsToFetch = hashSetOf<String>()
+                        if (!backgroundPath.startsWith("#")) pathsToFetch.add(backgroundPath)
+                        if (!foregroundPath.startsWith("#")) pathsToFetch.add(foregroundPath)
+                        val byteArrayForEntries = if (pathsToFetch.isNotEmpty()) filter.getByteArrayForEntries(pathsToFetch) ?: emptyMap() else emptyMap()
+
+                        val backgroundDrawable = fetchDrawable(context, backgroundPath, byteArrayForEntries[backgroundPath], apkInfo, locale, filterGenerator, requestedAppIconSize)
+                        val foregroundDrawable = fetchDrawable(context, foregroundPath, byteArrayForEntries[foregroundPath], apkInfo, locale, filterGenerator, requestedAppIconSize)
+                        if (backgroundDrawable != null && foregroundDrawable != null) {
+                            return AdaptiveIconDrawable(backgroundDrawable, foregroundDrawable)
+                        }
+                    }
+                }
+            } else if (rootTag == "layer-list") {
+                val drawablesPaths = adaptiveIconParser.drawables
+                if (drawablesPaths.isNotEmpty()) {
+                    filterGenerator.generateZipFilter().use { filter ->
+                        val pathsToFetch = drawablesPaths.filter { !it.startsWith("#") }.toHashSet()
+                        val byteArrayForEntries = if (pathsToFetch.isNotEmpty()) filter.getByteArrayForEntries(pathsToFetch) ?: emptyMap() else emptyMap()
+                        val drawables = drawablesPaths.mapNotNull { layerPath ->
+                            fetchDrawable(context, layerPath, byteArrayForEntries[layerPath], apkInfo, locale, filterGenerator, requestedAppIconSize)
+                        }
+                        if (drawables.isNotEmpty()) {
+                            return LayerDrawable(drawables.toTypedArray())
+                        }
+                    }
+                }
+            } else if (rootTag == "bitmap" || rootTag == "nine-patch") {
+                val srcPath = adaptiveIconParser.drawables.firstOrNull()
+                if (!srcPath.isNullOrBlank()) {
+                    filterGenerator.generateZipFilter().use { filter ->
+                        val srcBytes = if (!srcPath.startsWith("#")) filter.getByteArrayForEntries(hashSetOf(srcPath))?.get(srcPath) else null
+                        return fetchDrawable(context, srcPath, srcBytes, apkInfo, locale, filterGenerator, requestedAppIconSize)
+                    }
+                }
+            } else {
+                // Try framework parser as a generic fallback for any other tag (vector, selector, etc.)
+                var drawable = XmlDrawableParser.tryParseDrawable(context, bytes)
+                if (drawable == null) {
+                    // fallback to text XML translation which resolves references
+                    val xmlTranslator = XmlTranslator()
+                    val fallbackBuffer = ByteBuffer.wrap(bytes)
+                    val fallbackBinaryXmlParser = BinaryXmlParser(fallbackBuffer, apkInfo.resourceTable, xmlTranslator, locale)
+                    fallbackBinaryXmlParser.parse()
+                    val xml = xmlTranslator.xml
+                    drawable = XmlDrawableParser.tryParseDrawable(context, xml)
+                }
+                return drawable
             }
+        } catch (e: Exception) {
         }
-        return drawable
+        return null
     }
 
     private fun getAppIconFromByteArray(bytes: ByteArray, requestedAppIconSize: Int): Bitmap? {

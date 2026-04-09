@@ -69,7 +69,7 @@ public class AdaptiveIconParser implements XmlStreamer {
     private String getDrawable(final XmlNodeStartTag xmlNodeStartTag) {
         final Attributes attributes = xmlNodeStartTag.attributes;
         for (final Attribute attribute : attributes.attributes) {
-            if (attribute.name.equals("drawable")) {
+            if (attribute.name.equals("drawable") || attribute.name.equals("src")) {
                 return attribute.value;
             }
         }

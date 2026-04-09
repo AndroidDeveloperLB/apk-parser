@@ -14,7 +14,6 @@ import net.dongliu.apk.parser.struct.ResourceValue;
 import net.dongliu.apk.parser.struct.resource.Densities;
 import net.dongliu.apk.parser.struct.resource.ResourceEntry;
 import net.dongliu.apk.parser.struct.resource.ResourceTable;
-import net.dongliu.apk.parser.struct.resource.Type;
 import net.dongliu.apk.parser.struct.xml.Attribute;
 import net.dongliu.apk.parser.struct.xml.Attributes;
 import net.dongliu.apk.parser.struct.xml.XmlCData;
@@ -234,27 +233,7 @@ public class ApkMetaTranslator implements XmlStreamer {
     private List<IconPath> extractIconPaths(Attribute iconAttr, String attrName) {
         final ResourceValue resourceValue = iconAttr.typedValue;
         if (resourceValue instanceof ResourceValue.ReferenceResourceValue) {
-            final long resourceId = ((ResourceValue.ReferenceResourceValue) resourceValue).getReferenceResourceId();
-            final List<ResourceTable.Resource> resources = this.resourceTable.getResourcesById(resourceId);
-            if (!resources.isEmpty()) {
-                final List<IconPath> icons = new ArrayList<>();
-                boolean hasDefault = false;
-                for (final ResourceTable.Resource resource : resources) {
-                    final Type type = resource.type;
-                    final ResourceEntry resourceEntry = resource.resourceEntry;
-                    final String path = resourceEntry.toStringValue(this.resourceTable, this.locale);
-                    if (type.density == Densities.DEFAULT) {
-                        hasDefault = true;
-                        updateApkMetaIcon(path, attrName);
-                    }
-                    final IconPath iconPath = new IconPath(path, type.density);
-                    icons.add(iconPath);
-                }
-                if (!hasDefault) {
-                    updateApkMetaIcon(icons.get(0).path, attrName);
-                }
-                return icons;
-            }
+            return extractIconPathsById(((ResourceValue.ReferenceResourceValue) resourceValue).getReferenceResourceId(), attrName, new java.util.HashSet<Long>());
         } else {
             final String value = iconAttr.value;
             if (value != null) {
@@ -264,6 +243,37 @@ public class ApkMetaTranslator implements XmlStreamer {
             }
         }
         return Collections.emptyList();
+    }
+
+    private List<IconPath> extractIconPathsById(long resourceId, String attrName, java.util.Set<Long> visitedIds) {
+        if (visitedIds.contains(resourceId)) return Collections.emptyList();
+        visitedIds.add(resourceId);
+
+        final List<ResourceTable.Resource> resources = this.resourceTable.getResourcesById(resourceId);
+        if (resources.isEmpty()) return Collections.emptyList();
+
+        final List<IconPath> icons = new ArrayList<>();
+        boolean hasDefault = false;
+        for (final ResourceTable.Resource resource : resources) {
+            final ResourceEntry resourceEntry = resource.resourceEntry;
+            if (resourceEntry.value instanceof ResourceValue.ReferenceResourceValue) {
+                // follow reference recursively
+                long nextId = ((ResourceValue.ReferenceResourceValue) resourceEntry.value).getReferenceResourceId();
+                icons.addAll(extractIconPathsById(nextId, attrName, visitedIds));
+            } else {
+                final String path = resourceEntry.toStringValue(this.resourceTable, this.locale);
+                if (path == null) continue;
+                if (resource.type.density == Densities.DEFAULT) {
+                    hasDefault = true;
+                    updateApkMetaIcon(path, attrName);
+                }
+                icons.add(new IconPath(path, resource.type.density));
+            }
+        }
+        if (!hasDefault && !icons.isEmpty()) {
+            updateApkMetaIcon(icons.get(0).path, attrName);
+        }
+        return icons;
     }
 
     private void updateApkMetaIcon(String path, String attrName) {
