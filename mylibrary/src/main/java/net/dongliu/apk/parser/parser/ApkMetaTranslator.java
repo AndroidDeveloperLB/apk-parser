@@ -52,8 +52,14 @@ public class ApkMetaTranslator implements XmlStreamer {
     public void onStartTag(final @NonNull XmlNodeStartTag xmlNodeStartTag) {
         final Attributes attributes = xmlNodeStartTag.attributes;
         final String xmlNodeStartTagName = xmlNodeStartTag.name;
+        android.util.Log.d("AppLog", "icon fetching: manifest tag encountered: <" + xmlNodeStartTagName + ">");
         switch (xmlNodeStartTagName) {
             case "application": {
+                android.util.Log.d("AppLog", "icon fetching: checking tag <application> for icons");
+                for (Attribute attr : attributes.attributes) {
+                    if (attr == null) continue;
+                    android.util.Log.d("AppLog", "icon fetching: application attr: " + attr.name + "=" + attr.value);
+                }
                 this.apkMetaBuilder.setDebuggable(attributes.getBoolean("debuggable", false));
                 //TODO fix this part in a better way. Workaround for this: https://github.com/hsiafan/apk-parser/issues/119
                 if (this.apkMetaBuilder.split == null)
@@ -95,6 +101,43 @@ public class ApkMetaTranslator implements XmlStreamer {
                 final Attribute logoAttr = attributes.get("logo");
                 if (logoAttr != null) {
                     allIconPaths.addAll(this.extractIconPaths(logoAttr, "logo"));
+                }
+                final Attribute bannerAttr = attributes.get("banner");
+                if (bannerAttr != null) {
+                    allIconPaths.addAll(this.extractIconPaths(bannerAttr, "banner"));
+                }
+                this.iconPaths = allIconPaths;
+                break;
+            }
+            case "activity":
+            case "activity-alias":
+            case "receiver":
+            case "service":
+            case "provider":
+            case "instrumentation":
+            case "permission-group":
+            case "meta-data": {
+                android.util.Log.d("AppLog", "icon fetching: checking tag <" + xmlNodeStartTagName + "> for icons");
+                for (Attribute attr : attributes.attributes) {
+                    if (attr == null) continue;
+                    android.util.Log.d("AppLog", "icon fetching: " + xmlNodeStartTagName + " attr: " + attr.name + "=" + attr.value);
+                }
+                final List<IconPath> allIconPaths = new ArrayList<>(this.iconPaths);
+                final Attribute iconAttr = attributes.get("icon");
+                if (iconAttr != null) {
+                    allIconPaths.addAll(this.extractIconPaths(iconAttr, "icon"));
+                }
+                final Attribute roundIconAttr = attributes.get("roundIcon");
+                if (roundIconAttr != null) {
+                    allIconPaths.addAll(this.extractIconPaths(roundIconAttr, "roundIcon"));
+                }
+                final Attribute logoAttr = attributes.get("logo");
+                if (logoAttr != null) {
+                    allIconPaths.addAll(this.extractIconPaths(logoAttr, "logo"));
+                }
+                final Attribute bannerAttr = attributes.get("banner");
+                if (bannerAttr != null) {
+                    allIconPaths.addAll(this.extractIconPaths(bannerAttr, "banner"));
                 }
                 this.iconPaths = allIconPaths;
                 break;
@@ -189,6 +232,18 @@ public class ApkMetaTranslator implements XmlStreamer {
                 break;
             }
             case "permission": {
+                android.util.Log.d("AppLog", "icon fetching: checking tag <permission> for icons");
+                for (Attribute attr : attributes.attributes) {
+                    if (attr == null) continue;
+                    android.util.Log.d("AppLog", "icon fetching: permission attr: " + attr.name + "=" + attr.value);
+                }
+                final List<IconPath> allIconPaths = new ArrayList<>(this.iconPaths);
+                final Attribute iconAttr = attributes.get("icon");
+                if (iconAttr != null) {
+                    allIconPaths.addAll(this.extractIconPaths(iconAttr, "icon"));
+                }
+                this.iconPaths = allIconPaths;
+
                 final Permission permission = new Permission(
                         attributes.getString("name"),
                         attributes.getString("label"),
@@ -227,19 +282,26 @@ public class ApkMetaTranslator implements XmlStreamer {
 
     @NonNull
     public List<IconPath> getIconPaths() {
+        if (this.iconPaths.isEmpty()) {
+            android.util.Log.d("AppLog", "icon fetching: getIconPaths() returned empty list");
+        }
         return this.iconPaths;
     }
 
     private List<IconPath> extractIconPaths(Attribute iconAttr, String attrName) {
         final ResourceValue resourceValue = iconAttr.typedValue;
         if (resourceValue instanceof ResourceValue.ReferenceResourceValue) {
-            return extractIconPathsById(((ResourceValue.ReferenceResourceValue) resourceValue).getReferenceResourceId(), attrName, new java.util.HashSet<Long>());
+            long resId = ((ResourceValue.ReferenceResourceValue) resourceValue).getReferenceResourceId();
+            android.util.Log.d("AppLog", "icon fetching: extracting " + attrName + " from reference ID 0x" + Long.toHexString(resId));
+            return extractIconPathsById(resId, attrName, new java.util.HashSet<Long>());
         } else {
             final String value = iconAttr.value;
             if (value != null) {
                 updateApkMetaIcon(value, attrName);
                 final IconPath iconPath = new IconPath(value, Densities.DEFAULT);
                 return Collections.singletonList(iconPath);
+            } else {
+                android.util.Log.d("AppLog", "icon fetching: " + attrName + " attribute exists but has no value");
             }
         }
         return Collections.emptyList();
@@ -250,7 +312,10 @@ public class ApkMetaTranslator implements XmlStreamer {
         visitedIds.add(resourceId);
 
         final List<ResourceTable.Resource> resources = this.resourceTable.getResourcesById(resourceId);
-        if (resources.isEmpty()) return Collections.emptyList();
+        if (resources.isEmpty()) {
+            android.util.Log.d("AppLog", "icon fetching: no resources found for ID 0x" + Long.toHexString(resourceId));
+            return Collections.emptyList();
+        }
 
         final List<IconPath> icons = new ArrayList<>();
         boolean hasDefault = false;
