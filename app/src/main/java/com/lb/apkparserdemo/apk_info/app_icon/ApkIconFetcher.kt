@@ -110,6 +110,28 @@ object ApkIconFetcher {
                 null
             }
         }
+        if (path.startsWith("resourceId:")) {
+            val resId = try {
+                path.substringAfter("0x").toLong(16).toInt()
+            } catch (e: Exception) {
+                0
+            }
+            if (resId != 0) {
+                try {
+                    // Try to fetch from system if it's a system resource
+                    if ((resId shr 24) == 0x01) {
+                        val drawable = androidx.core.content.res.ResourcesCompat.getDrawable(context.resources, resId, null)
+                        if (drawable != null) {
+                            android.util.Log.d("AppLog", "icon fetching: successfully fetched system resource $path")
+                            return drawable
+                        }
+                    }
+                } catch (e: Exception) {
+                    android.util.Log.d("AppLog", "icon fetching: failed to get system resource $path: ${e.message}")
+                }
+            }
+            return null
+        }
         if (bytes == null) {
             android.util.Log.d("AppLog", "icon fetching: bytes is null for $path")
             return null
@@ -141,8 +163,8 @@ object ApkIconFetcher {
                 if (!foregroundPath.isNullOrBlank()) {
                     filterGenerator.generateZipFilter().use { filter ->
                         val pathsToFetch = hashSetOf<String>()
-                        if (backgroundPath != null && !backgroundPath.startsWith("#")) pathsToFetch.add(backgroundPath)
-                        if (!foregroundPath.startsWith("#")) pathsToFetch.add(foregroundPath)
+                        if (isZipPath(backgroundPath)) pathsToFetch.add(backgroundPath!!)
+                        if (isZipPath(foregroundPath)) pathsToFetch.add(foregroundPath)
                         val byteArrayForEntries = if (pathsToFetch.isNotEmpty()) filter.getByteArrayForEntries(pathsToFetch) ?: emptyMap() else emptyMap()
                         android.util.Log.d("AppLog", "icon fetching: retrieved ${byteArrayForEntries.size} entries for adaptive icon layers")
 
@@ -168,7 +190,7 @@ object ApkIconFetcher {
                 android.util.Log.d("AppLog", "icon fetching: layer-list count: ${drawablesPaths.size}")
                 if (drawablesPaths.isNotEmpty()) {
                     filterGenerator.generateZipFilter().use { filter ->
-                        val pathsToFetch = drawablesPaths.filter { !it.startsWith("#") }.toHashSet()
+                        val pathsToFetch = drawablesPaths.filter { isZipPath(it) }.toHashSet()
                         val byteArrayForEntries = if (pathsToFetch.isNotEmpty()) filter.getByteArrayForEntries(pathsToFetch) ?: emptyMap() else emptyMap()
                         val drawables = drawablesPaths.mapNotNull { layerPath ->
                             fetchDrawable(context, layerPath, byteArrayForEntries[layerPath], apkInfo, locale, filterGenerator, requestedAppIconSize)
@@ -183,7 +205,7 @@ object ApkIconFetcher {
                 android.util.Log.d("AppLog", "icon fetching: rootTag $rootTag, innerPath: $innerPath")
                 if (!innerPath.isNullOrBlank()) {
                     filterGenerator.generateZipFilter().use { filter ->
-                        val srcBytes = if (!innerPath.startsWith("#")) filter.getByteArrayForEntries(hashSetOf(innerPath))?.get(innerPath) else null
+                        val srcBytes = if (isZipPath(innerPath)) filter.getByteArrayForEntries(hashSetOf(innerPath))?.get(innerPath) else null
                         return fetchDrawable(context, innerPath, srcBytes, apkInfo, locale, filterGenerator, requestedAppIconSize)
                     }
                 }
@@ -209,6 +231,13 @@ object ApkIconFetcher {
             android.util.Log.d("AppLog", "icon fetching: exception parsing XML $path: ${e.message}")
         }
         return null
+    }
+
+    private fun isZipPath(path: String?): Boolean {
+        if (path.isNullOrBlank()) return false
+        if (path.startsWith("#")) return false
+        if (path.startsWith("resourceId:")) return false
+        return true
     }
 
     private fun getAppIconFromByteArray(bytes: ByteArray, requestedAppIconSize: Int): Bitmap? {

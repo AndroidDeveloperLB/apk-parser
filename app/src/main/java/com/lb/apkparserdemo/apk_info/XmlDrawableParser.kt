@@ -28,7 +28,7 @@ object XmlDrawableParser {
 
     fun tryParseDrawable(context: Context, binXml: ByteArray, apkInfo: ApkInfo, locale: Locale): Drawable? {
         android.util.Log.d("AppLog", "icon fetching: tryParseDrawable (Binary)")
-        val streamer = VectorDrawableStreamer()
+        val streamer = VectorDrawableStreamer(context)
         val parser = BinaryXmlParser(ByteBuffer.wrap(binXml), apkInfo.resourceTable, streamer, locale)
         return try {
             parser.parse()
@@ -61,7 +61,7 @@ object XmlDrawableParser {
 
             return if (parser.name == "vector") {
                 android.util.Log.d("AppLog", "icon fetching: parsed string XML as vector")
-                val imageVector = parseVectorFromPullParser(parser)
+                val imageVector = parseVectorFromPullParser(context, parser)
                 imageVector?.let { imageVectorToDrawable(context, it) }
             } else {
                 android.util.Log.d("AppLog", "icon fetching: parsed string XML root: ${parser.name}, fallback to framework")
@@ -96,7 +96,7 @@ object XmlDrawableParser {
         return null
     }
 
-    private class VectorDrawableStreamer : XmlStreamer {
+    private class VectorDrawableStreamer(private val context: Context) : XmlStreamer {
         var imageVector: ImageVector? = null
         var isVector = false
         private var builder: ImageVector.Builder? = null
@@ -118,7 +118,7 @@ object XmlDrawableParser {
                         defaultHeight = height.dp,
                         viewportWidth = viewportWidth,
                         viewportHeight = viewportHeight,
-                        tintColor = attr.getString("tint")?.let { parseColor(it) } ?: Color.Unspecified,
+                        tintColor = attr.getString("tint")?.let { parseColor(context, it) } ?: Color.Unspecified,
                         tintBlendMode = parseBlendMode(attr.getString("tintMode")),
                         autoMirror = attr.getBoolean("autoMirrored", false)
                     )
@@ -142,9 +142,9 @@ object XmlDrawableParser {
                     builder?.addPath(
                         pathData = addPathNodes(pathData),
                         name = attr.getString("name") ?: "",
-                        fill = attr.getString("fillColor")?.let { obtainBrush(it) },
+                        fill = attr.getString("fillColor")?.let { obtainBrush(context, it) },
                         fillAlpha = attr.getString("fillAlpha")?.toFloat() ?: 1f,
-                        stroke = attr.getString("strokeColor")?.let { obtainBrush(it) },
+                        stroke = attr.getString("strokeColor")?.let { obtainBrush(context, it) },
                         strokeAlpha = attr.getString("strokeAlpha")?.toFloat() ?: 1f,
                         strokeLineWidth = attr.getString("strokeWidth")?.toFloat() ?: 0f,
                         strokeLineCap = parseStrokeCap(attr.getString("strokeLineCap")),
@@ -182,7 +182,7 @@ object XmlDrawableParser {
         override fun onNamespaceEnd(tag: net.dongliu.apk.parser.struct.xml.XmlNamespaceEndTag) {}
     }
 
-    private fun parseVectorFromPullParser(parser: XmlPullParser): ImageVector? {
+    private fun parseVectorFromPullParser(context: Context, parser: XmlPullParser): ImageVector? {
         val ns = "http://schemas.android.com/apk/res/android"
         val width = parser.getAttributeValue(ns, "width")?.parseDimension() ?: 24f
         val height = parser.getAttributeValue(ns, "height")?.parseDimension() ?: 24f
@@ -195,7 +195,7 @@ object XmlDrawableParser {
             defaultHeight = height.dp,
             viewportWidth = viewportWidth,
             viewportHeight = viewportHeight,
-            tintColor = parser.getAttributeValue(ns, "tint")?.let { parseColor(it) } ?: Color.Unspecified,
+            tintColor = parser.getAttributeValue(ns, "tint")?.let { parseColor(context, it) } ?: Color.Unspecified,
             tintBlendMode = parseBlendMode(parser.getAttributeValue(ns, "tintMode")),
             autoMirror = parser.getAttributeValue(ns, "autoMirrored")?.toBoolean() ?: false
         )
@@ -226,9 +226,9 @@ object XmlDrawableParser {
                             builder.addPath(
                                 pathData = addPathNodes(pathData),
                                 name = parser.getAttributeValue(ns, "name") ?: "",
-                                fill = parser.getAttributeValue(ns, "fillColor")?.let { obtainBrush(it) },
+                                fill = parser.getAttributeValue(ns, "fillColor")?.let { obtainBrush(context, it) },
                                 fillAlpha = parser.getAttributeValue(ns, "fillAlpha")?.toFloat() ?: 1f,
-                                stroke = parser.getAttributeValue(ns, "strokeColor")?.let { obtainBrush(it) },
+                                stroke = parser.getAttributeValue(ns, "strokeColor")?.let { obtainBrush(context, it) },
                                 strokeAlpha = parser.getAttributeValue(ns, "strokeAlpha")?.toFloat() ?: 1f,
                                 strokeLineWidth = parser.getAttributeValue(ns, "strokeWidth")?.toFloat() ?: 0f,
                                 strokeLineCap = parseStrokeCap(parser.getAttributeValue(ns, "strokeLineCap")),
@@ -397,15 +397,23 @@ object XmlDrawableParser {
 
     private fun String.parseDimension(): Float = filter { it.isDigit() || it == '.' || it == '-' }.toFloatOrNull() ?: 0f
 
-    private fun parseColor(colorStr: String): Color {
+    private fun parseColor(context: Context, colorStr: String): Color {
         return try {
-            if (colorStr.startsWith("#")) Color(android.graphics.Color.parseColor(colorStr))
-            else Color.Transparent
+            if (colorStr.startsWith("#")) {
+                Color(android.graphics.Color.parseColor(colorStr))
+            } else if (colorStr.startsWith("resourceId:")) {
+                val resId = colorStr.substringAfter("0x").toLong(16).toInt()
+                if ((resId shr 24) == 0x01) {
+                    val color = androidx.core.content.res.ResourcesCompat.getColor(context.resources, resId, null)
+                    Color(color)
+                } else Color.Transparent
+            } else Color.Transparent
         } catch (e: Exception) { Color.Transparent }
     }
 
-    private fun obtainBrush(colorStr: String): Brush? {
-        return if (colorStr.startsWith("#")) SolidColor(parseColor(colorStr)) else null
+    private fun obtainBrush(context: Context, colorStr: String): Brush? {
+        val color = parseColor(context, colorStr)
+        return if (color != Color.Transparent) SolidColor(color) else null
     }
 
     private fun parseBlendMode(modeStr: String?): BlendMode = when (modeStr) {
