@@ -67,7 +67,7 @@ public class ResourceTable {
         // an 8-bit Type id [bits 16-23]
         // a 16-bit Entry index [bits 0-15]
         final short packageId = (short) (resourceId >> 24 & 0xff);
-        final ResourcePackage resourcePackage = this.getPackage(packageId);
+        ResourcePackage resourcePackage = this.getPackage(packageId);
         if (resourcePackage == null) {
             StringBuilder sb = new StringBuilder();
             for (Short id : packageMap.keySet()) {

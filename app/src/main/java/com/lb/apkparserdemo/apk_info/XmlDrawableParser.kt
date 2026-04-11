@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import net.dongliu.apk.parser.parser.BinaryXmlParser
 import net.dongliu.apk.parser.parser.XmlStreamer
+import net.dongliu.apk.parser.parser.XmlTranslator
 import net.dongliu.apk.parser.struct.xml.XmlNodeEndTag
 import net.dongliu.apk.parser.struct.xml.XmlNodeStartTag
 import org.xmlpull.v1.XmlPullParser
@@ -28,6 +29,17 @@ object XmlDrawableParser {
 
     fun tryParseDrawable(context: Context, binXml: ByteArray, apkInfo: ApkInfo, locale: Locale, subResourceProvider: ((String) -> ByteArray?)? = null): Drawable? {
         android.util.Log.d("AppLog", "icon fetching: tryParseDrawable (Binary)")
+        try {
+            val xmlTranslator = XmlTranslator()
+            val fallbackBuffer = ByteBuffer.wrap(binXml)
+            val fallbackBinaryXmlParser = BinaryXmlParser(fallbackBuffer, apkInfo.resourceTable, xmlTranslator, locale)
+            fallbackBinaryXmlParser.parse()
+            val xml = xmlTranslator.xml
+            android.util.Log.d("AppLog", "icon fetching: XML content:\n$xml")
+        } catch (e: Exception) {
+            android.util.Log.d("AppLog", "icon fetching: failed to log XML content: ${e.message}")
+        }
+
         val streamer = VectorDrawableStreamer(context, apkInfo, locale, subResourceProvider)
         val parser = BinaryXmlParser(ByteBuffer.wrap(binXml), apkInfo.resourceTable, streamer, locale)
         return try {

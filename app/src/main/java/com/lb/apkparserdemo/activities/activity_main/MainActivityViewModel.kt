@@ -64,9 +64,9 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
         var startTime = System.currentTimeMillis()
         val installedPackages =
                 packageManager.getInstalledPackagesCompat(PackageManager.GET_META_DATA)
-//                        .filter{it.packageName=="com.google.android.contactkeys"}
+                        .filter{it.packageName=="android"}
         var endTime = System.currentTimeMillis()
-        Log.d("AppLog", "time taken: ${endTime - startTime}")
+        Log.d("AppLog", "time taken: ${endTime - startTime}. total apps to process: ${installedPackages.size}")
         startTime = endTime
         var apksHandledSoFar = 0
         for (packageInfo in installedPackages) {
@@ -74,123 +74,137 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
             Log.d("AppLog", "checking files of $packageName")
             val isSystemApp = packageInfo.isSystemApp()
 
-            // 1. Build a master resource table and collect all APK paths
-            val allApkFilePaths = mutableListOf<String>()
-            packageInfo.applicationInfo?.publicSourceDir?.let { allApkFilePaths.add(it) }
-            packageInfo.applicationInfo?.splitPublicSourceDirs?.let { allApkFilePaths.addAll(it) }
+            val baseApkPath = packageInfo.applicationInfo!!.publicSourceDir
+            val splitApkPaths = packageInfo.applicationInfo!!.splitPublicSourceDirs?.toList() ?: emptyList()
+            val allApkFilePaths = listOf(baseApkPath) + splitApkPaths
 
-            val masterResourceTable = ResourceTable(null)
-            for (apkPath in allApkFilePaths) {
-                getZipFilter(apkPath, ZIP_FILTER_TYPE).use { filter ->
-                    val resBytes = filter.getByteArrayForEntries(emptySet(), hashSetOf(AndroidConstants.RESOURCE_FILE))?.get(AndroidConstants.RESOURCE_FILE)
-                    if (resBytes != null) {
+            // Always build master table if splits exist, to ensure correct labels/icons
+            val masterResourceTable: ResourceTable? = if (splitApkPaths.isNotEmpty()) {
+                val table = ResourceTable(null)
+                for (apkPath in allApkFilePaths) {
+                    getZipFilter(apkPath, ZIP_FILTER_TYPE).use { filter ->
+                        val resBytes = filter.getByteArrayForEntries(emptySet(), hashSetOf(AndroidConstants.RESOURCE_FILE))?.get(AndroidConstants.RESOURCE_FILE)
+                        if (resBytes != null) {
+                            try {
+                                val parser = ResourceTableParser(ByteBuffer.wrap(resBytes))
+                                parser.parse()
+                                table.merge(parser.resourceTable)
+                            } catch (e: Exception) {
+                                Log.e("AppLog", "failed to parse resources of $apkPath: ${e.message}")
+                            }
+                        }
+                    }
+                }
+                table
+            } else null
+
+            val apkInfo = getZipFilter(baseApkPath, ZIP_FILTER_TYPE).use { filter ->
+                try {
+                    ApkInfo.internalGetApkInfo(locale, filter, requestParseManifestXmlTagForApkType = GET_APK_TYPE, requestParseResources = VALIDATE_RESOURCES, masterResourceTable = masterResourceTable)
+                } catch (e: Throwable) {
+                    Log.e("AppLog", "failed to parse apk for $packageName: ${e.message}")
+                    null
+                }
+            }
+
+            if (apkInfo == null) {
+                parsingErrorsLiveData.inc()
+                if (isSystemApp) systemAppsErrorsCountLiveData.inc()
+                Log.e("AppLog", "can't parse apk for \"$packageName\" in: \"$baseApkPath\" isSystemApp?$isSystemApp")
+                continue
+            }
+
+            val currentApkInfo = apkInfo!!
+            if (VALIDATE_RESOURCES) {
+                //check if the library can get app icon, if required
+                val appIcon = ApkIconFetcher.getApkIcon(
+                        context, locale, object : ApkIconFetcher.ZipFilterCreator {
+                    override fun generateZipFilter(): AbstractZipFilter =
+                            MultiZipFilter(allApkFilePaths.map { getZipFilter(it, ZIP_FILTER_TYPE) })
+                }, currentApkInfo, appIconSize
+                )
+                if (packageInfo.applicationInfo!!.icon != 0 && appIcon == null) {
+                    failedGettingAppIconErrorsLiveData.inc()
+                    if (isSystemApp) systemAppsErrorsCountLiveData.inc()
+                    Log.e("AppLog", "can\'t get app icon for \"$packageName\" in: \"$baseApkPath\" isSystemApp?$isSystemApp")
+                    // Log all entries in all APKs to see if the requested path exists
+                    for (apkPath in allApkFilePaths) {
                         try {
-                            val parser = ResourceTableParser(ByteBuffer.wrap(resBytes))
-                            parser.parse()
-                            masterResourceTable.merge(parser.resourceTable)
-                        } catch (e: Exception) {
-                            Log.e("AppLog", "failed to parse resources of $apkPath: ${e.message}")
-                        }
+                            ZipFile(apkPath).use { zip ->
+                                Log.d("AppLog", "icon fetching: ZIP $apkPath has ${zip.size()} entries")
+                                val iconPaths = currentApkInfo.apkMetaTranslator.iconPaths.mapNotNull { it.path }
+                                for (p in iconPaths) {
+                                    if (zip.getEntry(p) != null) Log.d("AppLog", "icon fetching: found $p in $apkPath")
+                                    else {
+                                        // Try without leading res/ if it's there
+                                        val p2 = if (p.startsWith("res/")) p.substring(4) else p
+                                        if (zip.getEntry(p2) != null) Log.d("AppLog", "icon fetching: found $p2 (alt) in $apkPath")
+                                    }
+                                }
+                            }
+                        } catch (ignored: Exception) {}
                     }
                 }
             }
-
-            //first check the main APK of each app
-            packageInfo.applicationInfo!!.publicSourceDir.let { apkFilePath ->
-                getZipFilter(apkFilePath, ZIP_FILTER_TYPE).use {
-                    var throwable: Throwable? = null
-                    val apkInfo = try {
-                        ApkInfo.internalGetApkInfo(locale, it, requestParseManifestXmlTagForApkType = GET_APK_TYPE, requestParseResources = VALIDATE_RESOURCES, masterResourceTable = masterResourceTable)
-                    } catch (e: Throwable) {
-                        throwable = e
-                        e.printStackTrace()
-                        null
-                    }
-                    if (apkInfo == null) {
-                        parsingErrorsLiveData.inc()
-                        if (isSystemApp) systemAppsErrorsCountLiveData.inc()
-                        if (throwable != null)
-                            Log.e("AppLog", "can't parse apk for \"$packageName\" in: \"$apkFilePath\" - exception:$throwable isSystemApp?$isSystemApp")
-                        else
-                            Log.e("AppLog", "can't parse apk for \"$packageName\" in: \"$apkFilePath\" isSystemApp?$isSystemApp")
-                        return@use
-                    }
-                    if (VALIDATE_RESOURCES) {
-                        //check if the library can get app icon, if required
-                        val appIcon = ApkIconFetcher.getApkIcon(
-                                context, locale, object : ApkIconFetcher.ZipFilterCreator {
-                            override fun generateZipFilter(): AbstractZipFilter =
-                                    MultiZipFilter(allApkFilePaths.map { getZipFilter(it, ZIP_FILTER_TYPE) })
-                        }, apkInfo, appIconSize
-                        )
-                        if (packageInfo.applicationInfo!!.icon != 0 && appIcon == null) {
-                            failedGettingAppIconErrorsLiveData.inc()
-                            if (isSystemApp) systemAppsErrorsCountLiveData.inc()
-                            Log.e("AppLog", "can\'t get app icon for \"$packageName\" in: \"$apkFilePath\" isSystemApp?$isSystemApp")
-                        }
-                    }
-                    when {
-                        GET_APK_TYPE && apkInfo.apkType == ApkInfo.ApkType.UNKNOWN -> {
-                            wrongApkTypeErrorsLiveData.inc()
-                            if (isSystemApp) systemAppsErrorsCountLiveData.inc()
-                            Log.e("AppLog", "can\'t get apk type for \"$packageName\" in: \"$apkFilePath\" isSystemApp?$isSystemApp")
-                        }
-
-                        GET_APK_TYPE && apkInfo.apkType == ApkInfo.ApkType.SPLIT -> {
-                            wrongApkTypeErrorsLiveData.inc()
-                            if (isSystemApp) systemAppsErrorsCountLiveData.inc()
-                            Log.e("AppLog", "detected as split apk, but in fact a main apk, for \"$packageName\" in: \"$apkFilePath\" isSystemApp?$isSystemApp")
-                        }
-
-                        else -> {}
-                    }
-                    val apkMeta = apkInfo.apkMetaTranslator.apkMeta
-                    if (packageInfo.packageName != apkMeta.packageName) {
-                        wrongPackageNameErrorsLiveData.inc()
-                        if (isSystemApp) systemAppsErrorsCountLiveData.inc()
-                        Log.e("AppLog", "apk package name is different for $apkFilePath : " + "correct one is: \"${packageInfo.packageName}\" vs found: \"${apkMeta.packageName}\" isSystemApp?$isSystemApp")
-                    }
-                    val apkMetaTranslator = apkInfo.apkMetaTranslator
-                    //compare version name using library vs framework
-                    if (VALIDATE_RESOURCES && packageInfo.versionName != apkMeta.versionName) {
-                        wrongVersionNameErrorsLiveData.inc()
-                        if (isSystemApp) systemAppsErrorsCountLiveData.inc()
-                        Log.e("AppLog", "apk version name is different for \"$packageName\" on $apkFilePath : " + "correct one is: \"${packageInfo.versionName}\" vs found: \"${apkMeta.versionName}\" isSystemApp?$isSystemApp")
-                    }
-                    if (versionCodeCompat(packageInfo) != apkMeta.versionCode) {
-                        wrongVersionCodeErrorsLiveData.inc()
-                        if (isSystemApp) systemAppsErrorsCountLiveData.inc()
-                        Log.e("AppLog", "apk version code is different for \"$packageName\" on $apkFilePath : correct one is: " + "${
-                            versionCodeCompat(packageInfo)
-                        } vs found: ${apkMeta.versionCode} isSystemApp?$isSystemApp"
-                        )
-                    }
-                    //compare app label using library vs framework
-                    val labelOfLibrary = apkMeta.label ?: apkMeta.packageName
-                    if (VALIDATE_RESOURCES) {
-                        val potentialLabels = HashSet<CharSequence>()
-                        packageManager.getPackageArchiveInfo(apkFilePath, 0)!!.applicationInfo!!.let { appInfo ->
-                            if (appInfo.nonLocalizedLabel != null)
-                                potentialLabels.add(appInfo.nonLocalizedLabel)
-                            potentialLabels.add(appInfo.loadLabel(packageManager))
-                        }
-                        packageInfo.applicationInfo!!.let { appInfo ->
-                            if (appInfo.nonLocalizedLabel != null)
-                                potentialLabels.add(appInfo.nonLocalizedLabel)
-                            potentialLabels.add(appInfo.loadLabel(packageManager))
-                        }
-                        if (!potentialLabels.contains(labelOfLibrary)) {
-                            wrongLabelErrorsLiveData.inc()
-                            if (isSystemApp) systemAppsErrorsCountLiveData.inc()
-                            Log.e("AppLog", "apk label is different for \"${packageName}\" on $apkFilePath : correct one is : ${potentialLabels.joinToString(prefix = "\"", postfix = "\"", separator = "\\")} vs found: \"$labelOfLibrary\" isSystemApp?$isSystemApp")
-                        }
-                    }
-                    Log.d("AppLog", "apk data of $apkFilePath : ${apkMeta.packageName}, ${apkMeta.versionCode}, ${apkMeta.versionName}, $labelOfLibrary, ${apkMetaTranslator.iconPaths}")
+            when {
+                GET_APK_TYPE && currentApkInfo.apkType == ApkInfo.ApkType.UNKNOWN -> {
+                    wrongApkTypeErrorsLiveData.inc()
+                    if (isSystemApp) systemAppsErrorsCountLiveData.inc()
+                    Log.e("AppLog", "can\'t get apk type for \"$packageName\" in: \"$baseApkPath\" isSystemApp?$isSystemApp")
                 }
-                apkFilesHandledLiveData.inc()
-                ++apksHandledSoFar
+
+                GET_APK_TYPE && currentApkInfo.apkType == ApkInfo.ApkType.SPLIT -> {
+                    wrongApkTypeErrorsLiveData.inc()
+                    if (isSystemApp) systemAppsErrorsCountLiveData.inc()
+                    Log.e("AppLog", "detected as split apk, but in fact a main apk, for \"$packageName\" in: \"$baseApkPath\" isSystemApp?$isSystemApp")
+                }
+
+                else -> {}
             }
-            //done with base APK.
+            val apkMeta = currentApkInfo.apkMetaTranslator.apkMeta
+            if (packageInfo.packageName != apkMeta.packageName) {
+                wrongPackageNameErrorsLiveData.inc()
+                if (isSystemApp) systemAppsErrorsCountLiveData.inc()
+                Log.e("AppLog", "apk package name is different for $baseApkPath : " + "correct one is: \"${packageInfo.packageName}\" vs found: \"${apkMeta.packageName}\" isSystemApp?$isSystemApp")
+            }
+            val apkMetaTranslator = currentApkInfo.apkMetaTranslator
+            //compare version name using library vs framework
+            if (VALIDATE_RESOURCES && packageInfo.versionName != apkMeta.versionName) {
+                wrongVersionNameErrorsLiveData.inc()
+                if (isSystemApp) systemAppsErrorsCountLiveData.inc()
+                Log.e("AppLog", "apk version name is different for \"$packageName\" on $baseApkPath : " + "correct one is: \"${packageInfo.versionName}\" vs found: \"${apkMeta.versionName}\" isSystemApp?$isSystemApp")
+            }
+            if (versionCodeCompat(packageInfo) != apkMeta.versionCode) {
+                wrongVersionCodeErrorsLiveData.inc()
+                if (isSystemApp) systemAppsErrorsCountLiveData.inc()
+                Log.e("AppLog", "apk version code is different for \"$packageName\" on $baseApkPath : correct one is: " + "${
+                    versionCodeCompat(packageInfo)
+                } vs found: ${apkMeta.versionCode} isSystemApp?$isSystemApp"
+                )
+            }
+            //compare app label using library vs framework
+            val labelOfLibrary = apkMeta.label ?: apkMeta.packageName
+            if (VALIDATE_RESOURCES) {
+                val potentialLabels = HashSet<CharSequence>()
+                packageManager.getPackageArchiveInfo(baseApkPath, 0)?.applicationInfo?.let { appInfo ->
+                    if (appInfo.nonLocalizedLabel != null)
+                        potentialLabels.add(appInfo.nonLocalizedLabel)
+                    potentialLabels.add(appInfo.loadLabel(packageManager))
+                }
+                packageInfo.applicationInfo!!.let { appInfo ->
+                    if (appInfo.nonLocalizedLabel != null)
+                        potentialLabels.add(appInfo.nonLocalizedLabel)
+                    potentialLabels.add(appInfo.loadLabel(packageManager))
+                }
+                if (!potentialLabels.contains(labelOfLibrary)) {
+                    wrongLabelErrorsLiveData.inc()
+                    if (isSystemApp) systemAppsErrorsCountLiveData.inc()
+                    Log.e("AppLog", "apk label is different for \"${packageName}\" on $baseApkPath : correct one is : ${potentialLabels.joinToString(prefix = "\"", postfix = "\"", separator = "\\")} vs found: \"$labelOfLibrary\" isSystemApp?$isSystemApp")
+                }
+            }
+            Log.d("AppLog", "apk data of $baseApkPath : ${apkMeta.packageName}, ${apkMeta.versionCode}, ${apkMeta.versionName}, $labelOfLibrary, ${apkMetaTranslator.iconPaths}")
+            apkFilesHandledLiveData.inc()
+            ++apksHandledSoFar
             appsHandledLiveData.inc()
         }
         endTime = System.currentTimeMillis()

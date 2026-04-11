@@ -51,20 +51,29 @@ class MultiZipFilter(private val filters: List<AbstractZipFilter>) : AbstractZip
         val missingMandatory = mandatoryEntriesNames.toMutableSet()
         val requestedExtra = extraEntriesNames?.toMutableSet() ?: mutableSetOf()
 
+        android.util.Log.d("AppLog", "icon fetching: MultiZipFilter searching for mandatory: $missingMandatory, extra: $requestedExtra in ${filters.size} filters")
+
         for (filter in filters) {
             val filterResult = filter.getByteArrayForEntries(emptySet(), missingMandatory + requestedExtra)
             if (filterResult != null) {
                 for ((name, bytes) in filterResult) {
                     if (!result.containsKey(name)) {
+                        android.util.Log.d("AppLog", "icon fetching: MultiZipFilter found entry: $name")
                         result[name] = bytes
                         missingMandatory.remove(name)
                         requestedExtra.remove(name)
                     }
                 }
             }
-            if (missingMandatory.isEmpty() && requestedExtra.isEmpty()) break
+            if (missingMandatory.isEmpty() && requestedExtra.isEmpty()) {
+                android.util.Log.d("AppLog", "icon fetching: MultiZipFilter found all entries early")
+                break
+            }
         }
 
+        if (missingMandatory.isNotEmpty()) {
+            android.util.Log.d("AppLog", "icon fetching: MultiZipFilter failed to find mandatory entries: $missingMandatory")
+        }
         return if (missingMandatory.isEmpty()) result else null
     }
 

@@ -32,6 +32,7 @@ public class AdaptiveIconParser implements XmlStreamer {
     private String rootTag;
     @Nullable
     private String currentSection;
+    private boolean hasInlineContent = false;
 
     @Nullable
     public String getForeground() {
@@ -58,6 +59,10 @@ public class AdaptiveIconParser implements XmlStreamer {
         return rootTag;
     }
 
+    public boolean hasInlineContent() {
+        return hasInlineContent;
+    }
+
     @Override
     public void onStartTag(final @NonNull XmlNodeStartTag xmlNodeStartTag) {
         if (rootTag == null) {
@@ -69,17 +74,9 @@ public class AdaptiveIconParser implements XmlStreamer {
             this.currentSection = xmlNodeStartTag.name;
         }
 
-        StringBuilder sb = new StringBuilder();
-        for (net.dongliu.apk.parser.struct.xml.Attribute attr : xmlNodeStartTag.attributes.attributes) {
-            if (attr == null) continue;
-            if (sb.length() > 0) sb.append(", ");
-            sb.append(attr.namespace).append(":").append(attr.name).append("=").append(attr.value);
-        }
-        android.util.Log.d("AppLog", "icon fetching: tag <" + xmlNodeStartTag.name + "> attributes: [" + sb.toString() + "]");
-
-        final String drawable = this.getDrawable(xmlNodeStartTag);
+        final String drawable = this.getFoundDrawable(xmlNodeStartTag);
         if (drawable != null) {
-            android.util.Log.d("AppLog", "icon fetching: found drawable value: " + drawable);
+            android.util.Log.d("AppLog", "icon fetching: found drawable value: " + drawable + " in section: " + currentSection);
             this.drawables.add(drawable);
             if ("background".equals(this.currentSection) && this.background == null) {
                 this.background = drawable;
@@ -88,13 +85,28 @@ public class AdaptiveIconParser implements XmlStreamer {
             } else if ("monochrome".equals(this.currentSection) && this.monochrome == null) {
                 this.monochrome = drawable;
             }
+        } else if (currentSection != null && !"background".equals(xmlNodeStartTag.name) && !"foreground".equals(xmlNodeStartTag.name) && !"monochrome".equals(xmlNodeStartTag.name)) {
+            // Tag inside a section but no drawable attribute found -> likely inlined content
+            String name = xmlNodeStartTag.name;
+            if ("vector".equals(name) || "shape".equals(name) || "animated-vector".equals(name) || "gradient".equals(name)) {
+                hasInlineContent = true;
+                android.util.Log.d("AppLog", "icon fetching: detected inline content: " + name);
+            }
         }
+
+        StringBuilder sb = new StringBuilder();
+        for (net.dongliu.apk.parser.struct.xml.Attribute attr : xmlNodeStartTag.attributes.attributes) {
+            if (attr == null) continue;
+            if (sb.length() > 0) sb.append(", ");
+            sb.append(attr.namespace).append(":").append(attr.name).append("=").append(attr.value);
+        }
+        android.util.Log.d("AppLog", "icon fetching: tag <" + xmlNodeStartTag.name + "> attributes: [" + sb.toString() + "]");
     }
 
     @Nullable
-    private String getDrawable(final XmlNodeStartTag xmlNodeStartTag) {
+    private String getFoundDrawable(final XmlNodeStartTag xmlNodeStartTag) {
         final Attributes attributes = xmlNodeStartTag.attributes;
-        for (final Attribute attribute : attributes.attributes) {
+        for (final net.dongliu.apk.parser.struct.xml.Attribute attribute : attributes.attributes) {
             if (attribute == null) continue;
             if (attribute.name.equals("drawable") || attribute.name.equals("src")) {
                 return attribute.value;
