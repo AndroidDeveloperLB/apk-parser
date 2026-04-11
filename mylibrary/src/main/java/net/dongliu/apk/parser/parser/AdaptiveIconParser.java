@@ -20,12 +20,12 @@ import java.util.List;
  * @author Liu Dong dongliu@live.cn
  */
 public class AdaptiveIconParser implements XmlStreamer {
-    @Nullable
-    private String foreground;
-    @Nullable
-    private String background;
-    @Nullable
-    private String monochrome;
+    @NonNull
+    private final List<String> foregroundDrawables = new ArrayList<>();
+    @NonNull
+    private final List<String> backgroundDrawables = new ArrayList<>();
+    @NonNull
+    private final List<String> monochromeDrawables = new ArrayList<>();
     @NonNull
     private final List<String> drawables = new ArrayList<>();
     @Nullable
@@ -36,17 +36,32 @@ public class AdaptiveIconParser implements XmlStreamer {
 
     @Nullable
     public String getForeground() {
-        return this.foreground;
+        return this.foregroundDrawables.isEmpty() ? null : this.foregroundDrawables.get(0);
     }
 
     @Nullable
     public String getBackground() {
-        return this.background;
+        return this.backgroundDrawables.isEmpty() ? null : this.backgroundDrawables.get(0);
     }
 
     @Nullable
     public String getMonochrome() {
-        return this.monochrome;
+        return this.monochromeDrawables.isEmpty() ? null : this.monochromeDrawables.get(0);
+    }
+
+    @NonNull
+    public List<String> getForegroundDrawables() {
+        return foregroundDrawables;
+    }
+
+    @NonNull
+    public List<String> getBackgroundDrawables() {
+        return backgroundDrawables;
+    }
+
+    @NonNull
+    public List<String> getMonochromeDrawables() {
+        return monochromeDrawables;
     }
 
     @NonNull
@@ -78,18 +93,20 @@ public class AdaptiveIconParser implements XmlStreamer {
         if (drawable != null) {
             android.util.Log.d("AppLog", "icon fetching: found drawable value: " + drawable + " in section: " + currentSection + " (tag: <" + xmlNodeStartTag.name + ">)");
             this.drawables.add(drawable);
-            if ("background".equals(this.currentSection) && this.background == null) {
-                this.background = drawable;
-            } else if ("foreground".equals(this.currentSection) && this.foreground == null) {
-                this.foreground = drawable;
-            } else if ("monochrome".equals(this.currentSection) && this.monochrome == null) {
-                this.monochrome = drawable;
+            if ("background".equals(this.currentSection)) {
+                this.backgroundDrawables.add(drawable);
+            } else if ("foreground".equals(this.currentSection)) {
+                this.foregroundDrawables.add(drawable);
+            } else if ("monochrome".equals(this.currentSection)) {
+                this.monochromeDrawables.add(drawable);
             }
         } else if (currentSection != null && !"background".equals(xmlNodeStartTag.name) && !"foreground".equals(xmlNodeStartTag.name) && !"monochrome".equals(xmlNodeStartTag.name)) {
-            // Tag inside a section but no drawable/color attribute found -> likely inlined content
+            // Tag inside a section but no drawable/color attribute found -> check if it's actually inlined content
             String name = xmlNodeStartTag.name;
-            hasInlineContent = true;
-            android.util.Log.d("AppLog", "icon fetching: detected inline content or complex tag: <" + name + "> in section: " + currentSection);
+            if ("vector".equals(name) || "shape".equals(name) || "animated-vector".equals(name) || "path".equals(name) || "gradient".equals(name)) {
+                hasInlineContent = true;
+                android.util.Log.d("AppLog", "icon fetching: detected inline content: <" + name + "> in section: " + currentSection);
+            }
         }
 
         StringBuilder sb = new StringBuilder();

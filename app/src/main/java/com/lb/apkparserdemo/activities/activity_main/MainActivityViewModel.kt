@@ -72,7 +72,6 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
 //        com.samsung.crane
 //        com.sec.android.widgetapp.easymodecontactswidget
 
-//        com.google.android.calendar
         var endTime = System.currentTimeMillis()
         Log.d("AppLog", "time taken: ${endTime - startTime}. total apps to process: ${installedPackages.size}")
         startTime = endTime

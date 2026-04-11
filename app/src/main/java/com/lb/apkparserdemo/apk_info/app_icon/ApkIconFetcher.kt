@@ -198,15 +198,15 @@ object ApkIconFetcher {
             val rootTag = adaptiveIconParser.rootTag
 
             if (rootTag == "adaptive-icon" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                val backgroundPath = adaptiveIconParser.background
-                var foregroundPath = adaptiveIconParser.foreground
-                val monochromePath = adaptiveIconParser.monochrome
-                if (foregroundPath.isNullOrBlank() && !monochromePath.isNullOrBlank()) {
-                    android.util.Log.d("AppLog", "icon fetching: foreground missing, using monochrome as fallback: $monochromePath")
-                    foregroundPath = monochromePath
+                val backgroundPaths = adaptiveIconParser.backgroundDrawables
+                var foregroundPaths = adaptiveIconParser.foregroundDrawables
+                val monochromePaths = adaptiveIconParser.monochromeDrawables
+                if (foregroundPaths.isEmpty() && !monochromePaths.isEmpty()) {
+                    android.util.Log.d("AppLog", "icon fetching: foreground missing, using monochrome as fallback: $monochromePaths")
+                    foregroundPaths = monochromePaths
                 }
                 
-                android.util.Log.d("AppLog", "icon fetching: adaptive-icon background: $backgroundPath, foreground: $foregroundPath, hasInline: ${adaptiveIconParser.hasInlineContent()}")
+                android.util.Log.d("AppLog", "icon fetching: adaptive-icon backgrounds: $backgroundPaths, foregrounds: $foregroundPaths, hasInline: ${adaptiveIconParser.hasInlineContent()}")
                 
                 if (adaptiveIconParser.hasInlineContent()) {
                     android.util.Log.d("AppLog", "icon fetching: adaptive-icon has inlined layers, using XmlDrawableParser")
@@ -215,41 +215,36 @@ object ApkIconFetcher {
                     }
                 }
 
-                if (!foregroundPath.isNullOrBlank()) {
+                if (foregroundPaths.isNotEmpty()) {
                     filterGenerator.generateZipFilter().use { filter ->
                         val pathsToFetch = hashSetOf<String>()
-                        if (isZipPath(backgroundPath)) pathsToFetch.add(backgroundPath!!)
-                        if (isZipPath(foregroundPath)) pathsToFetch.add(foregroundPath)
+                        pathsToFetch.addAll(backgroundPaths.filter { isZipPath(it) })
+                        pathsToFetch.addAll(foregroundPaths.filter { isZipPath(it) })
                         val byteArrayForEntries = if (pathsToFetch.isNotEmpty()) filter.getByteArrayForEntries(emptySet(), pathsToFetch) ?: emptyMap() else emptyMap()
                         android.util.Log.d("AppLog", "icon fetching: retrieved ${byteArrayForEntries.size} entries for adaptive icon layers")
 
-                        val backgroundDrawable = if (backgroundPath != null) {
-                            fetchDrawable(context, backgroundPath, byteArrayForEntries[backgroundPath], apkInfo, locale, filterGenerator, requestedAppIconSize)
-                        } else {
-                            android.util.Log.d("AppLog", "icon fetching: background missing, using transparent")
-                            ColorDrawable(Color.TRANSPARENT)
+                        val backgroundDrawables = backgroundPaths.mapNotNull { path ->
+                            fetchDrawable(context, path, byteArrayForEntries[path], apkInfo, locale, filterGenerator, requestedAppIconSize)
                         }
                         
-                        val foregroundDrawable = fetchDrawable(context, foregroundPath, byteArrayForEntries[foregroundPath], apkInfo, locale, filterGenerator, requestedAppIconSize)
+                        val foregroundDrawables = foregroundPaths.mapNotNull { path ->
+                            fetchDrawable(context, path, byteArrayForEntries[path], apkInfo, locale, filterGenerator, requestedAppIconSize)
+                        }
                         
-                        if (foregroundDrawable != null || (foregroundPath.startsWith("resourceId:") && (foregroundPath.substringAfter("0x").toLong(16) shr 24) == 0x01L)) {
-                            val bg = backgroundDrawable ?: ColorDrawable(Color.TRANSPARENT)
-                            var fg = foregroundDrawable
-                            if (fg == null && foregroundPath.startsWith("resourceId:")) {
-                                try {
-                                    val resId = foregroundPath.substringAfter("0x").toLong(16).toInt()
-                                    fg = androidx.core.content.res.ResourcesCompat.getDrawable(context.resources, resId, null)
-                                } catch (ignored: Exception) {}
+                        if (foregroundDrawables.isNotEmpty()) {
+                            val bg = when {
+                                backgroundDrawables.size > 1 -> LayerDrawable(backgroundDrawables.toTypedArray())
+                                backgroundDrawables.size == 1 -> backgroundDrawables[0]
+                                else -> ColorDrawable(Color.TRANSPARENT)
                             }
-                            if (fg != null) {
-                                return AdaptiveIconDrawable(bg, fg)
-                            }
+                            val fg = if (foregroundDrawables.size > 1) LayerDrawable(foregroundDrawables.toTypedArray()) else foregroundDrawables[0]
+                            return AdaptiveIconDrawable(bg, fg)
                         } else {
-                            android.util.Log.d("AppLog", "icon fetching: failed to fetch foreground ($foregroundPath) for adaptive icon")
+                            android.util.Log.d("AppLog", "icon fetching: failed to fetch any foreground layers for adaptive icon")
                         }
                     }
                 }
-                // Fallback if foregroundPath is null or fetching failed
+                // Fallback if foregroundPaths is empty or fetching failed
                 android.util.Log.d("AppLog", "icon fetching: adaptive-icon manual fetch failed, fallback to XmlDrawableParser")
                 return XmlDrawableParser.tryParseDrawable(context, bytes, apkInfo, locale) { subPath ->
                     filterGenerator.generateZipFilter().use { it.getByteArrayForEntries(emptySet(), hashSetOf(subPath))?.get(subPath) }
