@@ -2,6 +2,8 @@ package com.lb.apkparserdemo.activities.activity_main
 
 import android.app.Application
 import android.content.pm.*
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.os.Build
 import android.util.Log
 import androidx.annotation.*
@@ -62,9 +64,15 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
         val packageManager = context.packageManager
         Log.d("AppLog", "getting all package infos:")
         var startTime = System.currentTimeMillis()
-        val allInstalledPackages =
+        val installedPackages =
                 packageManager.getInstalledPackagesCompat(PackageManager.GET_META_DATA)
-        val installedPackages = allInstalledPackages.slice(150 until 160)
+//                        .filter{it.packageName=="com.google.android.calendar"}
+//        other apps to test:
+//        com.samsung.advp.imssettings
+//        com.samsung.crane
+//        com.sec.android.widgetapp.easymodecontactswidget
+
+//        com.google.android.calendar
         var endTime = System.currentTimeMillis()
         Log.d("AppLog", "time taken: ${endTime - startTime}. total apps to process: ${installedPackages.size}")
         startTime = endTime
@@ -126,7 +134,7 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
                 if (packageInfo.applicationInfo!!.icon != 0 && appIcon == null) {
                     failedGettingAppIconErrorsLiveData.inc()
                     if (isSystemApp) systemAppsErrorsCountLiveData.inc()
-                    Log.e("AppError", "can\'t get app icon for \"$packageName\" in: \"$baseApkPath\"")
+                    Log.e("AppLog", "icon fetching: can\'t get app icon for \"$packageName\" in: \"$baseApkPath\"")
                     // Log all entries in all APKs to see if the requested path exists
                     for (apkPath in allApkFilePaths) {
                         try {
@@ -196,15 +204,13 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
                         potentialLabels.add(appInfo.nonLocalizedLabel)
                     potentialLabels.add(appInfo.loadLabel(packageManager))
                 }
-                Log.d("AppLabel", "package: $packageName, library: \"$labelOfLibrary\", framework: ${potentialLabels.joinToString(prefix = "\"", postfix = "\"", separator = "\\")}")
-                if (!potentialLabels.contains(labelOfLibrary)) {
+                val potentialLabelsStrings = potentialLabels.map { it.toString() }.toSet()
+                if (!potentialLabelsStrings.contains(labelOfLibrary.toString())) {
                     wrongLabelErrorsLiveData.inc()
                     if (isSystemApp) systemAppsErrorsCountLiveData.inc()
                     val libraryHex = labelOfLibrary?.toString()?.toByteArray(Charsets.UTF_8)?.joinToString("") { "%02x".format(it) }
-                    val frameworkHex = potentialLabels.map { it.toString().toByteArray(Charsets.UTF_8).joinToString("") { "%02x".format(it) } }
-                    Log.e("AppError", "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-                    Log.e("AppError", "apk label mismatch for \"${packageName}\": correct=${potentialLabels.joinToString(prefix = "\"", postfix = "\"", separator = "\\")} ($frameworkHex) vs found=\"$labelOfLibrary\" ($libraryHex)")
-                    Log.e("AppError", "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+                    val frameworkHex = potentialLabels.map { label -> label.toString().toByteArray(Charsets.UTF_8).joinToString("") { "%02x".format(it) } }
+                    Log.e("AppLog", "apk label mismatch for \"${packageName}\": correct=${potentialLabels.joinToString(prefix = "\"", postfix = "\"", separator = "\\")} ($frameworkHex) vs found=\"$labelOfLibrary\" ($libraryHex)")
                 }
             }
             Log.d("AppLog", "apk data of $baseApkPath : ${apkMeta.packageName}, ${apkMeta.versionCode}, ${apkMeta.versionName}, $labelOfLibrary, ${apkMetaTranslator.iconPaths}")

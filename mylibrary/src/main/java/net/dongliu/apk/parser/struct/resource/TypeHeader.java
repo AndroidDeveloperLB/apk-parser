@@ -74,20 +74,79 @@ public class TypeHeader extends ChunkHeader {
     private ResTableConfig readResTableConfig(final ByteBuffer buffer) {
         final long beginPos = buffer.position();
         final ResTableConfig config = new ResTableConfig();
-        final long size = Buffers.readUInt(buffer);
+        final int size = (int) Buffers.readUInt(buffer);
+        config.setSize(size);
+        
         // imsi
         config.setMcc(buffer.getShort());
         config.setMnc(buffer.getShort());
-        //read locale
-        config.setLanguage(new String(Buffers.readBytes(buffer, 2)).replace("\0", ""));
-        config.setCountry(new String(Buffers.readBytes(buffer, 2)).replace("\0", ""));
-        //screen type
+        
+        // locale
+        config.setLanguage(readLocaleCode(buffer));
+        config.setCountry(readLocaleCode(buffer));
+        
+        // screen type
         config.setOrientation(Buffers.readUByte(buffer));
         config.setTouchscreen(Buffers.readUByte(buffer));
         config.setDensity(Buffers.readUShort(buffer));
-        // now just skip the others...
+        
+        // input
+        if (size >= 32) {
+            config.setKeyboard(Buffers.readUByte(buffer));
+            config.setNavigation(Buffers.readUByte(buffer));
+            config.setInputFlags(Buffers.readUByte(buffer));
+            buffer.get(); // pad
+        }
+        
+        // screen size
+        if (size >= 36) {
+            config.setScreenWidth(Buffers.readUShort(buffer));
+            config.setScreenHeight(Buffers.readUShort(buffer));
+        }
+        
+        // version
+        if (size >= 40) {
+            config.setSdkVersion(Buffers.readUShort(buffer));
+            config.setMinorVersion(Buffers.readUShort(buffer));
+        }
+        
+        // screen config
+        if (size >= 48) {
+            config.setScreenLayout((short) Buffers.readUByte(buffer));
+            config.setUiMode((short) Buffers.readUByte(buffer));
+            config.setScreenLayout2((short) Buffers.readUShort(buffer));
+        }
+        
+        // locale extensions
+        if (size >= 52) {
+            byte[] script = Buffers.readBytes(buffer, 4);
+            config.setScript(new String(script).replace("\0", ""));
+        }
+        
+        if (size >= 60) {
+            byte[] variant = Buffers.readBytes(buffer, 8);
+            config.setVariant(new String(variant).replace("\0", ""));
+        }
+
         final long endPos = buffer.position();
         Buffers.skip(buffer, (int) (size - (endPos - beginPos)));
         return config;
+    }
+
+    private String readLocaleCode(ByteBuffer buffer) {
+        byte b1 = buffer.get();
+        byte b2 = buffer.get();
+        if ((b1 & 0x80) != 0) {
+            // 3-letter code
+            char[] chars = new char[3];
+            chars[0] = (char) (0x61 + (b2 & 0x1f));
+            chars[1] = (char) (0x61 + ((b2 & 0xe0) >> 5) + ((b1 & 0x03) << 3));
+            chars[2] = (char) (0x61 + ((b1 & 0x7c) >> 2));
+            return new String(chars);
+        } else {
+            if (b1 == 0) return "";
+            if (b2 == 0) return new String(new char[]{(char) b1});
+            return new String(new char[]{(char) b1, (char) b2});
+        }
     }
 }

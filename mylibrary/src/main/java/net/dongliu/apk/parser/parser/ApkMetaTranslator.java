@@ -318,6 +318,11 @@ public class ApkMetaTranslator implements XmlStreamer {
         final List<ResourceTable.Resource> resources = this.resourceTable.getResourcesById(resourceId);
         if (resources.isEmpty()) {
             android.util.Log.d("AppLog", "icon fetching: no resources found for ID 0x" + Long.toHexString(resourceId));
+            // Check if this might be a system resource that wasn't in our table
+            if ((resourceId >> 24) == 0x01) {
+                String path = "resourceId:0x" + Long.toHexString(resourceId);
+                return Collections.singletonList(new IconPath(path, Densities.DEFAULT));
+            }
             return Collections.emptyList();
         }
 

@@ -172,6 +172,7 @@ public class ResourceTableParser {
                         final int packageId = this.buffer.getInt();
                         final String name = Buffers.readZeroTerminatedString(this.buffer, 128);
                         android.util.Log.d("AppLog", "icon fetching: in package 0x" + Integer.toHexString(resourcePackage.getId()) + " (" + resourcePackage.getName() + "), found library mapping: 0x" + Integer.toHexString(packageId) + " -> " + name);
+                        this.resourceTable.addLibraryMapping(packageId, name);
                         if (name.equals(resourcePackage.getName())) {
                             android.util.Log.d("AppLog", "icon fetching: remapping package " + name + " to ID 0x" + Integer.toHexString(packageId));
                             resourcePackage.setId((short) packageId);

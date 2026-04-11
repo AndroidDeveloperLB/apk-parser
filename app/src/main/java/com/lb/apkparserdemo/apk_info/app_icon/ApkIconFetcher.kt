@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.*
 import android.graphics.drawable.*
 import android.os.Build
+import android.graphics.ImageDecoder
 import androidx.core.graphics.drawable.toBitmap
 import com.lb.apkparserdemo.apk_info.*
 import net.dongliu.apk.parser.bean.IconPath
@@ -142,17 +143,38 @@ object ApkIconFetcher {
                 0
             }
             if (resId != 0) {
-                try {
-                    // Try to fetch from system if it's a system resource
-                    if ((resId shr 24) == 0x01) {
+                val packageId = resId shr 24
+                if (packageId == 0x01) {
+                    try {
+                        // Try to fetch from system if it's a system resource
                         val drawable = androidx.core.content.res.ResourcesCompat.getDrawable(context.resources, resId, null)
                         if (drawable != null) {
                             android.util.Log.d("AppLog", "icon fetching: successfully fetched system resource $path")
                             return drawable
                         }
+                    } catch (e: Exception) {
+                        android.util.Log.d("AppLog", "icon fetching: failed to get system resource $path: ${e.message}")
                     }
-                } catch (e: Exception) {
-                    android.util.Log.d("AppLog", "icon fetching: failed to get system resource $path: ${e.message}")
+                } else {
+                    // Try to resolve from app resources
+                    try {
+                        val resources = apkInfo.resourceTable.getResourcesById(resId.toLong())
+                        if (resources.isNotEmpty()) {
+                            for (res in resources) {
+                                val value = res.resourceEntry.toStringValue(apkInfo.resourceTable, locale)
+                                if (value != null && value != path) {
+                                    android.util.Log.d("AppLog", "icon fetching: resolved resourceId $path to $value")
+                                    if (value.startsWith("#")) return ColorDrawable(Color.parseColor(value))
+                                    filterGenerator.generateZipFilter().use { filter ->
+                                        val subBytes = if (isZipPath(value)) filter.getByteArrayForEntries(emptySet(), hashSetOf(value))?.get(value) else null
+                                        return fetchDrawable(context, value, subBytes, apkInfo, locale, filterGenerator, requestedAppIconSize)
+                                    }
+                                }
+                            }
+                        }
+                    } catch (e: Exception) {
+                        android.util.Log.d("AppLog", "icon fetching: failed to resolve app resource $path: ${e.message}")
+                    }
                 }
             }
             return null
@@ -162,7 +184,7 @@ object ApkIconFetcher {
             return null
         }
         if (!path.endsWith(".xml", true)) {
-            return getAppIconFromByteArray(bytes, requestedAppIconSize)?.let {
+            return getAppIconFromByteArray(bytes, requestedAppIconSize, path)?.let {
                 BitmapDrawable(context.resources, it)
             }
         }
@@ -210,9 +232,18 @@ object ApkIconFetcher {
                         
                         val foregroundDrawable = fetchDrawable(context, foregroundPath, byteArrayForEntries[foregroundPath], apkInfo, locale, filterGenerator, requestedAppIconSize)
                         
-                        if (foregroundDrawable != null) {
+                        if (foregroundDrawable != null || (foregroundPath.startsWith("resourceId:") && (foregroundPath.substringAfter("0x").toLong(16) shr 24) == 0x01L)) {
                             val bg = backgroundDrawable ?: ColorDrawable(Color.TRANSPARENT)
-                            return AdaptiveIconDrawable(bg, foregroundDrawable)
+                            var fg = foregroundDrawable
+                            if (fg == null && foregroundPath.startsWith("resourceId:")) {
+                                try {
+                                    val resId = foregroundPath.substringAfter("0x").toLong(16).toInt()
+                                    fg = androidx.core.content.res.ResourcesCompat.getDrawable(context.resources, resId, null)
+                                } catch (ignored: Exception) {}
+                            }
+                            if (fg != null) {
+                                return AdaptiveIconDrawable(bg, fg)
+                            }
                         } else {
                             android.util.Log.d("AppLog", "icon fetching: failed to fetch foreground ($foregroundPath) for adaptive icon")
                         }
@@ -238,6 +269,10 @@ object ApkIconFetcher {
                         }
                     }
                 }
+                android.util.Log.d("AppLog", "icon fetching: layer-list fallback to XmlDrawableParser")
+                return XmlDrawableParser.tryParseDrawable(context, bytes, apkInfo, locale) { subPath ->
+                    filterGenerator.generateZipFilter().use { it.getByteArrayForEntries(emptySet(), hashSetOf(subPath))?.get(subPath) }
+                }
             } else if (rootTag == "bitmap" || rootTag == "nine-patch" || rootTag == "inset" || rootTag == "clip" || rootTag == "scale" || rootTag == "rotate") {
                 val innerPath = adaptiveIconParser.drawables.firstOrNull()
                 android.util.Log.d("AppLog", "icon fetching: rootTag $rootTag, innerPath: $innerPath")
@@ -245,6 +280,11 @@ object ApkIconFetcher {
                     filterGenerator.generateZipFilter().use { filter ->
                         val srcBytes = if (isZipPath(innerPath)) filter.getByteArrayForEntries(hashSetOf(innerPath))?.get(innerPath) else null
                         return fetchDrawable(context, innerPath, srcBytes, apkInfo, locale, filterGenerator, requestedAppIconSize)
+                    }
+                } else {
+                    android.util.Log.d("AppLog", "icon fetching: fallback to XmlDrawableParser for $rootTag with no innerPath")
+                    return XmlDrawableParser.tryParseDrawable(context, bytes, apkInfo, locale) { subPath ->
+                        filterGenerator.generateZipFilter().use { it.getByteArrayForEntries(emptySet(), hashSetOf(subPath))?.get(subPath) }
                     }
                 }
             } else {
@@ -280,7 +320,7 @@ object ApkIconFetcher {
         return true
     }
 
-    private fun getAppIconFromByteArray(bytes: ByteArray, requestedAppIconSize: Int): Bitmap? {
+    private fun getAppIconFromByteArray(bytes: ByteArray, requestedAppIconSize: Int, path: String): Bitmap? {
         if (requestedAppIconSize > 0) {
             val bitmapOptions = BitmapFactory.Options()
             bitmapOptions.inJustDecodeBounds = true
@@ -290,8 +330,35 @@ object ApkIconFetcher {
                 requestedAppIconSize,
                 requestedAppIconSize
             )
-            return BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bitmapOptions)
+            val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bitmapOptions)
+            if (bitmap != null) return bitmap
+        } else {
+            val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+            if (bitmap != null) return bitmap
         }
-        return BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+        
+        // Fallback for weird formats (like some BMPs) on API 28+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            try {
+                val source = ImageDecoder.createSource(ByteBuffer.wrap(bytes))
+                return ImageDecoder.decodeBitmap(source) { decoder, info, src ->
+                    if (requestedAppIconSize > 0) {
+                        decoder.setTargetSize(requestedAppIconSize, requestedAppIconSize)
+                    }
+                    decoder.allocator = ImageDecoder.ALLOCATOR_SOFTWARE
+                }
+            } catch (e: Exception) {
+                android.util.Log.d("AppLog", "icon fetching: ImageDecoder failed: ${e.message}")
+            }
+        }
+
+        // Diagnostic hex log for failing decode
+        val hex = bytes.take(32).joinToString("") { "%02x".format(it) }
+        android.util.Log.e("AppLog", "icon fetching: CRITICAL: failed to decode image bytes. path: $path, size: ${bytes.size}, hex(32): $hex")
+        if (bytes.size > 3 && bytes[0] == 'Q'.code.toByte() && bytes[1] == 'M'.code.toByte() && bytes[2] == 'G'.code.toByte()) {
+            android.util.Log.e("AppLog", "icon fetching: IDENTIFIED Samsung QMG format. This requires proprietary Samsung decoders.")
+        }
+
+        return null
     }
 }

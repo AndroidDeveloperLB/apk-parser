@@ -50,7 +50,10 @@ object XmlDrawableParser {
             } else {
                 // Fallback to framework for non-vector drawables (layer-list, etc.)
                 android.util.Log.d("AppLog", "icon fetching: not a vector, fallback to framework")
-                tryParseFrameworkDrawable(context, binXml)
+                val drawable = tryParseFrameworkDrawable(context, binXml)
+                if (drawable == null) android.util.Log.d("AppLog", "icon fetching: framework fallback failed")
+                else android.util.Log.d("AppLog", "icon fetching: framework fallback succeeded")
+                drawable
             }
         } catch (e: Exception) {
             android.util.Log.d("AppLog", "icon fetching: exception in BinaryXmlParser: ${e.message}")
@@ -101,9 +104,12 @@ object XmlDrawableParser {
             }
             if (type == XmlPullParser.START_TAG) {
                 val attrs = Xml.asAttributeSet(parser)
-                return Drawable.createFromXmlInner(context.resources, parser, attrs, context.theme)
+                val drawable = Drawable.createFromXmlInner(context.resources, parser, attrs, context.theme)
+                if (drawable == null) android.util.Log.d("AppLog", "icon fetching: framework failed to create drawable from XML")
+                return drawable
             }
         } catch (e: Exception) {
+            android.util.Log.d("AppLog", "icon fetching: framework exception: ${e.message}")
         }
         return null
     }
@@ -153,6 +159,29 @@ object XmlDrawableParser {
                         translationY = attr.getString("translateY")?.toFloat() ?: 0f
                     )
                     extraGroupsStack.add(0)
+                }
+                "inset" -> {
+                    // Just a container for modern icons, let the parser continue to child tags
+                    attr.getString("drawable")?.let { innerDrawable ->
+                        android.util.Log.d("AppLog", "icon fetching: inset has drawable attribute: $innerDrawable")
+                        // If it's a path or resourceId, we should try to parse it
+                        if (innerDrawable.endsWith(".xml")) {
+                            subResourceProvider?.invoke(innerDrawable)?.let { innerBytes ->
+                                val subStreamer = VectorDrawableStreamer(context, apkInfo, locale, subResourceProvider)
+                                val subParser = BinaryXmlParser(ByteBuffer.wrap(innerBytes), apkInfo.resourceTable, subStreamer, locale)
+                                try {
+                                    subParser.parse()
+                                    subStreamer.imageVector?.let { subVector ->
+                                        builder?.addPath(
+                                            pathData = subVector.root.map { if (it is VectorPath) it.pathData else emptyList() }.flatten(),
+                                            name = "inset_sub",
+                                            fill = SolidColor(Color.Transparent) // This is a hack, proper nested vector support is complex
+                                        )
+                                    }
+                                } catch (ignored: Exception) {}
+                            }
+                        }
+                    }
                 }
                 "path" -> {
                     val pathData = attr.getString("pathData") ?: return

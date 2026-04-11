@@ -76,7 +76,7 @@ public class AdaptiveIconParser implements XmlStreamer {
 
         final String drawable = this.getFoundDrawable(xmlNodeStartTag);
         if (drawable != null) {
-            android.util.Log.d("AppLog", "icon fetching: found drawable value: " + drawable + " in section: " + currentSection);
+            android.util.Log.d("AppLog", "icon fetching: found drawable value: " + drawable + " in section: " + currentSection + " (tag: <" + xmlNodeStartTag.name + ">)");
             this.drawables.add(drawable);
             if ("background".equals(this.currentSection) && this.background == null) {
                 this.background = drawable;
@@ -86,12 +86,10 @@ public class AdaptiveIconParser implements XmlStreamer {
                 this.monochrome = drawable;
             }
         } else if (currentSection != null && !"background".equals(xmlNodeStartTag.name) && !"foreground".equals(xmlNodeStartTag.name) && !"monochrome".equals(xmlNodeStartTag.name)) {
-            // Tag inside a section but no drawable attribute found -> likely inlined content
+            // Tag inside a section but no drawable/color attribute found -> likely inlined content
             String name = xmlNodeStartTag.name;
-            if ("vector".equals(name) || "shape".equals(name) || "animated-vector".equals(name) || "gradient".equals(name)) {
-                hasInlineContent = true;
-                android.util.Log.d("AppLog", "icon fetching: detected inline content: " + name);
-            }
+            hasInlineContent = true;
+            android.util.Log.d("AppLog", "icon fetching: detected inline content or complex tag: <" + name + "> in section: " + currentSection);
         }
 
         StringBuilder sb = new StringBuilder();
@@ -108,8 +106,13 @@ public class AdaptiveIconParser implements XmlStreamer {
         final Attributes attributes = xmlNodeStartTag.attributes;
         for (final net.dongliu.apk.parser.struct.xml.Attribute attribute : attributes.attributes) {
             if (attribute == null) continue;
-            if (attribute.name.equals("drawable") || attribute.name.equals("src")) {
-                return attribute.value;
+            if (attribute.name.equals("drawable") || attribute.name.equals("src") || attribute.name.equals("color")) {
+                String value = attribute.value;
+                if (value != null && value.startsWith("resourceId:0x1")) {
+                    // System resource ID that didn't resolve in local table
+                    return value;
+                }
+                return value;
             }
         }
         return null;

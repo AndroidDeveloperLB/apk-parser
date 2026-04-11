@@ -20,30 +20,27 @@ object Locales {
         if (locale == null) {
             return -1
         }
-        return when {
-            locale.language == targetLocale.language -> {
-                when {
-                    locale.country == targetLocale.country -> {
-                        3
-                    }
-
-                    targetLocale.country.isEmpty() -> {
-                        2
-                    }
-
-                    else -> {
-                        0
-                    }
-                }
+        val lang1 = normalizeLanguage(locale.language)
+        val lang2 = normalizeLanguage(targetLocale.language)
+        val languageMatch = lang1 == lang2
+        if (languageMatch) {
+            if (locale.country == targetLocale.country) {
+                return 4
             }
-
-            targetLocale.country.isEmpty() || targetLocale.language.isEmpty() -> {
-                1
+            if (targetLocale.country.isEmpty()) {
+                return 3
             }
+            return 2
+        }
+        return if (targetLocale.language.isEmpty()) 1 else 0
+    }
 
-            else -> {
-                0
-            }
+    private fun normalizeLanguage(language: String): String {
+        return when (language) {
+            "iw" -> "he"
+            "in" -> "id"
+            "ji" -> "yi"
+            else -> language
         }
     }
 }

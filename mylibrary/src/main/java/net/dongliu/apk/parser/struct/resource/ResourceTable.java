@@ -20,6 +20,7 @@ import java.util.Map;
  */
 public class ResourceTable {
     private final Map<Short, ResourcePackage> packageMap = new HashMap<>();
+    private final Map<String, Short> nameToIdMap = new HashMap<>();
     @Nullable
     public final StringPool stringPool;
     @NonNull
@@ -31,6 +32,7 @@ public class ResourceTable {
 
     public void addPackage(final @NonNull ResourcePackage resourcePackage) {
         ResourcePackage existing = this.packageMap.get(resourcePackage.getId());
+        this.nameToIdMap.put(resourcePackage.getName(), resourcePackage.getId());
         if (existing == null) {
             android.util.Log.d("AppLog", "icon fetching: adding new package " + resourcePackage.getName() + " with ID 0x" + Integer.toHexString(resourcePackage.getId()));
             this.packageMap.put(resourcePackage.getId(), resourcePackage);
@@ -49,18 +51,58 @@ public class ResourceTable {
                 existing.merge(entry.getValue());
             }
         }
+        this.nameToIdMap.putAll(other.nameToIdMap);
+    }
+
+    public void addLibraryMapping(int id, String name) {
+        this.nameToIdMap.put(name, (short) id);
     }
 
     @Nullable
     public ResourcePackage getPackage(final short id) {
         ResourcePackage res = this.packageMap.get(id);
-        if (res == null && id == 0x7f) {
+        if (res != null) return res;
+
+        if (id == 0x7f) {
             res = this.packageMap.get((short) 0);
             if (res != null) {
                 android.util.Log.d("AppLog", "icon fetching: fallback for package ID 0x7f to ID 0 (package name: " + res.getName() + ")");
+                return res;
             }
         }
-        return res;
+
+        // Try to find package by name mapping
+        // This handles cases where a shared library is referred to by ID 0x02 in one APK but 0x7f in its own APK.
+        for (Map.Entry<String, Short> entry : nameToIdMap.entrySet()) {
+            if (entry.getValue() == id) {
+                ResourcePackage p = findPackageByName(entry.getKey());
+                if (p != null) {
+                    android.util.Log.d("AppLog", "icon fetching: resolved package for ID 0x" + Integer.toHexString(id) + " via name mapping to " + p.getName() + " (actual ID: 0x" + Integer.toHexString(p.getId()) + ")");
+                    return p;
+                }
+            }
+        }
+
+        // Final fallback: if there's only one package besides system, and we can't find the requested ID, 
+        // it might be a hardcoded ID mismatch.
+        if (packageMap.size() == 2 && packageMap.containsKey((short) 0x01)) {
+            for (ResourcePackage p : packageMap.values()) {
+                if (p.getId() != 0x01) {
+                    android.util.Log.d("AppLog", "icon fetching: absolute fallback for ID 0x" + Integer.toHexString(id) + " to package " + p.getName() + " (ID: 0x" + Integer.toHexString(p.getId()) + ")");
+                    return p;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    @Nullable
+    private ResourcePackage findPackageByName(String name) {
+        for (ResourcePackage p : packageMap.values()) {
+            if (p.getName().equals(name)) return p;
+        }
+        return null;
     }
 
     /**
