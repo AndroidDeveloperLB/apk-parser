@@ -20,10 +20,10 @@ class ApkInfo(
 
         @Suppress("SameParameterValue")
         fun internalGetApkInfo(locale: Locale, zipFilter: AbstractZipFilter, requestParseManifestXmlTagForApkType: Boolean = false,
-                               requestParseResources: Boolean = false): ApkInfo? {
+                               requestParseResources: Boolean = false, masterResourceTable: ResourceTable? = null): ApkInfo? {
             val mandatoryFilesToCheck = hashSetOf(AndroidConstants.MANIFEST_FILE)
             val extraFilesToCheck =
-                    if (requestParseResources) hashSetOf(AndroidConstants.RESOURCE_FILE) else null
+                    if (requestParseResources && masterResourceTable == null) hashSetOf(AndroidConstants.RESOURCE_FILE) else null
             val byteArrayForEntries =
                     zipFilter.getByteArrayForEntries(mandatoryFilesToCheck, extraFilesToCheck)
                             ?: return null
@@ -32,7 +32,8 @@ class ApkInfo(
             val resourcesBytes: ByteArray? = byteArrayForEntries[AndroidConstants.RESOURCE_FILE]
             val xmlTranslator = XmlTranslator()
             val resourceTable: ResourceTable =
-                    if (resourcesBytes == null)
+                    if (masterResourceTable != null) masterResourceTable
+                    else if (resourcesBytes == null)
                         ResourceTable(null)
                     else {
                         val resourceTableParser = ResourceTableParser(ByteBuffer.wrap(resourcesBytes))

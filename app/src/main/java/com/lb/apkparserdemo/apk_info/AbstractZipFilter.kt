@@ -41,3 +41,34 @@ abstract class AbstractZipFilter : Closeable {
     }
 
 }
+
+class MultiZipFilter(private val filters: List<AbstractZipFilter>) : AbstractZipFilter() {
+    override fun getNextEntryName(): String? = throw UnsupportedOperationException("MultiZipFilter only supports getByteArrayForEntries")
+    override fun getBytesFromCurrentEntry(): ByteArray? = throw UnsupportedOperationException("MultiZipFilter only supports getByteArrayForEntries")
+
+    override fun getByteArrayForEntries(mandatoryEntriesNames: Set<String>, extraEntriesNames: Set<String>?): HashMap<String, ByteArray>? {
+        val result = HashMap<String, ByteArray>()
+        val missingMandatory = mandatoryEntriesNames.toMutableSet()
+        val requestedExtra = extraEntriesNames?.toMutableSet() ?: mutableSetOf()
+
+        for (filter in filters) {
+            val filterResult = filter.getByteArrayForEntries(emptySet(), missingMandatory + requestedExtra)
+            if (filterResult != null) {
+                for ((name, bytes) in filterResult) {
+                    if (!result.containsKey(name)) {
+                        result[name] = bytes
+                        missingMandatory.remove(name)
+                        requestedExtra.remove(name)
+                    }
+                }
+            }
+            if (missingMandatory.isEmpty() && requestedExtra.isEmpty()) break
+        }
+
+        return if (missingMandatory.isEmpty()) result else null
+    }
+
+    override fun close() {
+        filters.forEach { it.close() }
+    }
+}

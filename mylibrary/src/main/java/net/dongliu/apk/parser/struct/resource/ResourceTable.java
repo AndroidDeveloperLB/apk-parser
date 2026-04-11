@@ -30,12 +30,31 @@ public class ResourceTable {
     }
 
     public void addPackage(final @NonNull ResourcePackage resourcePackage) {
+        android.util.Log.d("AppLog", "icon fetching: adding package " + resourcePackage.getName() + " with ID 0x" + Integer.toHexString(resourcePackage.getId()));
         this.packageMap.put(resourcePackage.getId(), resourcePackage);
+    }
+
+    public void merge(@NonNull ResourceTable other) {
+        for (Map.Entry<Short, ResourcePackage> entry : other.packageMap.entrySet()) {
+            ResourcePackage existing = this.packageMap.get(entry.getKey());
+            if (existing == null) {
+                this.packageMap.put(entry.getKey(), entry.getValue());
+            } else {
+                existing.merge(entry.getValue());
+            }
+        }
     }
 
     @Nullable
     public ResourcePackage getPackage(final short id) {
-        return this.packageMap.get(id);
+        ResourcePackage res = this.packageMap.get(id);
+        if (res == null && id == 0x7f) {
+            res = this.packageMap.get((short) 0);
+            if (res != null) {
+                android.util.Log.d("AppLog", "icon fetching: fallback for package ID 0x7f to ID 0 (package name: " + res.getName() + ")");
+            }
+        }
+        return res;
     }
 
     /**
@@ -50,10 +69,16 @@ public class ResourceTable {
         final short packageId = (short) (resourceId >> 24 & 0xff);
         final ResourcePackage resourcePackage = this.getPackage(packageId);
         if (resourcePackage == null) {
+            StringBuilder sb = new StringBuilder();
+            for (Short id : packageMap.keySet()) {
+                sb.append("0x").append(Integer.toHexString(id)).append(" ");
+            }
+            android.util.Log.d("AppLog", "icon fetching: no package found for ID 0x" + Long.toHexString(resourceId) + " (packageId: 0x" + Integer.toHexString(packageId) + "). Available packages: " + sb.toString());
             return Collections.emptyList();
         }
         final int resolvedResourceId = resourcePackage.resolveStagedResId((int) resourceId);
         if (resolvedResourceId != (int) resourceId) {
+            android.util.Log.d("AppLog", "icon fetching: resolved staged ID 0x" + Long.toHexString(resourceId) + " to 0x" + Integer.toHexString(resolvedResourceId));
             return getResourcesById(resolvedResourceId);
         }
 
@@ -62,9 +87,11 @@ public class ResourceTable {
         final TypeSpec typeSpec = resourcePackage.getTypeSpec(typeId);
         final List<Type> types = resourcePackage.getTypes(typeId);
         if (typeSpec == null || types == null) {
+            android.util.Log.d("AppLog", "icon fetching: no typeSpec or types found for ID 0x" + Long.toHexString(resourceId) + " (typeId: 0x" + Integer.toHexString(typeId) + ")");
             return Collections.emptyList();
         }
         if (!typeSpec.exists(entryIndex)) {
+            android.util.Log.d("AppLog", "icon fetching: entry index 0x" + Integer.toHexString(entryIndex) + " does not exist in typeSpec for ID 0x" + Long.toHexString(resourceId) + " (typeSpec.entryFlags.length: " + typeSpec.entryFlags.length + ")");
             return Collections.emptyList();
         }
         // read from type resource

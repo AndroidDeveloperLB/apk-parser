@@ -26,9 +26,9 @@ import java.util.*
 
 object XmlDrawableParser {
 
-    fun tryParseDrawable(context: Context, binXml: ByteArray, apkInfo: ApkInfo, locale: Locale): Drawable? {
+    fun tryParseDrawable(context: Context, binXml: ByteArray, apkInfo: ApkInfo, locale: Locale, subResourceProvider: ((String) -> ByteArray?)? = null): Drawable? {
         android.util.Log.d("AppLog", "icon fetching: tryParseDrawable (Binary)")
-        val streamer = VectorDrawableStreamer(context)
+        val streamer = VectorDrawableStreamer(context, apkInfo, locale, subResourceProvider)
         val parser = BinaryXmlParser(ByteBuffer.wrap(binXml), apkInfo.resourceTable, streamer, locale)
         return try {
             parser.parse()
@@ -96,7 +96,12 @@ object XmlDrawableParser {
         return null
     }
 
-    private class VectorDrawableStreamer(private val context: Context) : XmlStreamer {
+    private class VectorDrawableStreamer(
+        private val context: Context,
+        private val apkInfo: ApkInfo,
+        private val locale: Locale,
+        private val subResourceProvider: ((String) -> ByteArray?)?
+    ) : XmlStreamer {
         var imageVector: ImageVector? = null
         var isVector = false
         private var builder: ImageVector.Builder? = null
@@ -142,9 +147,9 @@ object XmlDrawableParser {
                     builder?.addPath(
                         pathData = addPathNodes(pathData),
                         name = attr.getString("name") ?: "",
-                        fill = attr.getString("fillColor")?.let { obtainBrush(context, it) },
+                        fill = attr.getString("fillColor")?.let { obtainBrush(context, it, apkInfo, locale, subResourceProvider) },
                         fillAlpha = attr.getString("fillAlpha")?.toFloat() ?: 1f,
-                        stroke = attr.getString("strokeColor")?.let { obtainBrush(context, it) },
+                        stroke = attr.getString("strokeColor")?.let { obtainBrush(context, it, apkInfo, locale, subResourceProvider) },
                         strokeAlpha = attr.getString("strokeAlpha")?.toFloat() ?: 1f,
                         strokeLineWidth = attr.getString("strokeWidth")?.toFloat() ?: 0f,
                         strokeLineCap = parseStrokeCap(attr.getString("strokeLineCap")),
@@ -167,12 +172,19 @@ object XmlDrawableParser {
         }
 
         override fun onEndTag(tag: XmlNodeEndTag) {
-            if (tag.name == "vector") {
-                imageVector = builder?.build()
-            } else if (tag.name == "group") {
-                if (extraGroupsStack.isNotEmpty()) {
-                    val extras = extraGroupsStack.removeAt(extraGroupsStack.size - 1)
-                    repeat(extras + 1) { builder?.clearGroup() }
+            when (tag.name) {
+                "vector" -> {
+                    if (extraGroupsStack.isNotEmpty()) {
+                        val extras = extraGroupsStack.removeAt(extraGroupsStack.size - 1)
+                        repeat(extras) { builder?.clearGroup() }
+                    }
+                    imageVector = builder?.build()
+                }
+                "group" -> {
+                    if (extraGroupsStack.isNotEmpty()) {
+                        val extras = extraGroupsStack.removeAt(extraGroupsStack.size - 1)
+                        repeat(extras + 1) { builder?.clearGroup() }
+                    }
                 }
             }
         }
@@ -411,9 +423,128 @@ object XmlDrawableParser {
         } catch (e: Exception) { Color.Transparent }
     }
 
-    private fun obtainBrush(context: Context, colorStr: String): Brush? {
+    private fun obtainBrush(
+        context: Context,
+        colorStr: String,
+        apkInfo: ApkInfo? = null,
+        locale: Locale = Locale.getDefault(),
+        subResourceProvider: ((String) -> ByteArray?)? = null
+    ): Brush? {
         val color = parseColor(context, colorStr)
-        return if (color != Color.Transparent) SolidColor(color) else null
+        if (color != Color.Transparent) return SolidColor(color)
+        
+        if (colorStr.endsWith(".xml") && subResourceProvider != null && apkInfo != null) {
+            android.util.Log.d("AppLog", "icon fetching: attempting to parse complex color: $colorStr")
+            val bytes = subResourceProvider(colorStr)
+            if (bytes != null) {
+                return tryParseComplexColor(context, bytes, apkInfo, locale, subResourceProvider)
+            } else {
+                android.util.Log.d("AppLog", "icon fetching: subResourceProvider returned null for $colorStr")
+            }
+        }
+        return null
+    }
+
+    private fun tryParseComplexColor(
+        context: Context,
+        bytes: ByteArray,
+        apkInfo: ApkInfo,
+        locale: Locale,
+        subResourceProvider: ((String) -> ByteArray?)?
+    ): Brush? {
+        val streamer = GradientStreamer(context, apkInfo, locale, subResourceProvider)
+        val parser = BinaryXmlParser(ByteBuffer.wrap(bytes), apkInfo.resourceTable, streamer, locale)
+        try {
+            parser.parse()
+            return streamer.brush
+        } catch (e: Exception) {
+            android.util.Log.d("AppLog", "icon fetching: failed to parse complex color: ${e.message}")
+        }
+        return null
+    }
+
+    private class GradientStreamer(
+        private val context: Context,
+        private val apkInfo: ApkInfo,
+        private val locale: Locale,
+        private val subResourceProvider: ((String) -> ByteArray?)?
+    ) : XmlStreamer {
+        var brush: Brush? = null
+        private var type: String? = null
+        private var startColor: Color = Color.Transparent
+        private var endColor: Color = Color.Transparent
+        private var centerColor: Color? = null
+        private var startX = 0f
+        private var startY = 0f
+        private var endX = 0f
+        private var endY = 0f
+        private var centerX = 0f
+        private var centerY = 0f
+        private var gradientRadius = 0f
+        private val stops = mutableListOf<Float>()
+        private val colors = mutableListOf<Color>()
+
+        override fun onStartTag(tag: XmlNodeStartTag) {
+            val attr = tag.attributes
+            when (tag.name) {
+                "gradient" -> {
+                    type = attr.getString("type") ?: "linear"
+                    startColor = attr.getString("startColor")?.let { parseColor(context, it) } ?: Color.Transparent
+                    endColor = attr.getString("endColor")?.let { parseColor(context, it) } ?: Color.Transparent
+                    centerColor = attr.getString("centerColor")?.let { parseColor(context, it) }
+                    startX = attr.getString("startX")?.toFloat() ?: 0f
+                    startY = attr.getString("startY")?.toFloat() ?: 0f
+                    endX = attr.getString("endX")?.toFloat() ?: 0f
+                    endY = attr.getString("endY")?.toFloat() ?: 0f
+                    centerX = attr.getString("centerX")?.toFloat() ?: 0f
+                    centerY = attr.getString("centerY")?.toFloat() ?: 0f
+                    gradientRadius = attr.getString("gradientRadius")?.toFloat() ?: 0f
+                }
+                "item" -> {
+                    val offset = attr.getString("offset")?.toFloat() ?: 0f
+                    val colorStr = attr.getString("color")
+                    val color = if (colorStr != null) {
+                        obtainBrush(context, colorStr, apkInfo, locale, subResourceProvider)?.let {
+                            if (it is SolidColor) it.value else Color.Transparent
+                        } ?: Color.Transparent
+                    } else Color.Transparent
+                    stops.add(offset)
+                    colors.add(color)
+                }
+            }
+        }
+
+        override fun onEndTag(tag: XmlNodeEndTag) {
+            if (tag.name == "gradient") {
+                val finalColors = if (colors.isNotEmpty()) colors else {
+                    centerColor?.let { listOf(startColor, it, endColor) } ?: listOf(startColor, endColor)
+                }
+                val finalStops = if (stops.isNotEmpty()) stops else {
+                    if (centerColor != null) listOf(0f, 0.5f, 1f) else listOf(0f, 1f)
+                }
+                
+                brush = when (type) {
+                    "radial" -> Brush.radialGradient(
+                        colorStops = finalStops.zip(finalColors).toTypedArray(),
+                        center = androidx.compose.ui.geometry.Offset(centerX, centerY),
+                        radius = gradientRadius
+                    )
+                    "sweep" -> Brush.sweepGradient(
+                        colorStops = finalStops.zip(finalColors).toTypedArray(),
+                        center = androidx.compose.ui.geometry.Offset(centerX, centerY)
+                    )
+                    else -> Brush.linearGradient(
+                        colorStops = finalStops.zip(finalColors).toTypedArray(),
+                        start = androidx.compose.ui.geometry.Offset(startX, startY),
+                        end = androidx.compose.ui.geometry.Offset(endX, endY)
+                    )
+                }
+            }
+        }
+
+        override fun onCData(xmlCData: net.dongliu.apk.parser.struct.xml.XmlCData) {}
+        override fun onNamespaceStart(tag: net.dongliu.apk.parser.struct.xml.XmlNamespaceStartTag) {}
+        override fun onNamespaceEnd(tag: net.dongliu.apk.parser.struct.xml.XmlNamespaceEndTag) {}
     }
 
     private fun parseBlendMode(modeStr: String?): BlendMode = when (modeStr) {

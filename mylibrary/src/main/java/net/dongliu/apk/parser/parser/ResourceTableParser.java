@@ -71,11 +71,13 @@ public class ResourceTableParser {
         this.stringPool = stringPool;
         this.resourceTable = new ResourceTable(stringPool);
         final long packageCount = resourceTableHeader.getPackageCount();
+        android.util.Log.d("AppLog", "icon fetching: packageCount in resources.arsc: " + packageCount);
         if (packageCount != 0) {
             PackageHeader packageHeader = (PackageHeader) this.readChunkHeader();
             for (int i = 0; i < packageCount; i++) {
                 final Pair<ResourcePackage, PackageHeader> pair = this.readPackage(packageHeader);
-                this.resourceTable.addPackage(pair.getLeft());
+                ResourcePackage resourcePackage = pair.getLeft();
+                this.resourceTable.addPackage(resourcePackage);
                 packageHeader = pair.getRight();
             }
         }
@@ -117,6 +119,7 @@ public class ResourceTableParser {
                     final String typeSpecName = resourcePackage.getTypeStringPool()
                             .get(typeSpecHeader.getId() - 1);
                     final TypeSpec typeSpec = new TypeSpec(typeSpecHeader, entryFlags, typeSpecName);
+                    android.util.Log.d("AppLog", "icon fetching: in package 0x" + Integer.toHexString(resourcePackage.getId()) + ", adding typeSpec " + typeSpecName + " with ID 0x" + Integer.toHexString(typeSpecHeader.getId()) + " count: " + typeSpecHeader.getEntryCount());
                     resourcePackage.addTypeSpec(typeSpec);
                     Buffers.position(this.buffer, chunkBegin + typeSpecHeader.getBodySize());
                     break;
@@ -143,7 +146,9 @@ public class ResourceTableParser {
                         }
                     }
                     final Type type = new Type(typeHeader);
-                    type.setName(resourcePackage.getTypeStringPool().get(typeHeader.getId() - 1));
+                    final String typeName = resourcePackage.getTypeStringPool().get(typeHeader.getId() - 1);
+                    type.setName(typeName);
+                    android.util.Log.d("AppLog", "icon fetching: in package 0x" + Integer.toHexString(resourcePackage.getId()) + ", adding type " + typeName + " with ID 0x" + Integer.toHexString(typeHeader.getId()) + " count: " + typeHeader.entryCount + " config: " + type.locale);
                     final long entryPos = chunkBegin + typeHeader.entriesStart - (int) typeHeader.headerSize;
                     Buffers.position(this.buffer, entryPos);
                     final ByteBuffer b = this.buffer.slice();
@@ -166,8 +171,11 @@ public class ResourceTableParser {
                     for (long i = 0; i < libraryHeader.getCount(); i++) {
                         final int packageId = this.buffer.getInt();
                         final String name = Buffers.readZeroTerminatedString(this.buffer, 128);
-                        final LibraryEntry entry = new LibraryEntry(packageId, name);
-                        //TODO: now just skip it..
+                        android.util.Log.d("AppLog", "icon fetching: in package 0x" + Integer.toHexString(resourcePackage.getId()) + " (" + resourcePackage.getName() + "), found library mapping: 0x" + Integer.toHexString(packageId) + " -> " + name);
+                        if (name.equals(resourcePackage.getName())) {
+                            android.util.Log.d("AppLog", "icon fetching: remapping package " + name + " to ID 0x" + Integer.toHexString(packageId));
+                            resourcePackage.setId((short) packageId);
+                        }
                     }
                     Buffers.position(this.buffer, chunkBegin + chunkHeader.getBodySize());
                     break;
@@ -188,6 +196,7 @@ public class ResourceTableParser {
                     throw new ParserException("unexpected chunk type: 0x" + (int) chunkHeader.chunkType);
             }
         }
+        android.util.Log.d("AppLog", "icon fetching: finished reading package " + resourcePackage.getName() + ". typeSpecs: " + resourcePackage.getTypeSpecMap().size() + ", types: " + resourcePackage.getTypesMap().size());
         return pair;
 
     }

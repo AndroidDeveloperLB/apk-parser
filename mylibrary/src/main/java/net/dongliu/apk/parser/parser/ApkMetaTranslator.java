@@ -58,7 +58,8 @@ public class ApkMetaTranslator implements XmlStreamer {
                 android.util.Log.d("AppLog", "icon fetching: checking tag <application> for icons");
                 for (Attribute attr : attributes.attributes) {
                     if (attr == null) continue;
-                    android.util.Log.d("AppLog", "icon fetching: application attr: " + attr.name + "=" + attr.value);
+                    String typeStr = attr.typedValue != null ? attr.typedValue.getClass().getSimpleName() : "null";
+                    android.util.Log.d("AppLog", "icon fetching: application attr: " + attr.name + "=" + attr.value + " (type: " + typeStr + ")");
                 }
                 this.apkMetaBuilder.setDebuggable(attributes.getBoolean("debuggable", false));
                 //TODO fix this part in a better way. Workaround for this: https://github.com/hsiafan/apk-parser/issues/119
@@ -290,6 +291,9 @@ public class ApkMetaTranslator implements XmlStreamer {
 
     private List<IconPath> extractIconPaths(Attribute iconAttr, String attrName) {
         final ResourceValue resourceValue = iconAttr.typedValue;
+        if (resourceValue != null) {
+            android.util.Log.d("AppLog", "icon fetching: extracting " + attrName + ", typedValue type: " + resourceValue.getClass().getSimpleName() + " data: " + resourceValue.toStringValue(resourceTable, locale));
+        }
         if (resourceValue instanceof ResourceValue.ReferenceResourceValue) {
             long resId = ((ResourceValue.ReferenceResourceValue) resourceValue).getReferenceResourceId();
             android.util.Log.d("AppLog", "icon fetching: extracting " + attrName + " from reference ID 0x" + Long.toHexString(resId));

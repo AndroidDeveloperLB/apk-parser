@@ -211,7 +211,9 @@ object ApkIconFetcher {
                 }
             } else {
                 android.util.Log.d("AppLog", "icon fetching: fallback to XmlDrawableParser for rootTag: $rootTag")
-                val drawable = XmlDrawableParser.tryParseDrawable(context, bytes, apkInfo, locale)
+                val drawable = XmlDrawableParser.tryParseDrawable(context, bytes, apkInfo, locale) { subPath ->
+                    filterGenerator.generateZipFilter().use { it.getByteArrayForEntries(hashSetOf(subPath))?.get(subPath) }
+                }
                 if (drawable == null) {
                     try {
                         val xmlTranslator = XmlTranslator()

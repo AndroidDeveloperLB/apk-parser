@@ -66,6 +66,23 @@ public class ResourcePackage {
         types.add(type);
     }
 
+    public void merge(@NonNull ResourcePackage other) {
+        for (Map.Entry<Short, TypeSpec> entry : other.typeSpecMap.entrySet()) {
+            if (!this.typeSpecMap.containsKey(entry.getKey())) {
+                this.typeSpecMap.put(entry.getKey(), entry.getValue());
+            }
+        }
+        for (Map.Entry<Short, List<Type>> entry : other.typesMap.entrySet()) {
+            List<Type> types = this.typesMap.get(entry.getKey());
+            if (types == null) {
+                this.typesMap.put(entry.getKey(), new ArrayList<>(entry.getValue()));
+            } else {
+                types.addAll(entry.getValue());
+            }
+        }
+        this.stagedAliasMap.putAll(other.stagedAliasMap);
+    }
+
     @Nullable
     public List<Type> getTypes(final short id) {
         return this.typesMap.get(id);
