@@ -62,16 +62,16 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
         val packageManager = context.packageManager
         Log.d("AppLog", "getting all package infos:")
         var startTime = System.currentTimeMillis()
-        val installedPackages =
+        val allInstalledPackages =
                 packageManager.getInstalledPackagesCompat(PackageManager.GET_META_DATA)
-                        .filter{it.packageName=="android"}
+        val installedPackages = allInstalledPackages.slice(150 until 160)
         var endTime = System.currentTimeMillis()
         Log.d("AppLog", "time taken: ${endTime - startTime}. total apps to process: ${installedPackages.size}")
         startTime = endTime
         var apksHandledSoFar = 0
-        for (packageInfo in installedPackages) {
+        for ((index, packageInfo) in installedPackages.withIndex()) {
             val packageName = packageInfo.packageName
-            Log.d("AppLog", "checking files of $packageName")
+            Log.d("AppLog", "processing index $index: $packageName")
             val isSystemApp = packageInfo.isSystemApp()
 
             val baseApkPath = packageInfo.applicationInfo!!.publicSourceDir
@@ -126,7 +126,7 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
                 if (packageInfo.applicationInfo!!.icon != 0 && appIcon == null) {
                     failedGettingAppIconErrorsLiveData.inc()
                     if (isSystemApp) systemAppsErrorsCountLiveData.inc()
-                    Log.e("AppLog", "can\'t get app icon for \"$packageName\" in: \"$baseApkPath\" isSystemApp?$isSystemApp")
+                    Log.e("AppError", "can\'t get app icon for \"$packageName\" in: \"$baseApkPath\"")
                     // Log all entries in all APKs to see if the requested path exists
                     for (apkPath in allApkFilePaths) {
                         try {
@@ -196,10 +196,15 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
                         potentialLabels.add(appInfo.nonLocalizedLabel)
                     potentialLabels.add(appInfo.loadLabel(packageManager))
                 }
+                Log.d("AppLabel", "package: $packageName, library: \"$labelOfLibrary\", framework: ${potentialLabels.joinToString(prefix = "\"", postfix = "\"", separator = "\\")}")
                 if (!potentialLabels.contains(labelOfLibrary)) {
                     wrongLabelErrorsLiveData.inc()
                     if (isSystemApp) systemAppsErrorsCountLiveData.inc()
-                    Log.e("AppLog", "apk label is different for \"${packageName}\" on $baseApkPath : correct one is : ${potentialLabels.joinToString(prefix = "\"", postfix = "\"", separator = "\\")} vs found: \"$labelOfLibrary\" isSystemApp?$isSystemApp")
+                    val libraryHex = labelOfLibrary?.toString()?.toByteArray(Charsets.UTF_8)?.joinToString("") { "%02x".format(it) }
+                    val frameworkHex = potentialLabels.map { it.toString().toByteArray(Charsets.UTF_8).joinToString("") { "%02x".format(it) } }
+                    Log.e("AppError", "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+                    Log.e("AppError", "apk label mismatch for \"${packageName}\": correct=${potentialLabels.joinToString(prefix = "\"", postfix = "\"", separator = "\\")} ($frameworkHex) vs found=\"$labelOfLibrary\" ($libraryHex)")
+                    Log.e("AppError", "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
                 }
             }
             Log.d("AppLog", "apk data of $baseApkPath : ${apkMeta.packageName}, ${apkMeta.versionCode}, ${apkMeta.versionName}, $labelOfLibrary, ${apkMetaTranslator.iconPaths}")
@@ -216,6 +221,7 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
                 "AppLog",
                 "averageTime(ms):${(endTime - startTime).toFloat() / installedPackages.size.toFloat()} per app, ${(endTime - startTime).toFloat() / apksHandledSoFar.toFloat()} per APK"
         )
+        Log.d("AppLog", "Final stats: labelErrors=${wrongLabelErrorsLiveData.value}, iconErrors=${failedGettingAppIconErrorsLiveData.value}, parsingErrors=${parsingErrorsLiveData.value}")
         Log.e("AppLog", "done")
         isDoneLiveData.postValue(true)
     }

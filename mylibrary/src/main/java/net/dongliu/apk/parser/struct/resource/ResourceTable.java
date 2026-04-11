@@ -30,8 +30,14 @@ public class ResourceTable {
     }
 
     public void addPackage(final @NonNull ResourcePackage resourcePackage) {
-        android.util.Log.d("AppLog", "icon fetching: adding package " + resourcePackage.getName() + " with ID 0x" + Integer.toHexString(resourcePackage.getId()));
-        this.packageMap.put(resourcePackage.getId(), resourcePackage);
+        ResourcePackage existing = this.packageMap.get(resourcePackage.getId());
+        if (existing == null) {
+            android.util.Log.d("AppLog", "icon fetching: adding new package " + resourcePackage.getName() + " with ID 0x" + Integer.toHexString(resourcePackage.getId()));
+            this.packageMap.put(resourcePackage.getId(), resourcePackage);
+        } else {
+            android.util.Log.d("AppLog", "icon fetching: merging existing package " + existing.getName() + " with " + resourcePackage.getName() + " for ID 0x" + Integer.toHexString(resourcePackage.getId()));
+            existing.merge(resourcePackage);
+        }
     }
 
     public void merge(@NonNull ResourceTable other) {

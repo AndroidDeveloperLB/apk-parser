@@ -68,16 +68,24 @@ public class ResourcePackage {
 
     public void merge(@NonNull ResourcePackage other) {
         for (Map.Entry<Short, TypeSpec> entry : other.typeSpecMap.entrySet()) {
-            if (!this.typeSpecMap.containsKey(entry.getKey())) {
+            TypeSpec existingSpec = this.typeSpecMap.get(entry.getKey());
+            if (existingSpec == null) {
                 this.typeSpecMap.put(entry.getKey(), entry.getValue());
+            } else {
+                // If they exist in both, we should ideally check if the count is the same.
+                // For now, we keep the one with more flags (more complete)
+                if (entry.getValue().entryFlags.length > existingSpec.entryFlags.length) {
+                    this.typeSpecMap.put(entry.getKey(), entry.getValue());
+                }
             }
         }
         for (Map.Entry<Short, List<Type>> entry : other.typesMap.entrySet()) {
-            List<Type> types = this.typesMap.get(entry.getKey());
-            if (types == null) {
+            List<Type> existingTypes = this.typesMap.get(entry.getKey());
+            if (existingTypes == null) {
                 this.typesMap.put(entry.getKey(), new ArrayList<>(entry.getValue()));
             } else {
-                types.addAll(entry.getValue());
+                // Add all unique configurations from the other package
+                existingTypes.addAll(entry.getValue());
             }
         }
         this.stagedAliasMap.putAll(other.stagedAliasMap);

@@ -186,7 +186,8 @@ public abstract class ResourceValue {
                 final ResourceEntry resourceEntry = resource.resourceEntry;
                 final int localMatchLevel = Locales.match(locale, type.locale);
                 final int densityLevel = ReferenceResourceValue.densityLevel(type.density);
-                android.util.Log.d("AppLog", "icon fetching: matching res 0x" + Long.toHexString(resourceId) + " config: " + type.locale + " matchLevel: " + localMatchLevel);
+                String val = resourceEntry.toStringValue(resourceTable, locale);
+                android.util.Log.d("AppLog", "icon fetching: matching res 0x" + Long.toHexString(resourceId) + " config: " + type.locale + " matchLevel: " + localMatchLevel + " value: \"" + val + "\"");
                 if (localMatchLevel > currentLocalMatchLevel) {
                     selected = resourceEntry;
                     currentLocalMatchLevel = localMatchLevel;
