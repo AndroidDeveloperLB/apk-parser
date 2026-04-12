@@ -30,9 +30,17 @@ class ApkInfo(
             val manifestBytes: ByteArray = byteArrayForEntries[AndroidConstants.MANIFEST_FILE]
                     ?: return null
             val resourcesBytes: ByteArray? = byteArrayForEntries[AndroidConstants.RESOURCE_FILE]
+            if (resourcesBytes == null) {
+                android.util.Log.d("AppLog", "label fetching: resources.arsc NOT found in APK")
+            } else {
+                android.util.Log.d("AppLog", "label fetching: resources.arsc found, size: ${resourcesBytes.size}")
+            }
             val xmlTranslator = XmlTranslator()
             val resourceTable: ResourceTable =
-                    if (masterResourceTable != null) masterResourceTable
+                    if (masterResourceTable != null) {
+                        android.util.Log.d("AppLog", "label fetching: using master resource table")
+                        masterResourceTable
+                    }
                     else if (resourcesBytes == null)
                         ResourceTable(null)
                     else {
@@ -46,7 +54,12 @@ class ApkInfo(
                     ByteBuffer.wrap(manifestBytes), resourceTable,
                     CompositeXmlStreamer(xmlTranslator, apkMetaTranslator), locale
             )
-            binaryXmlParser.parse()
+            try {
+                binaryXmlParser.parse()
+            } catch (e: Throwable) {
+                android.util.Log.e("AppLog", "label fetching: CRITICAL error during binaryXmlParser.parse()", e)
+                throw e
+            }
             if (!requestParseManifestXmlTagForApkType) {
                 return ApkInfo(xmlTranslator, apkMetaTranslator, ApkType.UNKNOWN, resourceTable)
             }

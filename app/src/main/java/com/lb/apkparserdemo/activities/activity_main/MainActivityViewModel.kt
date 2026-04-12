@@ -65,9 +65,9 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
         Log.d("AppLog", "getting all package infos:")
         var startTime = System.currentTimeMillis()
         val appsToFocusOn = HashSet<String>()
-//                .also {
-//                    it.add("")
-//                }
+                .also {
+                    it.add("com.unicell.pangoandroid")
+                }
         val installedPackages =
                 packageManager.getInstalledPackagesCompat(PackageManager.GET_META_DATA)
                         .filter { appsToFocusOn.isEmpty()||appsToFocusOn.contains(it.packageName)}
@@ -78,7 +78,7 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
         var apksHandledSoFar = 0
         for ((index, packageInfo) in installedPackages.withIndex()) {
             val packageName = packageInfo.packageName
-            Log.d("AppLog", "processing index $index: $packageName")
+            // Log.d("AppLog", "processing index $index: $packageName")
             val isSystemApp = packageInfo.isSystemApp()
 
             val baseApkPath = packageInfo.applicationInfo!!.publicSourceDir
@@ -110,7 +110,7 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
                 try {
                     ApkInfo.internalGetApkInfo(locale, filter, requestParseManifestXmlTagForApkType = GET_APK_TYPE, requestParseResources = VALIDATE_RESOURCES, masterResourceTable = masterResourceTable)
                 } catch (e: Throwable) {
-                    Log.e("AppLog", "failed to parse apk for $packageName: ${e.message}")
+                    Log.e("AppLog", "failed to parse apk for $packageName", e)
                     null
                 }
             }
@@ -134,20 +134,20 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
                 if (packageInfo.applicationInfo!!.icon != 0 && appIcon == null) {
                     failedGettingAppIconErrorsLiveData.inc()
                     if (isSystemApp) systemAppsErrorsCountLiveData.inc()
-                    Log.e("AppLog", "icon fetching: can\'t get app icon for \"$packageName\" in: \"$baseApkPath\"")
+                    // Log.e("AppLog", "icon fetching: can\'t get app icon for \"$packageName\" in: \"$baseApkPath\"")
                     // Log all entries in all APKs to see if the requested path exists
                     for (apkPath in allApkFilePaths) {
                         try {
                             ZipFile(apkPath).use { zip ->
-                                Log.d("AppLog", "icon fetching: ZIP $apkPath has ${zip.size()} entries")
+                                // Log.d("AppLog", "icon fetching: ZIP $apkPath has ${zip.size()} entries")
                                 val iconPaths = currentApkInfo.apkMetaTranslator.iconPaths.mapNotNull { it.path }
                                 for (p in iconPaths) {
-                                    if (zip.getEntry(p) != null) Log.d("AppLog", "icon fetching: found $p in $apkPath")
-                                    else {
+                                    // if (zip.getEntry(p) != null) Log.d("AppLog", "icon fetching: found $p in $apkPath")
+                                    // else {
                                         // Try without leading res/ if it's there
-                                        val p2 = if (p.startsWith("res/")) p.substring(4) else p
-                                        if (zip.getEntry(p2) != null) Log.d("AppLog", "icon fetching: found $p2 (alt) in $apkPath")
-                                    }
+                                        // val p2 = if (p.startsWith("res/")) p.substring(4) else p
+                                        // if (zip.getEntry(p2) != null) Log.d("AppLog", "icon fetching: found $p2 (alt) in $apkPath")
+                                    // }
                                 }
                             }
                         } catch (ignored: Exception) {
@@ -211,10 +211,10 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
                     if (isSystemApp) systemAppsErrorsCountLiveData.inc()
                     val libraryHex = labelOfLibrary?.toString()?.toByteArray(Charsets.UTF_8)?.joinToString("") { "%02x".format(it) }
                     val frameworkHex = potentialLabels.map { label -> label.toString().toByteArray(Charsets.UTF_8).joinToString("") { "%02x".format(it) } }
-                    Log.e("AppLog", "apk label mismatch for \"${packageName}\": correct=${potentialLabels.joinToString(prefix = "\"", postfix = "\"", separator = "\\")} ($frameworkHex) vs found=\"$labelOfLibrary\" ($libraryHex)")
+                    Log.e("AppLog", "label fetching: mismatch for \"${packageName}\": correct=${potentialLabels.joinToString(prefix = "\"", postfix = "\"", separator = "\\")} ($frameworkHex) vs found=\"$labelOfLibrary\" ($libraryHex)")
                 }
             }
-            Log.d("AppLog", "apk data of $baseApkPath : ${apkMeta.packageName}, ${apkMeta.versionCode}, ${apkMeta.versionName}, $labelOfLibrary, ${apkMetaTranslator.iconPaths}")
+            // Log.d("AppLog", "apk data of $baseApkPath : ${apkMeta.packageName}, ${apkMeta.versionCode}, ${apkMeta.versionName}, $labelOfLibrary, ${apkMetaTranslator.iconPaths}")
             apkFilesHandledLiveData.inc()
             ++apksHandledSoFar
             appsHandledLiveData.inc()

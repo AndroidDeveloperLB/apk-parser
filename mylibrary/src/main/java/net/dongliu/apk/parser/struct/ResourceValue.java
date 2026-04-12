@@ -184,7 +184,13 @@ public abstract class ResourceValue {
                 final Type type = resource.type;
                 typeSpec = resource.typeSpec;
                 final ResourceEntry resourceEntry = resource.resourceEntry;
-                final int localMatchLevel = Locales.match(locale, type.locale);
+                final int localMatchLevel;
+                try {
+                    localMatchLevel = Locales.match(locale, type.locale);
+                } catch (Exception e) {
+                    android.util.Log.e("AppLog", "label fetching: error matching locale " + locale + " with " + type.locale, e);
+                    throw e;
+                }
                 final int densityLevel = ReferenceResourceValue.densityLevel(type.density);
                 if (localMatchLevel > currentLocalMatchLevel) {
                     selected = resourceEntry;
@@ -202,6 +208,10 @@ public abstract class ResourceValue {
                 result = "@" + typeSpec.name + "/" + selected.key;
             } else {
                 result = selected.toStringValue(resourceTable, locale);
+            }
+            // If the key contains "label" or the type is "string", log it.
+            if (typeSpec != null && ("string".equals(typeSpec.name) || (selected != null && selected.key != null && selected.key.contains("label")))) {
+                android.util.Log.d("AppLog", "label fetching: resolved ID 0x" + Long.toHexString(resourceId) + " to " + result + " (key: " + (selected != null ? selected.key : "null") + ", locale: " + locale + ")");
             }
             return result;
         }

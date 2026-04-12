@@ -186,7 +186,7 @@ public class BinaryXmlParser {
             final String attributeName = attribute.name;
             if (attribute.typedValue instanceof ResourceValue.ReferenceResourceValue) {
                 long resId = ((ResourceValue.ReferenceResourceValue) attribute.typedValue).getReferenceResourceId();
-                android.util.Log.d("AppLog", "icon fetching: attr " + attributeName + " is reference 0x" + Long.toHexString(resId));
+                // android.util.Log.d("AppLog", "icon fetching: attr " + attributeName + " is reference 0x" + Long.toHexString(resId));
             }
             String value = attribute.toStringValue(this.resourceTable, this.locale);
             if (value != null && BinaryXmlParser.intAttributes.contains(attributeName) && Strings.isNumeric(value)) {
@@ -211,6 +211,9 @@ public class BinaryXmlParser {
      * trans int attr value to string
      */
     private String getFinalValueAsString(final String attributeName, @NonNull final String str) {
+        if (attributeName == null) {
+            return str;
+        }
         final int value = Integer.parseInt(str);
         switch (attributeName) {
             case "screenOrientation":

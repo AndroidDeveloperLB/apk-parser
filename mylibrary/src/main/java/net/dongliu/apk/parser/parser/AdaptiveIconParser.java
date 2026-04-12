@@ -82,7 +82,7 @@ public class AdaptiveIconParser implements XmlStreamer {
     public void onStartTag(final @NonNull XmlNodeStartTag xmlNodeStartTag) {
         if (rootTag == null) {
             rootTag = xmlNodeStartTag.name;
-            android.util.Log.d("AppLog", "icon fetching: XML root tag: " + rootTag);
+            // android.util.Log.d("AppLog", "icon fetching: XML root tag: " + rootTag);
         }
 
         if ("background".equals(xmlNodeStartTag.name) || "foreground".equals(xmlNodeStartTag.name) || "monochrome".equals(xmlNodeStartTag.name)) {
@@ -91,7 +91,7 @@ public class AdaptiveIconParser implements XmlStreamer {
 
         final String drawable = this.getFoundDrawable(xmlNodeStartTag);
         if (drawable != null) {
-            android.util.Log.d("AppLog", "icon fetching: found drawable value: " + drawable + " in section: " + currentSection + " (tag: <" + xmlNodeStartTag.name + ">)");
+            // android.util.Log.d("AppLog", "icon fetching: found drawable value: " + drawable + " in section: " + currentSection + " (tag: <" + xmlNodeStartTag.name + ">)");
             this.drawables.add(drawable);
             if ("background".equals(this.currentSection)) {
                 this.backgroundDrawables.add(drawable);
@@ -106,7 +106,7 @@ public class AdaptiveIconParser implements XmlStreamer {
             if ("vector".equals(name) || "shape".equals(name) || "animated-vector".equals(name) || "gradient".equals(name) || "path".equals(name)) {
                 // If it's a known drawing tag and doesn't have a drawable/src attribute, it's likely inlined content.
                 hasInlineContent = true;
-                android.util.Log.d("AppLog", "icon fetching: detected inline content: <" + name + "> in section: " + currentSection);
+                // android.util.Log.d("AppLog", "icon fetching: detected inline content: <" + name + "> in section: " + currentSection);
             }
         }
 
@@ -116,7 +116,7 @@ public class AdaptiveIconParser implements XmlStreamer {
             if (sb.length() > 0) sb.append(", ");
             sb.append(attr.namespace).append(":").append(attr.name).append("=").append(attr.value);
         }
-        android.util.Log.d("AppLog", "icon fetching: tag <" + xmlNodeStartTag.name + "> attributes: [" + sb.toString() + "]");
+        // android.util.Log.d("AppLog", "icon fetching: tag <" + xmlNodeStartTag.name + "> attributes: [" + sb.toString() + "]");
     }
 
     @Nullable

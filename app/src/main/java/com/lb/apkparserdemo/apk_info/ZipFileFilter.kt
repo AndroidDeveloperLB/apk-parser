@@ -33,11 +33,11 @@ class ZipFileFilter(private val zipFile: ZipFile) : AbstractZipFilter(), Closeab
                 var entry: ZipEntry? = zipFile.getEntry(name)
                 if (entry == null && name.startsWith("/")) entry = zipFile.getEntry(name.substring(1))
                 if (entry == null) {
-                    android.util.Log.d("AppLog", "icon fetching: ZipFileFilter (${zipFile.name}) MISSED mandatory entry: $name")
+                    // android.util.Log.d("AppLog", "icon fetching: ZipFileFilter (${zipFile.name}) MISSED mandatory entry: $name")
                     return null
                 }
                 result[name] = zipFile.getInputStream(entry).readBytes()
-                android.util.Log.d("AppLog", "icon fetching: ZipFileFilter (${zipFile.name}) found mandatory entry: $name")
+                // android.util.Log.d("AppLog", "icon fetching: ZipFileFilter (${zipFile.name}) found mandatory entry: $name")
             }
             if (extraEntriesNames != null)
                 for (name in extraEntriesNames) {
@@ -45,11 +45,11 @@ class ZipFileFilter(private val zipFile: ZipFile) : AbstractZipFilter(), Closeab
                     if (entry == null && name.startsWith("/")) entry = zipFile.getEntry(name.substring(1))
                     if (entry == null) continue
                     result[name] = zipFile.getInputStream(entry).readBytes()
-                    android.util.Log.d("AppLog", "icon fetching: ZipFileFilter (${zipFile.name}) found extra entry: $name")
+                    // android.util.Log.d("AppLog", "icon fetching: ZipFileFilter (${zipFile.name}) found extra entry: $name")
                 }
             return result
         } catch (e: Exception) {
-            android.util.Log.d("AppLog", "icon fetching: ZipFileFilter (${zipFile.name}) exception: ${e.message}")
+            // android.util.Log.d("AppLog", "icon fetching: ZipFileFilter (${zipFile.name}) exception: ${e.message}")
             return null
         }
     }

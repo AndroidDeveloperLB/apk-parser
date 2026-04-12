@@ -52,14 +52,14 @@ public class ApkMetaTranslator implements XmlStreamer {
     public void onStartTag(final @NonNull XmlNodeStartTag xmlNodeStartTag) {
         final Attributes attributes = xmlNodeStartTag.attributes;
         final String xmlNodeStartTagName = xmlNodeStartTag.name;
-        android.util.Log.d("AppLog", "icon fetching: manifest tag encountered: <" + xmlNodeStartTagName + ">");
+        // android.util.Log.d("AppLog", "icon fetching: manifest tag encountered: <" + xmlNodeStartTagName + ">");
         switch (xmlNodeStartTagName) {
             case "application": {
-                android.util.Log.d("AppLog", "icon fetching: checking tag <application> for icons");
+                // android.util.Log.d("AppLog", "icon fetching: checking tag <application> for icons");
                 for (Attribute attr : attributes.attributes) {
                     if (attr == null) continue;
                     String typeStr = attr.typedValue != null ? attr.typedValue.getClass().getSimpleName() : "null";
-                    android.util.Log.d("AppLog", "icon fetching: application attr: " + attr.name + "=" + attr.value + " (type: " + typeStr + ")");
+                    android.util.Log.d("AppLog", "label fetching: application attr: " + attr.name + "=" + attr.value + " (type: " + typeStr + ")");
                 }
                 this.apkMetaBuilder.setDebuggable(attributes.getBoolean("debuggable", false));
                 //TODO fix this part in a better way. Workaround for this: https://github.com/hsiafan/apk-parser/issues/119
@@ -74,11 +74,13 @@ public class ApkMetaTranslator implements XmlStreamer {
                 if (!this.apkMetaBuilder.isolatedSplits)
                     this.apkMetaBuilder.setIsolatedSplits(attributes.getBoolean("isolatedSplits", false));
                 final String label = attributes.getString("label");
+                android.util.Log.d("AppLog", "label fetching: found label from attributes: " + label + " (locale: " + this.locale + ")");
                 if (label != null) {
                     this.apkMetaBuilder.setLabel(label);
                 } else {
                     //workaround in case the real label can't be found, so we at least try to use the package name with the application class
                     final String packageName = this.apkMetaBuilder.getPackageName();
+                    android.util.Log.d("AppLog", "label fetching: label attr NOT found for package: " + packageName);
                     if (!TextUtils.isEmpty(packageName)) {
                         final String applicationClassRelativePath = attributes.getString("name");
                         if (TextUtils.isEmpty(applicationClassRelativePath)) {
@@ -118,10 +120,10 @@ public class ApkMetaTranslator implements XmlStreamer {
             case "instrumentation":
             case "permission-group":
             case "meta-data": {
-                android.util.Log.d("AppLog", "icon fetching: checking tag <" + xmlNodeStartTagName + "> for icons");
+                // android.util.Log.d("AppLog", "icon fetching: checking tag <" + xmlNodeStartTagName + "> for icons");
                 for (Attribute attr : attributes.attributes) {
-                    if (attr == null) continue;
-                    android.util.Log.d("AppLog", "icon fetching: " + xmlNodeStartTagName + " attr: " + attr.name + "=" + attr.value);
+                    // if (attr == null) continue;
+                    // android.util.Log.d("AppLog", "icon fetching: " + xmlNodeStartTagName + " attr: " + attr.name + "=" + attr.value);
                 }
                 final List<IconPath> allIconPaths = new ArrayList<>(this.iconPaths);
                 final Attribute iconAttr = attributes.get("icon");
@@ -233,10 +235,10 @@ public class ApkMetaTranslator implements XmlStreamer {
                 break;
             }
             case "permission": {
-                android.util.Log.d("AppLog", "icon fetching: checking tag <permission> for icons");
+                // android.util.Log.d("AppLog", "icon fetching: checking tag <permission> for icons");
                 for (Attribute attr : attributes.attributes) {
-                    if (attr == null) continue;
-                    android.util.Log.d("AppLog", "icon fetching: permission attr: " + attr.name + "=" + attr.value);
+                    // if (attr == null) continue;
+                    // android.util.Log.d("AppLog", "icon fetching: permission attr: " + attr.name + "=" + attr.value);
                 }
                 final List<IconPath> allIconPaths = new ArrayList<>(this.iconPaths);
                 final Attribute iconAttr = attributes.get("icon");
@@ -284,7 +286,7 @@ public class ApkMetaTranslator implements XmlStreamer {
     @NonNull
     public List<IconPath> getIconPaths() {
         if (this.iconPaths.isEmpty()) {
-            android.util.Log.d("AppLog", "icon fetching: getIconPaths() returned empty list");
+            // android.util.Log.d("AppLog", "icon fetching: getIconPaths() returned empty list");
         }
         return this.iconPaths;
     }
@@ -292,11 +294,11 @@ public class ApkMetaTranslator implements XmlStreamer {
     private List<IconPath> extractIconPaths(Attribute iconAttr, String attrName) {
         final ResourceValue resourceValue = iconAttr.typedValue;
         if (resourceValue != null) {
-            android.util.Log.d("AppLog", "icon fetching: extracting " + attrName + ", typedValue type: " + resourceValue.getClass().getSimpleName() + " data: " + resourceValue.toStringValue(resourceTable, locale));
+            // android.util.Log.d("AppLog", "icon fetching: extracting " + attrName + ", typedValue type: " + resourceValue.getClass().getSimpleName() + " data: " + resourceValue.toStringValue(resourceTable, locale));
         }
         if (resourceValue instanceof ResourceValue.ReferenceResourceValue) {
             long resId = ((ResourceValue.ReferenceResourceValue) resourceValue).getReferenceResourceId();
-            android.util.Log.d("AppLog", "icon fetching: extracting " + attrName + " from reference ID 0x" + Long.toHexString(resId));
+            // android.util.Log.d("AppLog", "icon fetching: extracting " + attrName + " from reference ID 0x" + Long.toHexString(resId));
             return extractIconPathsById(resId, attrName, new java.util.HashSet<Long>());
         } else {
             final String value = iconAttr.value;
@@ -305,7 +307,7 @@ public class ApkMetaTranslator implements XmlStreamer {
                 final IconPath iconPath = new IconPath(value, Densities.DEFAULT);
                 return Collections.singletonList(iconPath);
             } else {
-                android.util.Log.d("AppLog", "icon fetching: " + attrName + " attribute exists but has no value");
+                // android.util.Log.d("AppLog", "icon fetching: " + attrName + " attribute exists but has no value");
             }
         }
         return Collections.emptyList();
@@ -317,7 +319,7 @@ public class ApkMetaTranslator implements XmlStreamer {
 
         final List<ResourceTable.Resource> resources = this.resourceTable.getResourcesById(resourceId);
         if (resources.isEmpty()) {
-            android.util.Log.d("AppLog", "icon fetching: no resources found for ID 0x" + Long.toHexString(resourceId));
+            // android.util.Log.d("AppLog", "icon fetching: no resources found for ID 0x" + Long.toHexString(resourceId));
             // Check if this might be a system resource that wasn't in our table
             if ((resourceId >> 24) == 0x01) {
                 String path = "resourceId:0x" + Long.toHexString(resourceId);
@@ -351,7 +353,7 @@ public class ApkMetaTranslator implements XmlStreamer {
     }
 
     private void updateApkMetaIcon(String path, String attrName) {
-        android.util.Log.d("AppLog", "icon fetching: discovered " + attrName + " path: " + path);
+        // android.util.Log.d("AppLog", "icon fetching: discovered " + attrName + " path: " + path);
         if ("icon".equals(attrName)) {
             this.apkMetaBuilder.setIcon(path);
         } else if ("roundIcon".equals(attrName)) {

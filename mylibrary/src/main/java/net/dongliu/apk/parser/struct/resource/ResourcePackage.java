@@ -67,6 +67,7 @@ public class ResourcePackage {
     }
 
     public void merge(@NonNull ResourcePackage other) {
+        android.util.Log.d("AppLog", "label fetching: merging package " + other.getName() + " into " + this.getName() + " (current typeSpecs: " + typeSpecMap.size() + ", other typeSpecs: " + other.typeSpecMap.size() + ")");
         for (Map.Entry<Short, TypeSpec> entry : other.typeSpecMap.entrySet()) {
             TypeSpec existingSpec = this.typeSpecMap.get(entry.getKey());
             if (existingSpec == null) {

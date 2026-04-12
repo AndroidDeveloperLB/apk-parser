@@ -30,6 +30,11 @@ object Locales {
             if (targetLocale.country.isEmpty()) {
                 return 3
             }
+            // Pseudolocale check: en-XA, ar-XB, etc.
+            // These should have lower priority than the default locale (1) if they don't match exactly.
+            if (targetLocale.country == "XA" || targetLocale.country == "XB") {
+                return 0
+            }
             return 2
         }
         return if (targetLocale.language.isEmpty()) 1 else 0
