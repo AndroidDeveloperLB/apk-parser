@@ -148,7 +148,10 @@ public class ResourceTableParser {
                     final Type type = new Type(typeHeader);
                     final String typeName = resourcePackage.getTypeStringPool().get(typeHeader.getId() - 1);
                     type.setName(typeName);
-                    android.util.Log.d("AppLog", "label fetching: in package 0x" + Integer.toHexString(resourcePackage.getId()) + ", adding type " + typeName + " with ID 0x" + Integer.toHexString(typeHeader.getId()) + " count: " + typeHeader.entryCount + " config: " + type.locale);
+                    // android.util.Log.d("AppLog", "label fetching: in package 0x" + Integer.toHexString(resourcePackage.getId()) + ", adding type " + typeName + " with ID 0x" + Integer.toHexString(typeHeader.getId()) + " count: " + typeHeader.entryCount + " config: " + type.locale);
+                    if (typeName != null && ("string".equals(typeName) || typeName.contains("label"))) {
+                         android.util.Log.d("AppLog", "label fetching: in package 0x" + Integer.toHexString(resourcePackage.getId()) + ", adding type " + typeName + " with ID 0x" + Integer.toHexString(typeHeader.getId()) + " count: " + typeHeader.entryCount + " config: " + type.locale);
+                    }
                     final long entryPos = chunkBegin + typeHeader.entriesStart - (int) typeHeader.headerSize;
                     Buffers.position(this.buffer, entryPos);
                     final ByteBuffer b = this.buffer.slice();

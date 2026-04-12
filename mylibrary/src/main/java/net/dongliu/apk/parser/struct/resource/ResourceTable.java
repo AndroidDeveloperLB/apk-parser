@@ -60,6 +60,10 @@ public class ResourceTable {
     }
 
     @Nullable
+    public Map<Short, ResourcePackage> getPackageMap() {
+        return packageMap;
+    }
+
     public ResourcePackage getPackage(final short id) {
         ResourcePackage res = this.packageMap.get(id);
         if (res != null) return res;

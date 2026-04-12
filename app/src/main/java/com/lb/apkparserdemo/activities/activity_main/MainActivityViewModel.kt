@@ -58,7 +58,16 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
 
     @WorkerThread
     private fun performTests() {
-        val locale = Locale.getDefault()
+        val localeList = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            val list = applicationContext.resources.configuration.locales
+            val result = mutableListOf<Locale>()
+            for (i in 0 until list.size()) {
+                result.add(list.get(i))
+            }
+            result
+        } else {
+            listOf(Locale.getDefault())
+        }
         val context = applicationContext
         val appIconSize = AppInfoUtil.getAppIconSize(context)
         val packageManager = context.packageManager
@@ -66,7 +75,7 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
         var startTime = System.currentTimeMillis()
         val appsToFocusOn = HashSet<String>()
                 .also {
-                    it.add("com.unicell.pangoandroid")
+//                    it.add("com.lb.contacts_sync")
                 }
         val installedPackages =
                 packageManager.getInstalledPackagesCompat(PackageManager.GET_META_DATA)
@@ -108,7 +117,7 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
 
             val apkInfo = getZipFilter(baseApkPath, ZIP_FILTER_TYPE).use { filter ->
                 try {
-                    ApkInfo.internalGetApkInfo(locale, filter, requestParseManifestXmlTagForApkType = GET_APK_TYPE, requestParseResources = VALIDATE_RESOURCES, masterResourceTable = masterResourceTable)
+                    ApkInfo.internalGetApkInfo(localeList, filter, requestParseManifestXmlTagForApkType = GET_APK_TYPE, requestParseResources = VALIDATE_RESOURCES, masterResourceTable = masterResourceTable)
                 } catch (e: Throwable) {
                     Log.e("AppLog", "failed to parse apk for $packageName", e)
                     null
@@ -126,7 +135,7 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
             if (VALIDATE_RESOURCES) {
                 //check if the library can get app icon, if required
                 val appIcon = ApkIconFetcher.getApkIcon(
-                        context, locale, object : ApkIconFetcher.ZipFilterCreator {
+                        context, localeList, object : ApkIconFetcher.ZipFilterCreator {
                     override fun generateZipFilter(): AbstractZipFilter =
                             MultiZipFilter(allApkFilePaths.map { getZipFilter(it, ZIP_FILTER_TYPE) })
                 }, currentApkInfo, appIconSize
@@ -211,7 +220,10 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
                     if (isSystemApp) systemAppsErrorsCountLiveData.inc()
                     val libraryHex = labelOfLibrary?.toString()?.toByteArray(Charsets.UTF_8)?.joinToString("") { "%02x".format(it) }
                     val frameworkHex = potentialLabels.map { label -> label.toString().toByteArray(Charsets.UTF_8).joinToString("") { "%02x".format(it) } }
+                    val allLibraryLabels = apkMetaTranslator.getAllLabels()
                     Log.e("AppLog", "label fetching: mismatch for \"${packageName}\": correct=${potentialLabels.joinToString(prefix = "\"", postfix = "\"", separator = "\\")} ($frameworkHex) vs found=\"$labelOfLibrary\" ($libraryHex)")
+                    Log.e("AppLog", "label fetching: All library translations for \"$packageName\": $allLibraryLabels")
+                    Log.e("AppLog", "label fetching: System locale list: $localeList. APK all locales: ${currentApkInfo.allLocales}")
                 }
             }
             // Log.d("AppLog", "apk data of $baseApkPath : ${apkMeta.packageName}, ${apkMeta.versionCode}, ${apkMeta.versionName}, $labelOfLibrary, ${apkMetaTranslator.iconPaths}")

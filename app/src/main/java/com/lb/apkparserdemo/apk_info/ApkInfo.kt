@@ -10,7 +10,8 @@ class ApkInfo(
         val xmlTranslator: XmlTranslator,
         val apkMetaTranslator: ApkMetaTranslator,
         val apkType: ApkType,
-        val resourceTable: ResourceTable
+        val resourceTable: ResourceTable,
+        val allLocales: Set<Locale> = emptySet()
 ) {
     enum class ApkType {
         SPLIT, BASE_OF_SPLIT_OR_STANDALONE, UNKNOWN
@@ -19,7 +20,7 @@ class ApkInfo(
     companion object {
 
         @Suppress("SameParameterValue")
-        fun internalGetApkInfo(locale: Locale, zipFilter: AbstractZipFilter, requestParseManifestXmlTagForApkType: Boolean = false,
+        fun internalGetApkInfo(locales: List<Locale>, zipFilter: AbstractZipFilter, requestParseManifestXmlTagForApkType: Boolean = false,
                                requestParseResources: Boolean = false, masterResourceTable: ResourceTable? = null): ApkInfo? {
             val mandatoryFilesToCheck = hashSetOf(AndroidConstants.MANIFEST_FILE)
             val extraFilesToCheck =
@@ -30,15 +31,23 @@ class ApkInfo(
             val manifestBytes: ByteArray = byteArrayForEntries[AndroidConstants.MANIFEST_FILE]
                     ?: return null
             val resourcesBytes: ByteArray? = byteArrayForEntries[AndroidConstants.RESOURCE_FILE]
-            if (resourcesBytes == null) {
-                android.util.Log.d("AppLog", "label fetching: resources.arsc NOT found in APK")
-            } else {
-                android.util.Log.d("AppLog", "label fetching: resources.arsc found, size: ${resourcesBytes.size}")
-            }
+            
             val xmlTranslator = XmlTranslator()
+            val allLocales = mutableSetOf<Locale>()
             val resourceTable: ResourceTable =
                     if (masterResourceTable != null) {
-                        android.util.Log.d("AppLog", "label fetching: using master resource table")
+                        // If we have a master table, we should still try to get the locales from it if possible
+                        // But for now, let's just use it as is. 
+                        // Actually, we could extract locales from all packages in the table.
+                        val tableLocales = mutableSetOf<Locale>()
+                        for (pkg in masterResourceTable.getPackageMap()!!.values) {
+                            for (types in pkg.getTypesMap()!!.values) {
+                                for (type in types!!) {
+                                    tableLocales.add(type.locale)
+                                }
+                            }
+                        }
+                        allLocales.addAll(tableLocales)
                         masterResourceTable
                     }
                     else if (resourcesBytes == null)
@@ -46,13 +55,13 @@ class ApkInfo(
                     else {
                         val resourceTableParser = ResourceTableParser(ByteBuffer.wrap(resourcesBytes))
                         resourceTableParser.parse()
+                        allLocales.addAll(resourceTableParser.locales)
                         resourceTableParser.resourceTable
-                        //                this.locales = resourceTableParser.locales
                     }
-            val apkMetaTranslator = ApkMetaTranslator(resourceTable, locale)
+            val apkMetaTranslator = ApkMetaTranslator(resourceTable, locales)
             val binaryXmlParser = BinaryXmlParser(
                     ByteBuffer.wrap(manifestBytes), resourceTable,
-                    CompositeXmlStreamer(xmlTranslator, apkMetaTranslator), locale
+                    CompositeXmlStreamer(xmlTranslator, apkMetaTranslator), locales.getOrNull(0) ?: Locale.getDefault()
             )
             try {
                 binaryXmlParser.parse()
@@ -61,17 +70,17 @@ class ApkInfo(
                 throw e
             }
             if (!requestParseManifestXmlTagForApkType) {
-                return ApkInfo(xmlTranslator, apkMetaTranslator, ApkType.UNKNOWN, resourceTable)
+                return ApkInfo(xmlTranslator, apkMetaTranslator, ApkType.UNKNOWN, resourceTable, allLocales)
             }
             val apkMeta = apkMetaTranslator.apkMeta
             val isSplitApk = !apkMeta.split.isNullOrEmpty()
             if (isSplitApk) {
-                return ApkInfo(xmlTranslator, apkMetaTranslator, ApkType.SPLIT, resourceTable)
+                return ApkInfo(xmlTranslator, apkMetaTranslator, ApkType.SPLIT, resourceTable, allLocales)
             }
             //standalone or base of split apks
             val isDefinitelyBaseApkOfSplit = apkMeta.isSplitRequired
             if (isDefinitelyBaseApkOfSplit) {
-                return ApkInfo(xmlTranslator, apkMetaTranslator, ApkType.BASE_OF_SPLIT_OR_STANDALONE, resourceTable)
+                return ApkInfo(xmlTranslator, apkMetaTranslator, ApkType.BASE_OF_SPLIT_OR_STANDALONE, resourceTable, allLocales)
             }
             val manifestXml = xmlTranslator.xml
             var apkType: ApkType = ApkType.BASE_OF_SPLIT_OR_STANDALONE
@@ -133,7 +142,7 @@ class ApkInfo(
                 e.printStackTrace()
                 //                            Log.e("AppLog", "failed to get apk type: $e")
             }
-            return ApkInfo(xmlTranslator, apkMetaTranslator, apkType, resourceTable)
+            return ApkInfo(xmlTranslator, apkMetaTranslator, apkType, resourceTable, allLocales)
         }
     }
 }

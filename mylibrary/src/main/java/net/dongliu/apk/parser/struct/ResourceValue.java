@@ -7,7 +7,6 @@ import net.dongliu.apk.parser.struct.resource.Densities;
 import net.dongliu.apk.parser.struct.resource.ResourceEntry;
 import net.dongliu.apk.parser.struct.resource.ResourceTable;
 import net.dongliu.apk.parser.struct.resource.Type;
-import net.dongliu.apk.parser.struct.resource.TypeSpec;
 import net.dongliu.apk.parser.struct.xml.Attribute;
 import net.dongliu.apk.parser.utils.Locales;
 
@@ -31,6 +30,10 @@ public abstract class ResourceValue {
      */
     @Nullable
     public abstract String toStringValue(ResourceTable resourceTable, Locale locale);
+
+    public String toStringValue(ResourceTable resourceTable, java.util.List<Locale> locales) {
+        return toStringValue(resourceTable, (locales != null && !locales.isEmpty()) ? locales.get(0) : Locale.getDefault());
+    }
 
     @NonNull
     public static ResourceValue decimal(final int value) {
@@ -164,7 +167,7 @@ public abstract class ResourceValue {
 
         @Override
         @Nullable
-        public String toStringValue(final @Nullable ResourceTable resourceTable, final Locale locale) {
+        public String toStringValue(final @Nullable ResourceTable resourceTable, final java.util.List<Locale> locales) {
             final long resourceId = this.getReferenceResourceId();
             // android system styles.
             if (resourceId > AndroidConstants.SYS_STYLE_ID_START && resourceId < AndroidConstants.SYS_STYLE_ID_END) {
@@ -175,45 +178,46 @@ public abstract class ResourceValue {
                 return raw;
             }
             final List<ResourceTable.Resource> resources = resourceTable.getResourcesById(resourceId);
-            // read from type resource
+
+            // Resource resolution across LocaleList
             ResourceEntry selected = null;
-            TypeSpec typeSpec = null;
-            int currentLocalMatchLevel = -1;
+            long currentMatchScore = -1;
             int currentDensityLevel = -1;
+
+            java.util.List<Locale> localeList = (locales == null || locales.isEmpty()) ?
+                java.util.Collections.singletonList(Locale.getDefault()) : locales;
+
             for (final ResourceTable.Resource resource : resources) {
                 final Type type = resource.type;
-                typeSpec = resource.typeSpec;
                 final ResourceEntry resourceEntry = resource.resourceEntry;
-                final int localMatchLevel;
-                try {
-                    localMatchLevel = Locales.match(locale, type.locale);
-                } catch (Exception e) {
-                    android.util.Log.e("AppLog", "label fetching: error matching locale " + locale + " with " + type.locale, e);
-                    throw e;
-                }
+
+                final long matchScore = Locales.matchScore(localeList, type.locale);
                 final int densityLevel = ReferenceResourceValue.densityLevel(type.density);
-                if (localMatchLevel > currentLocalMatchLevel) {
+
+                if (matchScore > currentMatchScore) {
                     selected = resourceEntry;
-                    currentLocalMatchLevel = localMatchLevel;
+                    currentMatchScore = matchScore;
                     currentDensityLevel = densityLevel;
-                } else if (localMatchLevel == currentLocalMatchLevel && densityLevel > currentDensityLevel) {
+                } else if (matchScore == currentMatchScore && densityLevel > currentDensityLevel) {
                     selected = resourceEntry;
                     currentDensityLevel = densityLevel;
                 }
             }
+
             final String result;
             if (selected == null) {
                 result = raw;
-            } else if (locale == null) {
-                result = "@" + typeSpec.name + "/" + selected.key;
             } else {
-                result = selected.toStringValue(resourceTable, locale);
-            }
-            // If the key contains "label" or the type is "string", log it.
-            if (typeSpec != null && ("string".equals(typeSpec.name) || (selected != null && selected.key != null && selected.key.contains("label")))) {
-                android.util.Log.d("AppLog", "label fetching: resolved ID 0x" + Long.toHexString(resourceId) + " to " + result + " (key: " + (selected != null ? selected.key : "null") + ", locale: " + locale + ")");
+                // To get the actual string value, we use the locales list to resolve any further references
+                result = selected.toStringValue(resourceTable, locales);
             }
             return result;
+        }
+
+        @Override
+        @Nullable
+        public String toStringValue(final @Nullable ResourceTable resourceTable, final Locale locale) {
+            return toStringValue(resourceTable, java.util.Collections.singletonList(locale));
         }
 
         public long getReferenceResourceId() {

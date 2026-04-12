@@ -42,6 +42,21 @@ class Attribute(
         }
     }
 
+    fun toStringValue(resourceTable: ResourceTable, locales: List<Locale>): String? {
+        val rawValue = rawValue
+        return if (rawValue != null) {
+            rawValue
+        } else {
+            val typedValue = typedValue
+            if (typedValue != null) {
+                typedValue.toStringValue(resourceTable, locales)
+            } else {
+                // something happen;
+                ""
+            }
+        }
+    }
+
     override fun toString(): String {
         return "Attribute{" +
                 "name='" + name + '\'' +

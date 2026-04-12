@@ -78,6 +78,16 @@ public class ResourceEntry {
         }
     }
 
+    @Nullable
+    public String toStringValue(final ResourceTable resourceTable, final java.util.List<Locale> locales) {
+        final ResourceValue value = this.value;
+        if (value != null) {
+            return value.toStringValue(resourceTable, locales);
+        } else {
+            return "null";
+        }
+    }
+
     @NonNull
     @Override
     public String toString() {

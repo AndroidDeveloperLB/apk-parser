@@ -38,14 +38,20 @@ public class ApkMetaTranslator implements XmlStreamer {
     @NonNull
     private final ApkMeta.Builder apkMetaBuilder = ApkMeta.newBuilder();
     private List<IconPath> iconPaths = Collections.emptyList();
+    private long labelResId = 0;
 
     private final ResourceTable resourceTable;
     @Nullable
-    private final Locale locale;
+    private final java.util.List<Locale> locales;
 
     public ApkMetaTranslator(final @NonNull ResourceTable resourceTable, @Nullable final Locale locale) {
         this.resourceTable = resourceTable;
-        this.locale = locale;
+        this.locales = locale != null ? java.util.Collections.singletonList(locale) : null;
+    }
+
+    public ApkMetaTranslator(final @NonNull ResourceTable resourceTable, @Nullable final java.util.List<Locale> locales) {
+        this.resourceTable = resourceTable;
+        this.locales = locales;
     }
 
     @Override
@@ -73,8 +79,18 @@ public class ApkMetaTranslator implements XmlStreamer {
                     this.apkMetaBuilder.setIsSplitRequired(attributes.getBoolean("isSplitRequired", false));
                 if (!this.apkMetaBuilder.isolatedSplits)
                     this.apkMetaBuilder.setIsolatedSplits(attributes.getBoolean("isolatedSplits", false));
-                final String label = attributes.getString("label");
-                android.util.Log.d("AppLog", "label fetching: found label from attributes: " + label + " (locale: " + this.locale + ")");
+                
+                Attribute labelAttr = attributes.get("label");
+                String label;
+                if (labelAttr != null && labelAttr.typedValue instanceof net.dongliu.apk.parser.struct.ResourceValue.ReferenceResourceValue) {
+                    this.labelResId = ((net.dongliu.apk.parser.struct.ResourceValue.ReferenceResourceValue) labelAttr.typedValue).getReferenceResourceId();
+                    label = labelAttr.toStringValue(this.resourceTable, this.locales != null ? this.locales : java.util.Collections.singletonList(java.util.Locale.getDefault()));
+                    android.util.Log.d("AppLog", "label fetching: found label reference ID 0x" + Long.toHexString(labelResId) + ", resolved to: " + label + " (locales: " + this.locales + ")");
+                } else {
+                    label = attributes.getString("label");
+                    android.util.Log.d("AppLog", "label fetching: found label string literal from attributes: " + label + " (locales: " + this.locales + ")");
+                }
+
                 if (label != null) {
                     this.apkMetaBuilder.setLabel(label);
                 } else {
@@ -284,6 +300,23 @@ public class ApkMetaTranslator implements XmlStreamer {
     }
 
     @NonNull
+    public java.util.Map<Locale, String> getAllLabels() {
+        if (this.labelResId == 0) {
+            String label = this.apkMetaBuilder.getLabel();
+            return label != null ? Collections.singletonMap(Locale.ROOT, label) : Collections.<Locale, String>emptyMap();
+        }
+        List<ResourceTable.Resource> resources = this.resourceTable.getResourcesById(this.labelResId);
+        java.util.Map<Locale, String> map = new java.util.HashMap<>();
+        for (ResourceTable.Resource resource : resources) {
+            String value = resource.resourceEntry.toStringValue(this.resourceTable, resource.type.locale);
+            if (value != null) {
+                map.put(resource.type.locale, value);
+            }
+        }
+        return map;
+    }
+
+    @NonNull
     public List<IconPath> getIconPaths() {
         if (this.iconPaths.isEmpty()) {
             // android.util.Log.d("AppLog", "icon fetching: getIconPaths() returned empty list");
@@ -337,7 +370,7 @@ public class ApkMetaTranslator implements XmlStreamer {
                 long nextId = ((ResourceValue.ReferenceResourceValue) resourceEntry.value).getReferenceResourceId();
                 icons.addAll(extractIconPathsById(nextId, attrName, visitedIds));
             } else {
-                final String path = resourceEntry.toStringValue(this.resourceTable, this.locale);
+                final String path = resourceEntry.toStringValue(this.resourceTable, (this.locales != null && !this.locales.isEmpty()) ? this.locales.get(0) : java.util.Locale.getDefault());
                 if (path == null) continue;
                 if (resource.type.density == Densities.DEFAULT) {
                     hasDefault = true;
