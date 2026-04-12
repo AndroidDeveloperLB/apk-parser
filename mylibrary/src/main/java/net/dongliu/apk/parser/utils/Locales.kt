@@ -41,39 +41,72 @@ object Locales {
     }
 
     /**
+     * Check if any locale in 'appLocales' matches the given 'locale' at level >= 2.
+     */
+    @JvmStatic
+    fun isLanguageSupported(locale: Locale, appLocales: Set<Locale>): Boolean {
+        for (appLocale in appLocales) {
+            if (match(locale, appLocale) >= 2) {
+                return true
+            }
+        }
+        return false
+    }
+
+    /**
      * Find the best matching score for a list of locales.
      * Higher is better.
-     * The score combines the index in the locale list and the match level for that locale.
      */
     @JvmStatic
     fun matchScore(locales: List<Locale>, targetLocale: Locale): Long {
+        return matchScore(locales, targetLocale, emptySet())
+    }
+
+    @JvmStatic
+    fun matchScore(locales: List<Locale>, targetLocale: Locale, appLocales: Set<Locale>): Long {
         if (locales.isEmpty()) return match(null, targetLocale).toLong()
         
-        // Priority 1: Language match (Level 2, 3, 4) for any locale in the list.
-        // We iterate through user preferences. The first language that has ANY match in the app wins.
+        // 1. Determine which language in the preference list we should "commit" to.
+        var bestSupportedLocaleIndex = -1
+        if (!appLocales.isEmpty()) {
+            for (i in 0 until locales.size) {
+                if (isLanguageSupported(locales.get(i), appLocales)) {
+                    bestSupportedLocaleIndex = i
+                    break
+                }
+            }
+        }
+
+        // 2. Score the targetLocale against the locales list.
         for (i in 0 until locales.size) {
             val level = match(locales.get(i), targetLocale)
+            
+            // If we've committed to a specific language, ONLY allow matches for that language or earlier.
+            // This prevents falling through to a later language if the current language has ANY support in the app.
+            if (bestSupportedLocaleIndex != -1 && i > bestSupportedLocaleIndex) {
+                break
+            }
+
             if (level >= 2) {
                 // Score depends on position primarily, then level.
-                // Multiplier 10000 ensures position i always beats i+1 regardless of level.
                 var score = (locales.size - i).toLong() * 10000 + level * 1000
                 
-                // Tie-breaker within the same locale and level (e.g. en_AU vs en_GB for en_IL).
+                // Tie-breaker
                 val country = targetLocale.country
                 if (country.length == 2) {
-                    // Alphabetical tie-breaker: favor earlier country codes (AU > CA).
-                    // Multiplier 30 ensures first letter dominates (max diff 25*30 vs 25).
                     score += (90 - country[0].code) * 30 + (90 - country[1].code)
                 } else {
-                    score += 800 // Within the level's 1000 range
+                    score += 800 
                 }
                 return score
             }
         }
         
-        // Priority 2: Default configuration (no language specified)
+        // Priority 2: Default configuration (no language specified).
+        // It is a fallback for the "best" language we matched.
         if (targetLocale.language.isEmpty()) {
-            return 1
+            val i = if (bestSupportedLocaleIndex != -1) bestSupportedLocaleIndex else 0
+            return (locales.size - i).toLong() * 10000 + 1
         }
         
         return 0

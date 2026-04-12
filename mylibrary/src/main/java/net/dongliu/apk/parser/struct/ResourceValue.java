@@ -186,12 +186,13 @@ public abstract class ResourceValue {
 
             java.util.List<Locale> localeList = (locales == null || locales.isEmpty()) ?
                 java.util.Collections.singletonList(Locale.getDefault()) : locales;
+            java.util.Set<Locale> appLocales = resourceTable.getLocales();
 
             for (final ResourceTable.Resource resource : resources) {
                 final Type type = resource.type;
                 final ResourceEntry resourceEntry = resource.resourceEntry;
 
-                final long matchScore = Locales.matchScore(localeList, type.locale);
+                final long matchScore = Locales.matchScore(localeList, type.locale, appLocales);
                 final int densityLevel = ReferenceResourceValue.densityLevel(type.density);
                 
                 // Diagnostic: log details for ID that had mismatch in previous runs

@@ -3,28 +3,30 @@ package net.dongliu.apk.parser.struct.resource;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import net.dongliu.apk.parser.struct.ResourceValue;
 import net.dongliu.apk.parser.struct.StringPool;
 import net.dongliu.apk.parser.utils.ResourceLoader;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 /**
- * The apk resource table
+ * Resource table.
  *
  * @author dongliu
  */
 public class ResourceTable {
     private final Map<Short, ResourcePackage> packageMap = new HashMap<>();
     private final Map<String, Short> nameToIdMap = new HashMap<>();
-    @Nullable
     public final StringPool stringPool;
     @NonNull
     public static final Map<Integer, String> sysStyle = ResourceLoader.loadSystemStyles();
+    private final Set<Locale> locales = new HashSet<>();
 
     public ResourceTable(@Nullable final StringPool stringPool) {
         this.stringPool = stringPool;
@@ -41,9 +43,11 @@ public class ResourceTable {
             existing.merge(resourcePackage);
         }
         android.util.Log.d("AppLog", "label fetching: package " + resourcePackage.getName() + " added with ID 0x" + Integer.toHexString(resourcePackage.getId()));
+        updateLocales();
     }
 
     public void merge(@NonNull ResourceTable other) {
+        this.nameToIdMap.putAll(other.nameToIdMap);
         for (Map.Entry<Short, ResourcePackage> entry : other.packageMap.entrySet()) {
             ResourcePackage existing = this.packageMap.get(entry.getKey());
             if (existing == null) {
@@ -52,22 +56,37 @@ public class ResourceTable {
                 existing.merge(entry.getValue());
             }
         }
-        this.nameToIdMap.putAll(other.nameToIdMap);
+        updateLocales();
+    }
+
+    private void updateLocales() {
+        this.locales.clear();
+        for (ResourcePackage p : packageMap.values()) {
+            for (java.util.List<Type> types : p.getTypesMap().values()) {
+                for (Type t : types) {
+                    this.locales.add(t.locale);
+                }
+            }
+        }
+    }
+
+    public Set<Locale> getLocales() {
+        return locales;
     }
 
     public void addLibraryMapping(int id, String name) {
         this.nameToIdMap.put(name, (short) id);
     }
 
-    @Nullable
     public Map<Short, ResourcePackage> getPackageMap() {
         return packageMap;
     }
 
     public ResourcePackage getPackage(final short id) {
         ResourcePackage res = this.packageMap.get(id);
-        if (res != null) return res;
-
+        if (res != null) {
+            return res;
+        }
         if (id == 0x7f) {
             res = this.packageMap.get((short) 0);
             if (res != null) {
@@ -75,9 +94,6 @@ public class ResourceTable {
                 return res;
             }
         }
-
-        // Try to find package by name mapping
-        // This handles cases where a shared library is referred to by ID 0x02 in one APK but 0x7f in its own APK.
         for (Map.Entry<String, Short> entry : nameToIdMap.entrySet()) {
             if (entry.getValue() == id) {
                 ResourcePackage p = findPackageByName(entry.getKey());
@@ -87,9 +103,6 @@ public class ResourceTable {
                 }
             }
         }
-
-        // Final fallback: if there's only one package besides system, and we can't find the requested ID, 
-        // it might be a hardcoded ID mismatch.
         if (packageMap.size() == 2 && packageMap.containsKey((short) 0x01)) {
             for (ResourcePackage p : packageMap.values()) {
                 if (p.getId() != 0x01) {
@@ -98,29 +111,24 @@ public class ResourceTable {
                 }
             }
         }
-
-        android.util.Log.d("AppLog", "label fetching: getPackage(0x" + Integer.toHexString(id) + ") returns null. Available packages: " + nameToIdMap.keySet());
         return null;
     }
 
-    @Nullable
-    private ResourcePackage findPackageByName(String name) {
+    public ResourcePackage findPackageByName(String name) {
         for (ResourcePackage p : packageMap.values()) {
-            if (p.getName().equals(name)) return p;
+            if (p.getName().equals(name)) {
+                return p;
+            }
         }
         return null;
     }
 
-    /**
-     * Get resources match the given resource id.
-     */
-    @NonNull
     public List<Resource> getResourcesById(final long resourceId) {
-        return getResourcesById(resourceId, new java.util.HashSet<>());
+        return getResourcesById(resourceId, new HashSet<>());
     }
 
     @NonNull
-    private List<Resource> getResourcesById(final long resourceId, java.util.Set<Long> visitedIds) {
+    private List<Resource> getResourcesById(final long resourceId, Set<Long> visitedIds) {
         if (visitedIds.contains(resourceId)) {
             return Collections.emptyList();
         }
@@ -157,45 +165,28 @@ public class ResourceTable {
             android.util.Log.d("AppLog", "label fetching: entry index 0x" + Integer.toHexString(entryIndex) + " does not exist in typeSpec for ID 0x" + Long.toHexString(resourceId) + " (typeSpec.entryFlags.length: " + typeSpec.entryFlags.length + ")");
             return Collections.emptyList();
         }
-        // read from type resource
-        final List<Resource> result = new ArrayList<>();
-        for (final Type type : types) {
-            final ResourceEntry resourceEntry = type.getResourceEntry(entryIndex);
-            if (resourceEntry == null) {
-                continue;
+        List<Resource> resources = new ArrayList<>();
+        for (Type type : types) {
+            ResourceEntry resourceEntry = type.getResourceEntry(entryIndex);
+            if (resourceEntry != null) {
+                resources.add(new Resource(typeSpec, type, resourceEntry));
             }
-            final ResourceValue currentResourceValue = resourceEntry.value;
-            if (currentResourceValue == null) {
-                continue;
-            }
-            // cyclic reference detect
-            if (currentResourceValue instanceof ResourceValue.ReferenceResourceValue) {
-                if (resourceId == ((ResourceValue.ReferenceResourceValue) currentResourceValue)
-                        .getReferenceResourceId()) {
-                    continue;
-                }
-            }
-            result.add(new Resource(typeSpec, type, resourceEntry));
         }
-        return result;
+        return resources;
     }
 
     /**
      * contains all info for one resource
      */
     public static class Resource {
-        @Nullable
         public final TypeSpec typeSpec;
-        @NonNull
         public final Type type;
-        @NonNull
         public final ResourceEntry resourceEntry;
 
-        public Resource(final @Nullable TypeSpec typeSpec, final @NonNull Type type, final @NonNull ResourceEntry resourceEntry) {
+        public Resource(TypeSpec typeSpec, Type type, ResourceEntry resourceEntry) {
             this.typeSpec = typeSpec;
             this.type = type;
             this.resourceEntry = resourceEntry;
         }
-
     }
 }
