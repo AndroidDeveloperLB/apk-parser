@@ -33,6 +33,7 @@ object ApkIconFetcher {
         }
 
         val densityDpi = context.resources.displayMetrics.densityDpi
+        android.util.Log.d("AppLog", "icon fetching: target densityDpi: $densityDpi, found ${iconPaths.size} icon paths")
 
         // Custom sorting for density: ANY is best, then closest to target densityDpi
         val sortedIconPaths = iconPaths.sortedWith(Comparator { o1: IconPath, o2: IconPath ->
@@ -48,12 +49,14 @@ object ApkIconFetcher {
             val diff2 = abs(o2.density - densityDpi)
             if (diff1 != diff2) return@Comparator diff1.compareTo(diff2)
             // if same distance, prefer higher density
-            return@Comparator o2.density.compareTo(o1.density)
+            o2.density.compareTo(o1.density)
         })
+        android.util.Log.d("AppLog", "icon fetching: sorted icon paths: ${sortedIconPaths.map { "${it.path} (density: ${it.density})" }}")
 
         // Filter out colors for now, try image/xml icons first
         val colorIconsPaths = sortedIconPaths.mapNotNull { it.path }.filter { it.startsWith("#") }.distinct()
         val otherIconPaths = sortedIconPaths.mapNotNull { it.path }.filter { !it.startsWith("#") }.distinct()
+        android.util.Log.d("AppLog", "icon fetching: icon paths to try: $otherIconPaths")
 
         for (path in otherIconPaths) {
             android.util.Log.d("AppLog", "icon fetching: attempting path: $path")
@@ -274,13 +277,17 @@ object ApkIconFetcher {
                 if (!innerPath.isNullOrBlank()) {
                     filterGenerator.generateZipFilter().use { filter ->
                         val srcBytes = if (isZipPath(innerPath)) filter.getByteArrayForEntries(hashSetOf(innerPath))?.get(innerPath) else null
-                        return fetchDrawable(context, innerPath, srcBytes, apkInfo, locale, filterGenerator, requestedAppIconSize)
+                        val drawable = fetchDrawable(context, innerPath, srcBytes, apkInfo, locale, filterGenerator, requestedAppIconSize)
+                        if (drawable != null) {
+                            // Apply tint if present in the wrapper tag
+                            // For now just return the drawable, but we could wrap it in another one if needed
+                            return drawable
+                        }
                     }
-                } else {
-                    android.util.Log.d("AppLog", "icon fetching: fallback to XmlDrawableParser for $rootTag with no innerPath")
-                    return XmlDrawableParser.tryParseDrawable(context, bytes, apkInfo, locale) { subPath ->
-                        filterGenerator.generateZipFilter().use { it.getByteArrayForEntries(emptySet(), hashSetOf(subPath))?.get(subPath) }
-                    }
+                }
+                android.util.Log.d("AppLog", "icon fetching: manual fetch failed for $rootTag, fallback to XmlDrawableParser")
+                return XmlDrawableParser.tryParseDrawable(context, bytes, apkInfo, locale) { subPath ->
+                    filterGenerator.generateZipFilter().use { it.getByteArrayForEntries(emptySet(), hashSetOf(subPath))?.get(subPath) }
                 }
             } else {
                 android.util.Log.d("AppLog", "icon fetching: fallback to XmlDrawableParser for rootTag: $rootTag")
@@ -336,7 +343,7 @@ object ApkIconFetcher {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             try {
                 val source = ImageDecoder.createSource(ByteBuffer.wrap(bytes))
-                return ImageDecoder.decodeBitmap(source) { decoder, info, src ->
+                return ImageDecoder.decodeBitmap(source) { decoder, _, _ ->
                     if (requestedAppIconSize > 0) {
                         decoder.setTargetSize(requestedAppIconSize, requestedAppIconSize)
                     }
@@ -352,6 +359,9 @@ object ApkIconFetcher {
         android.util.Log.e("AppLog", "icon fetching: CRITICAL: failed to decode image bytes. path: $path, size: ${bytes.size}, hex(32): $hex")
         if (bytes.size > 3 && bytes[0] == 'Q'.code.toByte() && bytes[1] == 'M'.code.toByte() && bytes[2] == 'G'.code.toByte()) {
             android.util.Log.e("AppLog", "icon fetching: IDENTIFIED Samsung QMG format. This requires proprietary Samsung decoders.")
+        }
+        if (bytes.size > 3 && bytes[0] == 'S'.code.toByte() && bytes[1] == 'P'.code.toByte() && bytes[2] == 'R'.code.toByte()) {
+            android.util.Log.e("AppLog", "icon fetching: IDENTIFIED Samsung SPR format. This is a proprietary Samsung vector format.")
         }
 
         return null

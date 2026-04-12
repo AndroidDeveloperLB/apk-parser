@@ -100,10 +100,11 @@ public class AdaptiveIconParser implements XmlStreamer {
             } else if ("monochrome".equals(this.currentSection)) {
                 this.monochromeDrawables.add(drawable);
             }
-        } else if (currentSection != null && !"background".equals(xmlNodeStartTag.name) && !"foreground".equals(xmlNodeStartTag.name) && !"monochrome".equals(xmlNodeStartTag.name)) {
-            // Tag inside a section but no drawable/color attribute found -> check if it's actually inlined content
+        } else {
+            // No direct drawable attribute found.
             String name = xmlNodeStartTag.name;
-            if ("vector".equals(name) || "shape".equals(name) || "animated-vector".equals(name) || "path".equals(name) || "gradient".equals(name)) {
+            if ("vector".equals(name) || "shape".equals(name) || "animated-vector".equals(name) || "gradient".equals(name) || "path".equals(name)) {
+                // If it's a known drawing tag and doesn't have a drawable/src attribute, it's likely inlined content.
                 hasInlineContent = true;
                 android.util.Log.d("AppLog", "icon fetching: detected inline content: <" + name + "> in section: " + currentSection);
             }

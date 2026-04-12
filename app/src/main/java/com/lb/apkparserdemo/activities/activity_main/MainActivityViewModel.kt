@@ -64,13 +64,13 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
         val packageManager = context.packageManager
         Log.d("AppLog", "getting all package infos:")
         var startTime = System.currentTimeMillis()
+        val appsToFocusOn = HashSet<String>()
+//                .also {
+//                    it.add("")
+//                }
         val installedPackages =
                 packageManager.getInstalledPackagesCompat(PackageManager.GET_META_DATA)
-//                        .filter{it.packageName=="com.google.android.calendar"}
-//        other apps to test:
-//        com.samsung.advp.imssettings
-//        com.samsung.crane
-//        com.sec.android.widgetapp.easymodecontactswidget
+                        .filter { appsToFocusOn.isEmpty()||appsToFocusOn.contains(it.packageName)}
 
         var endTime = System.currentTimeMillis()
         Log.d("AppLog", "time taken: ${endTime - startTime}. total apps to process: ${installedPackages.size}")
@@ -82,7 +82,8 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
             val isSystemApp = packageInfo.isSystemApp()
 
             val baseApkPath = packageInfo.applicationInfo!!.publicSourceDir
-            val splitApkPaths = packageInfo.applicationInfo!!.splitPublicSourceDirs?.toList() ?: emptyList()
+            val splitApkPaths = packageInfo.applicationInfo!!.splitPublicSourceDirs?.toList()
+                    ?: emptyList()
             val allApkFilePaths = listOf(baseApkPath) + splitApkPaths
 
             // Always build master table if splits exist, to ensure correct labels/icons
@@ -149,7 +150,8 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
                                     }
                                 }
                             }
-                        } catch (ignored: Exception) {}
+                        } catch (ignored: Exception) {
+                        }
                     }
                 }
             }

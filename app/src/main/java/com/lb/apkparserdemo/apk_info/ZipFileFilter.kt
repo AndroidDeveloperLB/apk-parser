@@ -19,6 +19,9 @@ class ZipFileFilter(private val zipFile: ZipFile) : AbstractZipFilter(), Closeab
         }
     }
 
+    override val allEntryNames: List<String>
+        get() = zipFile.entries().asSequence().map { it.name }.toList()
+
     override fun getByteArrayForEntries(
         mandatoryEntriesNames: Set<String>,
         extraEntriesNames: Set<String>?

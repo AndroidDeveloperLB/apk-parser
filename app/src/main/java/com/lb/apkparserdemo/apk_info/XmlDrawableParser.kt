@@ -46,7 +46,7 @@ object XmlDrawableParser {
             parser.parse()
             if (streamer.isVector) {
                 android.util.Log.d("AppLog", "icon fetching: parsed as VectorDrawable")
-                streamer.imageVector?.let { imageVectorToDrawable(context, it) }
+                streamer.imageVector?.let { imageVectorToDrawable(context, it, requestedAppIconSize = 0) } // We can pass a size here if needed
             } else {
                 // Fallback to framework for non-vector drawables (layer-list, etc.)
                 android.util.Log.d("AppLog", "icon fetching: not a vector, fallback to framework")
@@ -315,10 +315,10 @@ object XmlDrawableParser {
         return builder.build()
     }
 
-    private fun imageVectorToDrawable(context: Context, imageVector: ImageVector): Drawable {
+    private fun imageVectorToDrawable(context: Context, imageVector: ImageVector, requestedAppIconSize: Int = 0): Drawable {
         val density = Density(context.resources.displayMetrics.density)
-        val widthPx = with(density) { imageVector.defaultWidth.toPx() }.toInt().coerceAtLeast(1)
-        val heightPx = with(density) { imageVector.defaultHeight.toPx() }.toInt().coerceAtLeast(1)
+        val widthPx = if (requestedAppIconSize > 0) requestedAppIconSize else with(density) { imageVector.defaultWidth.toPx() }.toInt().coerceAtLeast(1)
+        val heightPx = if (requestedAppIconSize > 0) requestedAppIconSize else with(density) { imageVector.defaultHeight.toPx() }.toInt().coerceAtLeast(1)
         val bitmap = Bitmap.createBitmap(widthPx, heightPx, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(android.graphics.Canvas(bitmap))
         val drawScope = CanvasDrawScope()

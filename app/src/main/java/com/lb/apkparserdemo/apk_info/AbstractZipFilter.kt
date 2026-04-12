@@ -6,6 +6,9 @@ abstract class AbstractZipFilter : Closeable {
     abstract fun getNextEntryName(): String?
     abstract fun getBytesFromCurrentEntry(): ByteArray?
 
+    open val allEntryNames: List<String>
+        get() = emptyList()
+
     /**Note: depending on the implementation, this might be usable only once, and before any other function (because once you call it, there is no turning back)
      * if there is an error of any kind, null might be returned*/
     open fun getByteArrayForEntries(
@@ -45,6 +48,9 @@ abstract class AbstractZipFilter : Closeable {
 class MultiZipFilter(private val filters: List<AbstractZipFilter>) : AbstractZipFilter() {
     override fun getNextEntryName(): String? = throw UnsupportedOperationException("MultiZipFilter only supports getByteArrayForEntries")
     override fun getBytesFromCurrentEntry(): ByteArray? = throw UnsupportedOperationException("MultiZipFilter only supports getByteArrayForEntries")
+
+    override val allEntryNames: List<String>
+        get() = filters.flatMap { it.allEntryNames }.distinct()
 
     override fun getByteArrayForEntries(mandatoryEntriesNames: Set<String>, extraEntriesNames: Set<String>?): HashMap<String, ByteArray>? {
         val result = HashMap<String, ByteArray>()

@@ -8,6 +8,15 @@ class ZipInputStreamFilter(private val zipInputStream: ZipInputStream) : Abstrac
     Closeable {
     private var currentEntry: ZipEntry? = null
     private var currentEntryByteArray: ByteArray? = null
+    private var entryNames: MutableList<String>? = null
+
+    override val allEntryNames: List<String>
+        get() {
+            if (entryNames != null) return entryNames!!
+            // This is problematic for InputStream because it consumes it.
+            // But usually ZipFileFilter is used for local files.
+            return emptyList()
+        }
 
     override fun getNextEntryName(): String? {
         try {
