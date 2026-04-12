@@ -49,22 +49,31 @@ object Locales {
     fun matchScore(locales: List<Locale>, targetLocale: Locale): Long {
         if (locales.isEmpty()) return match(null, targetLocale).toLong()
         
-        // Priority 1: Locale List Index (Position). 
-        // A match for the 1st locale is always better than a match for the 2nd locale.
+        // Priority 1: Language match (Level 2, 3, 4) for any locale in the list.
+        // We iterate through user preferences. The first language that has ANY match in the app wins.
         for (i in 0 until locales.size) {
             val level = match(locales.get(i), targetLocale)
-            if (level > 1) {
-                val score = (locales.size - i).toLong() * 10 + level
-                // android.util.Log.d("AppLog", "label fetching: matchScore for [" + targetLocale + "] against [" + locales.get(i) + "] index " + i + " is " + score + " (level " + level + ")");
+            if (level >= 2) {
+                // Score depends on position primarily, then level.
+                // Multiplier 10000 ensures position i always beats i+1 regardless of level.
+                var score = (locales.size - i).toLong() * 10000 + level * 1000
+                
+                // Tie-breaker within the same locale and level (e.g. en_AU vs en_GB for en_IL).
+                val country = targetLocale.country
+                if (country.length == 2) {
+                    // Alphabetical tie-breaker: favor earlier country codes (AU > CA).
+                    // Multiplier 30 ensures first letter dominates (max diff 25*30 vs 25).
+                    score += (90 - country[0].code) * 30 + (90 - country[1].code)
+                } else {
+                    score += 800 // Within the level's 1000 range
+                }
                 return score
             }
         }
         
-        // Priority 2: Default configuration match for the FIRST preferred locale.
+        // Priority 2: Default configuration (no language specified)
         if (targetLocale.language.isEmpty()) {
-            val score = locales.size.toLong() * 10 + 1
-            // android.util.Log.d("AppLog", "label fetching: matchScore for [default] against index 0 is " + score);
-            return score
+            return 1
         }
         
         return 0

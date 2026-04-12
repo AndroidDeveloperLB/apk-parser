@@ -193,6 +193,11 @@ public abstract class ResourceValue {
 
                 final long matchScore = Locales.matchScore(localeList, type.locale);
                 final int densityLevel = ReferenceResourceValue.densityLevel(type.density);
+                
+                // Diagnostic: log details for ID that had mismatch in previous runs
+                if (matchScore > 0 && (resourceId == 0x7f100020 || resourceId == 0x7f130023 || resourceId == 0x7f140046)) {
+                    android.util.Log.d("AppLog", "label fetching: Candidate 0x" + Long.toHexString(resourceId) + ": config=[" + type.locale + "] score=" + matchScore + " value=[" + resourceEntry.toStringValue(resourceTable, (Locale)null) + "]");
+                }
 
                 if (matchScore > currentMatchScore) {
                     selected = resourceEntry;

@@ -75,7 +75,9 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
         var startTime = System.currentTimeMillis()
         val appsToFocusOn = HashSet<String>()
                 .also {
-//                    it.add("com.lb.contacts_sync")
+//                    it.add("com.google.android.nfc")
+                    it.add("com.lb.contacts_sync")
+//                    it.add("com.unicell.pangoandroid")
                 }
         val installedPackages =
                 packageManager.getInstalledPackagesCompat(PackageManager.GET_META_DATA)
