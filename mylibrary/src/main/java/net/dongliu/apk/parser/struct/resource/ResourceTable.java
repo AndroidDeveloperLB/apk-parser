@@ -33,6 +33,7 @@ public class ResourceTable {
     }
 
     public void addPackage(final @NonNull ResourcePackage resourcePackage) {
+//        android.util.Log.d("AppLog", "icon fetching: adding resource package: " + resourcePackage.getName() + " id: " + String.format("0x%02x", resourcePackage.getId()));
         ResourcePackage existing = this.packageMap.get(resourcePackage.getId());
         this.nameToIdMap.put(resourcePackage.getName(), resourcePackage.getId());
         if (existing == null) {
@@ -133,6 +134,7 @@ public class ResourceTable {
         final short packageId = (short) (resourceId >> 24 & 0xff);
         ResourcePackage resourcePackage = this.getPackage(packageId);
         if (resourcePackage == null) {
+//            android.util.Log.d("AppLog", "icon fetching: resource package not found for id: " + String.format("0x%08x", resourceId));
             return Collections.emptyList();
         }
         final int resolvedResourceId = resourcePackage.resolveStagedResId((int) resourceId);

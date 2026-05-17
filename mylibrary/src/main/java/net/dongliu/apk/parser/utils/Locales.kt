@@ -37,7 +37,7 @@ object Locales {
     @JvmStatic
     fun match(requestedConfig: DeviceConfig?, candidate: ResourceTable.Resource): Int {
         val config = candidate.type.config
-        
+
         // 1. MCC/MNC matching (High priority)
         if (requestedConfig != null) {
             val reqMcc = requestedConfig.mcc
@@ -46,7 +46,14 @@ object Locales {
             if (reqMnc != 0 && config.mnc != 0 && config.mnc != reqMnc) return 0
         }
 
-        // 2. Locale matching
+        // 2. UI Mode matching (Night mode)
+        if (requestedConfig != null && requestedConfig.uiMode != 0) {
+            val reqNight = requestedConfig.uiMode and 0x30 // UI_MODE_NIGHT_MASK
+            val confNight = candidate.type.config.uiMode and 0x30
+            if (reqNight != 0 && confNight != 0 && reqNight != confNight) return 0
+        }
+
+        // 3. Locale matching
         return match(requestedConfig?.locale, candidate.type.locale)
     }
 

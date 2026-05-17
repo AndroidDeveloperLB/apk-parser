@@ -111,8 +111,20 @@ public class ResTableConfig {
     public void setScreenWidth(int screenWidth) { this.screenWidth = screenWidth; }
     public void setScreenHeight(int screenHeight) { this.screenHeight = screenHeight; }
     public void setMinorVersion(int minorVersion) { this.minorVersion = minorVersion; }
+
+    public int getScreenLayout() {
+        return screenLayout;
+    }
     public void setScreenLayout(short screenLayout) { this.screenLayout = screenLayout; }
+
+    public int getUiMode() {
+        return uiMode;
+    }
     public void setUiMode(short uiMode) { this.uiMode = uiMode; }
+
+    public int getScreenLayout2() {
+        return screenLayout2;
+    }
     public void setScreenLayout2(short screenLayout2) { this.screenLayout2 = screenLayout2; }
     public void setColorMode(byte colorMode) { this.colorMode = colorMode; }
     public void setScreenConfigPad2(byte screenConfigPad2) { this.screenConfigPad2 = screenConfigPad2; }

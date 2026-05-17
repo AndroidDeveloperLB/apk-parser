@@ -299,6 +299,16 @@ public class ApkMetaTranslator implements XmlStreamer {
             return candidate.type.config.getSdkVersion() > current.type.config.getSdkVersion();
         }
 
+        if (requestedConfig != null && requestedConfig.getUiMode() != 0) {
+            int reqNight = requestedConfig.getUiMode() & 0x30; // UI_MODE_NIGHT_MASK
+            int candNight = candidate.type.config.getUiMode() & 0x30;
+            int curNight = current.type.config.getUiMode() & 0x30;
+            if (candNight != curNight) {
+                if (candNight == reqNight) return true;
+                if (curNight == reqNight) return false;
+            }
+        }
+
         if (requestedConfig != null && requestedConfig.getDensity() > 0) {
             int reqDensity = requestedConfig.getDensity();
             int candDensity = candidate.type.density;

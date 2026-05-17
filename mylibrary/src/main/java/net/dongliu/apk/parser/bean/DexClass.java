@@ -68,6 +68,6 @@ public class DexClass {
     @NonNull
     @Override
     public String toString() {
-        return "" + this.classType;
+        return this.classType;
     }
 }

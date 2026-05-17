@@ -49,7 +49,7 @@ internal class XmlNamespaces {
     /**
      * one namespace
      */
-    class XmlNamespace constructor(@JvmField val prefix: String?, @JvmField val uri: String?) {
+    class XmlNamespace(@JvmField val prefix: String?, @JvmField val uri: String?) {
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
             if (other !is XmlNamespace) return false

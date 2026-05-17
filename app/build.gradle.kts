@@ -28,6 +28,9 @@ extensions.configure<ApplicationExtension> {
         }
     }
     compileOptions {
+        // https://developer.android.com/studio/write/java8-support#library-desugaring
+        isCoreLibraryDesugaringEnabled = true
+        // https://developer.android.com/build/jdks#target-compat
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
@@ -45,18 +48,19 @@ tasks.withType<KotlinJvmCompile>().configureEach {
 
 dependencies {
     implementation("androidx.core:core-ktx:1.18.0")
-    implementation("com.google.android.material:material:1.14.0-rc01")
+    implementation("com.google.android.material:material:1.14.0")
     implementation("androidx.constraintlayout:constraintlayout:2.2.1")
     implementation(project(":mylibrary"))
     // https://mvnrepository.com/artifact/org.apache.commons/commons-compress
     implementation("org.apache.commons:commons-compress:1.28.0")
-
+// https://mvnrepository.com/artifact/com.android.tools/desugar_jdk_libs_nio https://github.com/google/desugar_jdk_libs/blob/master/CHANGELOG.md  https://developer.android.com/studio/write/java8-support https://android-developers.googleblog.com/2023/02/api-desugaring-supporting-android-13-and-java-nio.html
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs_nio:2.1.5")
     //  https://github.com/AndroidDeveloperLB/CommonUtils  https://jitpack.io/#AndroidDeveloperLB/CommonUtils/
-    implementation("com.github.AndroidDeveloperLB:CommonUtils:40")
+    implementation("com.github.AndroidDeveloperLB:CommonUtils:41")
     //    https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-core
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0")
     //    https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-android
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.11.0")
     //    https://developer.android.com/jetpack/androidx/releases/lifecycle#declaring_dependencies
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.10.0")
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.10.0")
@@ -69,8 +73,7 @@ dependencies {
 
     // Compose minimal dependencies, to be able to get VectorDrawable better
 //    https://developer.android.com/develop/ui/compose/bom
-    val composeBom = platform("androidx.compose:compose-bom:2026.04.01")
-    implementation(composeBom)
+    implementation(platform("androidx.compose:compose-bom:2026.05.00"))
     implementation("androidx.compose.ui:ui")
     // Room
     val roomVersion = "2.8.4"

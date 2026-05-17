@@ -111,7 +111,7 @@ public class TypeHeader extends ChunkHeader {
         }
 
         // screen config
-        if (size >= 48) {
+        if (size >= 32) {
             config.setScreenLayout(Buffers.readUByte(buffer));
             config.setUiMode(Buffers.readUByte(buffer));
             config.setScreenLayout2((short) Buffers.readUShort(buffer));

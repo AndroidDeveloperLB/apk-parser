@@ -35,10 +35,30 @@ import java.nio.ByteOrder
 import java.util.*
 import kotlin.math.*
 
+/**
+ * A complex parser that attempts to reconstruct Android Drawables from binary XML.
+ * It supports VectorDrawables (rendered via Jetpack Compose), Adaptive Icons,
+ * LayerLists, Insets, Rotations, and Shape Drawables with Gradients.
+ */
 object XmlDrawableParser {
 
+    /**
+     * A specialized [BitmapDrawable] that holds a rendered vector image.
+     */
     class VectorBitmapDrawable(context: Context, bitmap: Bitmap) : BitmapDrawable(context.resources, bitmap)
 
+    /**
+     * Attempts to parse a binary XML byte array into a [Drawable].
+     *
+     * @param context Android context.
+     * @param binXml The binary XML content of the drawable.
+     * @param apkInfo Parsed APK info for resource resolution.
+     * @param deviceConfig Device configuration for resource tailoring.
+     * @param requestedAppIconSize Target size for rendering the drawable.
+     * @param isLayer Whether this drawable is being parsed as a layer of another drawable.
+     * @param subResourceProvider Callback to provide bytes for referenced sub-resources (e.g., in layer-lists).
+     * @return A [Drawable] if parsing and rendering were successful, null otherwise.
+     */
     fun tryParseDrawable(
             context: Context,
             binXml: ByteArray,
@@ -58,7 +78,7 @@ object XmlDrawableParser {
         return try {
             parser.parse()
             streamer.result
-        } catch (_: Exception) {
+        } catch (_: Throwable) {
             null
         }
     }
@@ -134,16 +154,16 @@ object XmlDrawableParser {
             val attr = tag.attributes
             val name = tag.name
 
-            val logSb = StringBuilder()
-            repeat(depth) { logSb.append("  ") }
-            logSb.append("<$name")
-            for (a in attr.attributes) {
-                if (a != null) {
-                    val valStr = attr.getAttr(a.name) ?: a.value
-                    logSb.append(" ${a.name}=\"$valStr\"")
-                }
-            }
-            logSb.append(">")
+//            val logSb = StringBuilder()
+//            repeat(depth) { logSb.append("  ") }
+//            logSb.append("<$name")
+//            for (a in attr.attributes) {
+//                if (a != null) {
+//                    val valStr = attr.getAttr(a.name) ?: a.value
+//                    logSb.append(" ${a.name}=\"$valStr\"")
+//                }
+//            }
+//            logSb.append(">")
 //            if (depth == 0) {
 //                android.util.Log.d("AppLog", "icon fetching: XML root tag: $name")
 //            }
@@ -327,9 +347,9 @@ object XmlDrawableParser {
             depth--
             val name = tag.name
 
-            val logSb = StringBuilder()
-            repeat(depth) { logSb.append("  ") }
-            logSb.append("</$name>")
+//            val logSb = StringBuilder()
+//            repeat(depth) { logSb.append("  ") }
+//            logSb.append("</$name>")
 //            android.util.Log.d("AppLogXML", logSb.toString())
 
             when (name) {
@@ -509,9 +529,13 @@ object XmlDrawableParser {
                     val bitmap = android.graphics.BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
                     if (bitmap != null) bitmap.toDrawable(context.resources) else null
                 } catch (e: Exception) {
+//                    android.util.Log.e("AppLog", "icon fetching: error decoding bitmap for $path", e)
                     null
                 }
             }
+//            else {
+//                android.util.Log.d("AppLog", "icon fetching: subResourceProvider returned null for $path")
+//            }
             return null
         }
 

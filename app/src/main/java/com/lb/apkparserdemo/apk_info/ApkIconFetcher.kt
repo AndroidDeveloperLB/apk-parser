@@ -23,11 +23,30 @@ import net.dongliu.apk.parser.bean.IconPath
 import net.dongliu.apk.parser.struct.resource.Densities
 import java.nio.ByteBuffer
 
+/**
+ * Specialized utility for fetching and decoding app icons from APK files.
+ * Handles various icon types including raster images (PNG/JPG), Adaptive Icons,
+ * Vector Drawables, and Color Drawables.
+ */
 object ApkIconFetcher {
+    private const val MAX_CACHE_ENTRY_SIZE = 2 * 1024 * 1024 // 2MB limit for caching entry bytes
+
+    /** Interface to create a new [AbstractZipFilter] instance when needed during icon resolution. */
     fun interface ZipFilterCreator {
+        /** Generates a fresh [AbstractZipFilter] for reading APK entries. */
         fun generateZipFilter(): AbstractZipFilter
     }
 
+    /**
+     * Attempts to retrieve the app icon from the provided APK information.
+     *
+     * @param context Android context.
+     * @param deviceConfig Configuration for the device.
+     * @param filterGenerator Generator to create new zip filters if additional entries need to be read.
+     * @param apkInfo Parsed APK information.
+     * @param requestedAppIconSize The desired size of the resulting icon. If 0, uses system default.
+     * @return A [Bitmap] of the app icon, or null if it couldn't be found or decoded.
+     */
     fun getApkIcon(
             context: Context,
             deviceConfig: DeviceConfig?,
@@ -38,7 +57,7 @@ object ApkIconFetcher {
         val apkMeta = apkInfo.apkMetaTranslator.apkMeta
         val iconPaths = apkInfo.apkMetaTranslator.iconPaths
         if (iconPaths.isEmpty()) {
-//            android.util.Log.d("AppLog", "icon fetching: no icon paths found in manifest")
+//            android.util.Log.d("AppLog", "icon fetching: no icon paths found in manifest for ${apkMeta.packageName}")
             return null
         }
 
@@ -83,23 +102,41 @@ object ApkIconFetcher {
         var bestDrawable: Drawable? = null
         var bestPath: String? = null
 
-        for (path in otherIconPaths) {
-            filterGenerator.generateZipFilter().use { filter ->
-                val bytes = filter.getByteArrayForEntries(hashSetOf(path))?.get(path)
-                if (bytes != null) {
-                    try {
-                        val drawable = fetchDrawable(context, path, bytes, apkInfo, deviceConfig, filterGenerator, requestedAppIconSize)
-                        if (drawable != null) {
-                            if (bestDrawable == null || isBetterDrawable(drawable, bestDrawable!!)) {
-                                bestDrawable = drawable
-                                bestPath = path
-                            }
-                        }
-                    } catch (e: Exception) {
-//                        android.util.Log.d("AppLog", "icon fetching: exception decoding $path: ${e.message}")
-                    }
+        val bytesCache = HashMap<String, ByteArray>()
+        filterGenerator.generateZipFilter().use { filter ->
+            // Try to fetch all potential icon paths in one pass
+            val allBytes = filter.getByteArrayForEntries(emptySet(), otherIconPaths.toSet())
+            if (allBytes != null) {
+                for ((path, bytes) in allBytes) {
+                    if (bytes.size <= MAX_CACHE_ENTRY_SIZE) bytesCache[path] = bytes
                 }
             }
+//            else {
+//                android.util.Log.d("AppLog", "icon fetching: filter.getByteArrayForEntries returned null for ${apkMeta.packageName}")
+//            }
+        }
+
+        for (path in otherIconPaths) {
+            val bytes = bytesCache[path]
+            if (bytes != null) {
+                try {
+                    val drawable = fetchDrawable(context, path, bytes, apkInfo, deviceConfig, filterGenerator, requestedAppIconSize, bytesCache)
+                    if (drawable != null) {
+                        if (bestDrawable == null || isBetterDrawable(drawable, bestDrawable!!)) {
+                            bestDrawable = drawable
+                            bestPath = path
+                        }
+                    }
+//                    else {
+//                        android.util.Log.d("AppLog", "icon fetching: fetchDrawable returned null for $path in ${apkMeta.packageName}")
+//                    }
+                } catch (e: Throwable) {
+//                    android.util.Log.d("AppLog", "icon fetching: exception decoding $path: ${e.message} in ${apkMeta.packageName}")
+                }
+            }
+//            else {
+//                android.util.Log.d("AppLog", "icon fetching: path $path not found in bytesCache for ${apkMeta.packageName}")
+//            }
         }
 
         if (bestDrawable != null) {
@@ -119,8 +156,10 @@ object ApkIconFetcher {
 //                android.util.Log.d("AppLog", "icon fetching for ${apkMeta.packageName}: SUCCESS with Color: $colorPath")
                 return bitmap
             } catch (e: Exception) {
+//                android.util.Log.d("AppLog", "icon fetching: exception for colorPath $colorPath: ${e.message} in ${apkMeta.packageName}")
             }
         }
+//        android.util.Log.d("AppLog", "icon fetching for ${apkMeta.packageName}: FAILED to find any icon")
         return null
     }
 
@@ -175,7 +214,8 @@ object ApkIconFetcher {
             apkInfo: ApkInfo,
             deviceConfig: DeviceConfig?,
             filterGenerator: ZipFilterCreator,
-            requestedAppIconSize: Int
+            requestedAppIconSize: Int,
+            bytesCache: MutableMap<String, ByteArray> = HashMap()
     ): Drawable? {
         if (path.startsWith("#")) {
             return try {
@@ -195,10 +235,11 @@ object ApkIconFetcher {
                             if (value != null && (value.startsWith("#") || value.startsWith("res/"))) {
                                 if (value.startsWith("#")) return value.toColorInt().toDrawable()
 
-                                filterGenerator.generateZipFilter().use { filter ->
-                                    val subBytes = filter.getByteArrayForEntries(emptySet(), hashSetOf(value))?.get(value)
-                                    return fetchDrawable(context, value, subBytes, apkInfo, deviceConfig, filterGenerator, requestedAppIconSize)
-                                }
+                                val subBytes = bytesCache[value]
+                                        ?: filterGenerator.generateZipFilter().use { filter ->
+                                            filter.getByteArrayForEntries(emptySet(), hashSetOf(value))?.get(value)
+                                        }?.also { if (it.size <= MAX_CACHE_ENTRY_SIZE) bytesCache[value] = it }
+                                return fetchDrawable(context, value, subBytes, apkInfo, deviceConfig, filterGenerator, requestedAppIconSize, bytesCache)
                             }
                         }
                     }
@@ -228,10 +269,13 @@ object ApkIconFetcher {
                                 val value = res.resourceEntry.toStringValue(apkInfo.resourceTable, deviceConfig)
                                 if (value != null && value != path) {
                                     if (value.startsWith("#")) return value.toColorInt().toDrawable()
-                                    filterGenerator.generateZipFilter().use { filter ->
-                                        val subBytes = if (isZipPath(value)) filter.getByteArrayForEntries(emptySet(), hashSetOf(value))?.get(value) else null
-                                        return fetchDrawable(context, value, subBytes, apkInfo, deviceConfig, filterGenerator, requestedAppIconSize)
-                                    }
+                                    val subBytes = if (isZipPath(value)) {
+                                        bytesCache[value]
+                                                ?: filterGenerator.generateZipFilter().use { filter ->
+                                                    filter.getByteArrayForEntries(emptySet(), hashSetOf(value))?.get(value)
+                                                }?.also { if (it.size <= MAX_CACHE_ENTRY_SIZE) bytesCache[value] = it }
+                                    } else null
+                                    return fetchDrawable(context, value, subBytes, apkInfo, deviceConfig, filterGenerator, requestedAppIconSize, bytesCache)
                                 }
                             }
                         }
@@ -245,13 +289,12 @@ object ApkIconFetcher {
         if (bytes == null) return null
 
         if (!path.endsWith(".xml", true)) {
-            return getAppIconFromByteArray(bytes, requestedAppIconSize, path)?.let {
-                it.toDrawable(context.resources)
-            }
+            return getAppIconFromByteArray(bytes, requestedAppIconSize, path)?.toDrawable(context.resources)
         }
 
         return XmlDrawableParser.tryParseDrawable(context, bytes, apkInfo, deviceConfig, requestedAppIconSize) { subPath ->
-            filterGenerator.generateZipFilter().use { it.getByteArrayForEntries(emptySet(), hashSetOf(subPath))?.get(subPath) }
+            bytesCache[subPath]
+                    ?: filterGenerator.generateZipFilter().use { it.getByteArrayForEntries(emptySet(), hashSetOf(subPath))?.get(subPath) }?.also { if (it.size <= MAX_CACHE_ENTRY_SIZE) bytesCache[subPath] = it }
         }
     }
 

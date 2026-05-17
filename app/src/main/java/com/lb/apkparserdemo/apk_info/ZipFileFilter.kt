@@ -1,16 +1,44 @@
 package com.lb.apkparserdemo.apk_info
 
-import com.lb.apkparserdemo.utils.closeSilently
+import android.content.Context
+import com.lb.common_utils.closeSilently
+import com.lb.common_utils.readBytesIntoByteArray
 import java.io.Closeable
+import java.nio.ByteBuffer
 import java.util.Enumeration
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 
-class ZipFileFilter(private val zipFile: ZipFile) : AbstractZipFilter(), Closeable {
+/**
+ * Implementation of [AbstractZipFilter] using the standard [java.util.zip.ZipFile].
+ * This implementation is [isSeekable] and efficient for random access.
+ *
+ * @param context Android context for resource management.
+ * @param zipFile The backing [ZipFile] instance.
+ * @param inclusionPredicate Optional filter to decide which entries to process during iteration.
+ */
+class ZipFileFilter(
+        private val context: Context,
+        private val zipFile: ZipFile,
+        private val inclusionPredicate: ((String) -> Boolean)? = null
+) : AbstractZipFilter(), Closeable {
+    override val isSeekable: Boolean get() = true
     private var entries: Enumeration<out ZipEntry>? = null
 
     @Suppress("MemberVisibilityCanBePrivate")
     var currentEntry: ZipEntry? = null
+
+    private fun shouldInclude(name: String): Boolean {
+        if (inclusionPredicate != null) return inclusionPredicate.invoke(name)
+        if (name == "AndroidManifest.xml" || name == "resources.arsc") return true
+        if (name.startsWith("res/")) return true
+        if (name.startsWith("META-INF/")) {
+            val upper = name.uppercase()
+            return upper.endsWith(".RSA") || upper.endsWith(".DSA") || upper.endsWith(".EC") ||
+                    upper.endsWith("MANIFEST.MF") || upper.endsWith("CERT.SF")
+        }
+        return false
+    }
 
     init {
         try {
@@ -22,6 +50,24 @@ class ZipFileFilter(private val zipFile: ZipFile) : AbstractZipFilter(), Closeab
 
     override val allEntryNames: List<String>
         get() = zipFile.entries().asSequence().map { it.name }.toList()
+
+    override fun containsEntry(name: String): Boolean {
+        var entry = zipFile.getEntry(name)
+        if (entry == null && name.startsWith("/")) entry = zipFile.getEntry(name.substring(1))
+        return entry != null
+    }
+
+    override fun getByteBufferForEntry(name: String): ByteBuffer? {
+        var entry = zipFile.getEntry(name)
+        if (entry == null && name.startsWith("/")) entry = zipFile.getEntry(name.substring(1))
+        if (entry == null) return null
+        return try {
+            zipFile.getInputStream(entry).use { it.readIntoDirectBuffer(context, entry.size.toInt()) }
+        } catch (e: Throwable) {
+            if (e is OutOfMemoryError) System.gc()
+            super.getByteBufferForEntry(name)
+        }
+    }
 
     override fun getByteArrayForEntries(
             mandatoryEntriesNames: Set<String>,
@@ -37,7 +83,9 @@ class ZipFileFilter(private val zipFile: ZipFile) : AbstractZipFilter(), Closeab
                     // android.util.Log.d("AppLog", "icon fetching: ZipFileFilter (${zipFile.name}) MISSED mandatory entry: $name")
                     return null
                 }
-                result[name] = zipFile.getInputStream(entry).readBytes()
+                val bytes = ByteArray(entry.size.toInt())
+                zipFile.getInputStream(entry).use { it.readBytesIntoByteArray(bytes) }
+                result[name] = bytes
                 // android.util.Log.d("AppLog", "icon fetching: ZipFileFilter (${zipFile.name}) found mandatory entry: $name")
             }
             if (extraEntriesNames != null)
@@ -45,11 +93,13 @@ class ZipFileFilter(private val zipFile: ZipFile) : AbstractZipFilter(), Closeab
                     var entry: ZipEntry? = zipFile.getEntry(name)
                     if (entry == null && name.startsWith("/")) entry = zipFile.getEntry(name.substring(1))
                     if (entry == null) continue
-                    result[name] = zipFile.getInputStream(entry).readBytes()
+                    val bytes = ByteArray(entry.size.toInt())
+                    zipFile.getInputStream(entry).use { it.readBytesIntoByteArray(bytes) }
+                    result[name] = bytes
                     // android.util.Log.d("AppLog", "icon fetching: ZipFileFilter (${zipFile.name}) found extra entry: $name")
                 }
             return result
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             // android.util.Log.d("AppLog", "icon fetching: ZipFileFilter (${zipFile.name}) exception: ${e.message}")
             return null
         }
@@ -57,26 +107,21 @@ class ZipFileFilter(private val zipFile: ZipFile) : AbstractZipFilter(), Closeab
 
 
     override fun getNextEntryName(): String? {
-        entries.let {
-            if (it == null)
-                return null
-            try {
-                it.nextElement().let { zipEntry: ZipEntry? ->
-                    if (zipEntry == null) {
-//                        close()
-                        currentEntry = null
-                        entries = null
-                        return null
-                    }
-                    currentEntry = zipEntry
-                    return zipEntry.name
-                }
-            } catch (e: Exception) {
-                currentEntry = null
-                entries = null
-//                close()
-                return null
+        val enu = entries ?: return null
+        try {
+            while (enu.hasMoreElements()) {
+                val zipEntry = enu.nextElement()
+                if (!shouldInclude(zipEntry.name)) continue
+                currentEntry = zipEntry
+                return zipEntry.name
             }
+            currentEntry = null
+            entries = null
+            return null
+        } catch (e: Exception) {
+            currentEntry = null
+            entries = null
+            return null
         }
     }
 
