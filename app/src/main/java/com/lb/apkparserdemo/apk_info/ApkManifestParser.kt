@@ -32,12 +32,14 @@ object ApkManifestParser {
      * @property versionCode The version code of the app.
      * @property splitName The name of the split, if this is a split APK.
      * @property isSplit True if this is a split APK.
+     * @property minSdkVersion The minimum SDK version, if requested and available.
      */
     data class SimpleApkInfo(
             val packageName: String?,
             val versionCode: Long?,
             val splitName: String?,
-            val isSplit: Boolean
+            val isSplit: Boolean,
+            val minSdkVersion: Int? = null
     )
 
     /**
@@ -45,10 +47,12 @@ object ApkManifestParser {
      *
      * @param manifestEntryInputStream The stream positioned at the start of AndroidManifest.xml
      * @param entrySize The size of the entry if known, else -1
+     * @param requestFetchingMinSdkVersion If true, keeps parsing until minSdkVersion is found.
      * @return [SimpleApkInfo] if successful, null otherwise.
      */
     @WorkerThread
-    fun parseManifestInputStream(manifestEntryInputStream: InputStream, entrySize: Long = -1L): SimpleApkInfo? {
+    fun parseManifestInputStream(manifestEntryInputStream: InputStream, entrySize: Long = -1L,
+                                 requestFetchingMinSdkVersion: Boolean = false): SimpleApkInfo? {
         val bytes = if (entrySize > 0) {
             if (entrySize > Integer.MAX_VALUE)
                 return null
@@ -61,7 +65,13 @@ object ApkManifestParser {
         if (buffer.int != CHUNK_AXML_FILE) return null
         buffer.int // Skip file size
         var stringPoolOffset = -1
-        var info: SimpleApkInfo? = null
+        var pkg: String? = null
+        var vCode: Long? = null
+        var split: String? = null
+        var minSdk: Int? = null
+        var foundManifest = false
+        var foundUsesSdk = false
+
         while (buffer.hasRemaining()) {
             val chunkPos = buffer.position()
             val chunkType = try {
@@ -75,12 +85,64 @@ object ApkManifestParser {
                 break
             }
             if (chunkSize <= 0) break
+
             when (chunkType) {
                 CHUNK_STRING_POOL -> stringPoolOffset = chunkPos
                 CHUNK_START_TAG -> {
-                    val tagInfo = parseStartTag(buffer, stringPoolOffset)
-                    if (tagInfo != null && tagInfo.first == "manifest") {
-                        info = tagInfo.second
+                    try {
+                        buffer.int // line
+                        buffer.int // comment
+                        buffer.int // ns
+                        val nameIndex = buffer.int
+                        val tagName = getString(buffer, stringPoolOffset, nameIndex)
+
+                        if (tagName == "manifest") {
+                            buffer.short // attrStart
+                            buffer.short // attrSize
+                            val attrCount = buffer.short.toInt() and 0xFFFF
+                            buffer.position(buffer.position() + 6) // Skip classIndex + padding
+                            for (i in 0 until attrCount) {
+                                buffer.int // ns
+                                val attrNameIndex = buffer.int
+                                buffer.int // rawValue
+                                buffer.int // typedValueType
+                                val data = buffer.int
+                                val attrName = getString(buffer, stringPoolOffset, attrNameIndex)
+                                when (attrName) {
+                                    "package" -> pkg = getString(buffer, stringPoolOffset, data)
+                                    "versionCode" -> vCode = data.toLong()
+                                    "split" -> split = getString(buffer, stringPoolOffset, data)
+                                }
+                            }
+                            foundManifest = true
+                        } else if (requestFetchingMinSdkVersion && tagName == "uses-sdk") {
+                            buffer.short // attrStart
+                            buffer.short // attrSize
+                            val attrCount = buffer.short.toInt() and 0xFFFF
+                            buffer.position(buffer.position() + 6) // Skip classIndex + padding
+                            for (i in 0 until attrCount) {
+                                buffer.int // ns
+                                val attrNameIndex = buffer.int
+                                buffer.int // rawValue
+                                val typedValueType = buffer.int
+                                val data = buffer.int
+                                val attrName = getString(buffer, stringPoolOffset, attrNameIndex)
+                                if (attrName == "minSdkVersion") {
+                                    val type = typedValueType ushr 24
+                                    minSdk = if (type == 3) {
+                                        getString(buffer, stringPoolOffset, data)?.toIntOrNull()
+                                    } else {
+                                        data
+                                    }
+                                }
+                            }
+                            foundUsesSdk = true
+                        }
+                    } catch (e: Exception) {
+                        // Ignore parsing errors for this specific tag
+                    }
+                    // Break early if we got what we needed
+                    if (foundManifest && (!requestFetchingMinSdkVersion || foundUsesSdk)) {
                         break
                     }
                 }
@@ -89,16 +151,21 @@ object ApkManifestParser {
             if (nextPos > buffer.limit() || nextPos < 0) break
             buffer.position(nextPos)
         }
-        return info
+
+        return if (foundManifest) {
+            SimpleApkInfo(pkg, vCode, split, !split.isNullOrEmpty(), minSdk)
+        } else {
+            null
+        }
     }
 
-    fun findAndParseManifest(apkFileInputStream: InputStream): SimpleApkInfo? {
+    fun findAndParseManifest(apkFileInputStream: InputStream, requestFetchingMinSdkVersion: Boolean = false): SimpleApkInfo? {
         // Switching to Apache ZipArchiveInputStream for speed
         val zipIn = ZipArchiveInputStream(apkFileInputStream)
         var entry = zipIn.nextEntry
         while (entry != null) {
             if (entry.name == "AndroidManifest.xml") {
-                return parseManifestInputStream(zipIn, entry.size)
+                return parseManifestInputStream(zipIn, entry.size, requestFetchingMinSdkVersion)
             }
             entry = zipIn.nextEntry
         }
@@ -106,14 +173,14 @@ object ApkManifestParser {
     }
 
     @WorkerThread
-    fun parseUri(context: Context, uri: Uri): SimpleApkInfo? {
+    fun parseUri(context: Context, uri: Uri, requestFetchingMinSdkVersion: Boolean = false): SimpleApkInfo? {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.BAKLAVA) {
             val result = AtomicReference<SimpleApkInfo?>(null)
             val countDownLatch = CountDownLatch(1)
             val pfd = context.contentResolver.openFileDescriptor(uri, "r") ?: return null
             pfd.use { pfd ->
                 context.packageManager.parseAndroidManifest(pfd) { parser ->
-                    val simpleApkInfo = extractData(parser)
+                    val simpleApkInfo = extractData(parser, requestFetchingMinSdkVersion)
                     result.set(simpleApkInfo)
                     countDownLatch.countDown()
                 }
@@ -122,19 +189,20 @@ object ApkManifestParser {
             return result.get()
         }
         return try {
-            context.contentResolver.openInputStream(uri)?.use { findAndParseManifest(it) }
+            context.contentResolver.openInputStream(uri)
+                    ?.use { findAndParseManifest(it, requestFetchingMinSdkVersion) }
         } catch (e: Exception) {
             null
         }
     }
 
     @WorkerThread
-    fun parseFile(context: Context, file: File): SimpleApkInfo? {
+    fun parseFile(context: Context, file: File, requestFetchingMinSdkVersion: Boolean = false): SimpleApkInfo? {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
             val result = AtomicReference<SimpleApkInfo?>(null)
             val countDownLatch = CountDownLatch(1)
             context.packageManager.parseAndroidManifest(file) { parser ->
-                val simpleApkInfo = extractData(parser)
+                val simpleApkInfo = extractData(parser, requestFetchingMinSdkVersion)
                 result.set(simpleApkInfo)
                 countDownLatch.countDown()
             }
@@ -142,7 +210,7 @@ object ApkManifestParser {
             return result.get()
         }
         return try {
-            FileInputStream(file).use { findAndParseManifest(it) }
+            FileInputStream(file).use { findAndParseManifest(it, requestFetchingMinSdkVersion) }
         } catch (e: Exception) {
             null
         }
@@ -169,36 +237,6 @@ object ApkManifestParser {
             baos.write(buffer, 0, n)
         }
         return baos.toByteArray()
-    }
-
-    private fun parseStartTag(buffer: ByteBuffer, poolOffset: Int): Pair<String, SimpleApkInfo>? {
-        buffer.int // line
-        buffer.int // comment
-        buffer.int // ns
-        val nameIndex = buffer.int
-        val tagName = getString(buffer, poolOffset, nameIndex)
-        if (tagName != "manifest") return null
-        buffer.short // attrStart
-        buffer.short // attrSize
-        val attrCount = buffer.short.toInt() and 0xFFFF
-        var pkg: String? = null
-        var vCode: Long? = null
-        var split: String? = null
-        buffer.position(buffer.position() + 6) // Skip classIndex + padding
-        for (i in 0 until attrCount) {
-            buffer.int // ns
-            val attrNameIndex = buffer.int
-            buffer.int // rawValue
-            buffer.int // typedValueType
-            val data = buffer.int
-            val attrName = getString(buffer, poolOffset, attrNameIndex)
-            when (attrName) {
-                "package" -> pkg = getString(buffer, poolOffset, data)
-                "versionCode" -> vCode = data.toLong()
-                "split" -> split = getString(buffer, poolOffset, data)
-            }
-        }
-        return "manifest" to SimpleApkInfo(pkg, vCode, split, !split.isNullOrEmpty())
     }
 
     private fun getString(buffer: ByteBuffer, poolOffset: Int, index: Int): String? {
@@ -234,35 +272,53 @@ object ApkManifestParser {
         var len = buffer.get().toInt() and 0xFF
         if ((len and 0x80) != 0) len = (len and 0x7F shl 8) or (buffer.get().toInt() and 0xFF)
         var byteLen = buffer.get().toInt() and 0xFF
-        if ((byteLen and 0x80) != 0) byteLen = (byteLen and 0x7F shl 8) or (buffer.get().toInt() and 0xFF)
+        if ((byteLen and 0x80) != 0) byteLen =
+                (byteLen and 0x7F shl 8) or (buffer.get().toInt() and 0xFF)
         val bytes = ByteArray(byteLen)
         buffer.get(bytes)
         return String(bytes, Charsets.UTF_8)
     }
 
     @WorkerThread
-    private fun extractData(parser: XmlPullParser): SimpleApkInfo {
+    private fun extractData(parser: XmlPullParser, requestFetchingMinSdkVersion: Boolean): SimpleApkInfo? {
+        var eventType: Int = parser.eventType
         var packageName: String? = null
         var versionCode: Long? = null
         var splitName: String? = null
-        var eventType = parser.eventType
+        var isSplit = false
+        var minSdk: Int? = null
+        var foundManifest = false
+        var foundUsesSdk = false
+
         while (eventType != XmlPullParser.END_DOCUMENT) {
-            if (eventType == XmlPullParser.START_TAG && parser.name == "manifest") {
-                val ns = "http://schemas.android.com/apk/res/android"
-                packageName = parser.getAttributeValue(null, "package") ?: parser.getAttributeValue(
-                        ns,
-                        "package"
-                )
-                versionCode = parser.getAttributeValue(ns, "versionCode")?.toLongOrNull()
-                // If 'split' attribute exists, it's a split APK
-                splitName = parser.getAttributeValue(null, "split")
-                break
+            if (eventType == XmlPullParser.START_TAG) {
+                if (parser.name == "manifest") {
+                    val ns = "http://schemas.android.com/apk/res/android"
+                    packageName = parser.getAttributeValue(null, "package")
+                            ?: parser.getAttributeValue(ns, "package")
+                    if (packageName.isNullOrBlank())
+                        return null
+                    versionCode = parser.getAttributeValue(ns, "versionCode")?.toLongOrNull()
+                            ?: return null
+                    splitName = parser.getAttributeValue(null, "split")
+                    // If 'split' attribute exists, it's a split APK
+                    isSplit = !splitName.isNullOrEmpty()
+                    foundManifest = true
+                } else if (requestFetchingMinSdkVersion && parser.name == "uses-sdk") {
+                    val ns = "http://schemas.android.com/apk/res/android"
+                    minSdk = parser.getAttributeValue(ns, "minSdkVersion")?.toIntOrNull()
+                    foundUsesSdk = true
+                }
+                // Break early if we got what we needed
+                if (foundManifest && (!requestFetchingMinSdkVersion || foundUsesSdk)) {
+                    return SimpleApkInfo(packageName, versionCode, splitName, isSplit, minSdk)
+                }
             }
             eventType = parser.next()
         }
-        val simpleApkInfo = SimpleApkInfo(packageName = packageName, versionCode = versionCode,
-                splitName = splitName, isSplit = !splitName.isNullOrEmpty())
-        return simpleApkInfo
+        // Return whatever we managed to find if EOF is reached and manifest was found
+        return if (foundManifest) {
+            SimpleApkInfo(packageName, versionCode, splitName, isSplit, minSdk)
+        } else null
     }
-
 }

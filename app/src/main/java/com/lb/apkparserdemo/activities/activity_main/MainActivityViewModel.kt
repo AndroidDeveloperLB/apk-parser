@@ -11,6 +11,7 @@ import androidx.annotation.UiThread
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.viewModelScope
+import com.lb.apkparserdemo.R
 import com.lb.apkparserdemo.apk_info.AbstractZipFilter
 import com.lb.apkparserdemo.apk_info.ApacheZipFileFilter
 import com.lb.apkparserdemo.apk_info.ApkIconFetcher
@@ -177,7 +178,7 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
 //                time taken(ms): 67053 . handled 224 apps, apksCount:245 averageTime(ms):299.34375 per app, 273.6857 per APK
 //time taken(ms): 62721 . handled 224 apps, apksCount:245 averageTime(ms):280.00446 per app, 256.0041 per APK
 //            com.lb.apkparserdemo.testing.XapkTestHandler5(context).runTest(xapkFile, deviceConfig, appIconSize, useMemCache)
-                //time taken(ms): 37436 . handled 224 apps, apksCount:245 averageTime(ms):167.125 per app, 152.8 per APK
+                // time taken(ms): 37436 . handled 224 apps, apksCount:245 averageTime(ms):167.125 per app, 152.8 per APK
 //                time taken(ms): 57490 . handled 415 apps, apksCount:848 averageTime(ms):138.53012 per app, 67.794815 per APK
                 XapkTestHandler6(context).runTest(xapkFile, deviceConfig, appIconSize)
                 //  2293 without memcache,  1683    with memcache
@@ -210,7 +211,9 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
                 Log.e("AppLog", "testXapkParsing error for ${packageInfo.packageName}", e)
                 null
             }
-            totalParsingTime += System.currentTimeMillis() - stepStartTime
+            val singleTestTime = System.currentTimeMillis() - stepStartTime
+//            Log.d("AppLog", "testXapkParsing time taken(ms): $singleTestTime result:$result")
+            totalParsingTime += singleTestTime
             handleParsingResult(packageInfo, result, appIconSize)
             apksHandledSoFar += 1 + (packageInfo.applicationInfo?.splitPublicSourceDirs?.size ?: 0)
             apkFilesHandledLiveData.postValue(apksHandledSoFar)
