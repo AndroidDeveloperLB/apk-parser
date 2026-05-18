@@ -27,16 +27,16 @@ class XapkTestHandler6(private val context: Context) {
 
     fun runTest(xapkFileOnDisk: File, deviceConfig: DeviceConfig, appIconSize: Int): ApkParsingResult? {
         val inputStreamProvider = { FileInputStream(xapkFileOnDisk) }
-        return runTest(length = xapkFileOnDisk.length(), deviceConfig, appIconSize) {
-            object : SeekableInputStreamByteChannel(xapkFileOnDisk.length()) {
+        val fileSize = xapkFileOnDisk.length()
+        return runTest(deviceConfig, appIconSize) {
+            object : SeekableInputStreamByteChannel(fileSize) {
                 override fun getNewInputStream(): InputStream = inputStreamProvider()
             }
         }
     }
 
-    fun runTest(length: Long, deviceConfig: DeviceConfig, appIconSize: Int, channelProvider: () -> SeekableByteChannel): ApkParsingResult? {
+    fun runTest(deviceConfig: DeviceConfig, appIconSize: Int, channelProvider: () -> SeekableByteChannel): ApkParsingResult? {
         Log.d("AppLog", "XAPK Test 6: Started")
-
         val xapkChannel = channelProvider()
         var result: ApkParsingResult? = null
         try {

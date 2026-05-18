@@ -14,7 +14,6 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicReference
-
 /**
  * Light-weight parser for extracting basic information from an APK's AndroidManifest.xml
  * without needing to parse the entire APK or its resource table.
@@ -35,12 +34,8 @@ object ApkManifestParser {
      * @property minSdkVersion The minimum SDK version, if requested and available.
      */
     data class SimpleApkInfo(
-            val packageName: String?,
-            val versionCode: Long?,
-            val splitName: String?,
-            val isSplit: Boolean,
-            val minSdkVersion: Int? = null
-    )
+            val packageName: String?, val versionCode: Long?, val splitName: String?,
+            val isSplit: Boolean, val minSdkVersion: Int? = null)
 
     /**
      * Parses the manifest from an [InputStream].
@@ -51,8 +46,7 @@ object ApkManifestParser {
      * @return [SimpleApkInfo] if successful, null otherwise.
      */
     @WorkerThread
-    fun parseManifestInputStream(manifestEntryInputStream: InputStream, entrySize: Long = -1L,
-                                 requestFetchingMinSdkVersion: Boolean = false): SimpleApkInfo? {
+    fun parseManifestInputStream(manifestEntryInputStream: InputStream, entrySize: Long = -1L, requestFetchingMinSdkVersion: Boolean = false): SimpleApkInfo? {
         val bytes = if (entrySize > 0) {
             if (entrySize > Integer.MAX_VALUE)
                 return null
@@ -71,21 +65,18 @@ object ApkManifestParser {
         var minSdk: Int? = null
         var foundManifest = false
         var foundUsesSdk = false
-
         while (buffer.hasRemaining()) {
             val chunkPos = buffer.position()
-            val chunkType = try {
-                buffer.int
+            val chunkType: Int
+            val chunkSize: Int
+            try{
+                chunkType= buffer.int
+                chunkSize = buffer.int
             } catch (e: Exception) {
                 break
             }
-            val chunkSize = try {
-                buffer.int
-            } catch (e: Exception) {
+            if (chunkSize <= 0)
                 break
-            }
-            if (chunkSize <= 0) break
-
             when (chunkType) {
                 CHUNK_STRING_POOL -> stringPoolOffset = chunkPos
                 CHUNK_START_TAG -> {
@@ -95,7 +86,6 @@ object ApkManifestParser {
                         buffer.int // ns
                         val nameIndex = buffer.int
                         val tagName = getString(buffer, stringPoolOffset, nameIndex)
-
                         if (tagName == "manifest") {
                             buffer.short // attrStart
                             buffer.short // attrSize
@@ -113,6 +103,7 @@ object ApkManifestParser {
                                     "versionCode" -> vCode = data.toLong()
                                     "split" -> split = getString(buffer, stringPoolOffset, data)
                                 }
+
                             }
                             foundManifest = true
                         } else if (requestFetchingMinSdkVersion && tagName == "uses-sdk") {
@@ -142,8 +133,14 @@ object ApkManifestParser {
                         // Ignore parsing errors for this specific tag
                     }
                     // Break early if we got what we needed
-                    if (foundManifest && (!requestFetchingMinSdkVersion || foundUsesSdk)) {
-                        break
+                    if (foundManifest) {
+                        //if it's a split APK no need to check for minSdkVersion
+                        if (!split.isNullOrEmpty()) {
+                            break
+                        }
+                        //if it's a base APK, and we don't need minSdkVersion, or we got it, break
+                        if (!requestFetchingMinSdkVersion || foundUsesSdk)
+                            break
                     }
                 }
             }
@@ -289,7 +286,6 @@ object ApkManifestParser {
         var minSdk: Int? = null
         var foundManifest = false
         var foundUsesSdk = false
-
         while (eventType != XmlPullParser.END_DOCUMENT) {
             if (eventType == XmlPullParser.START_TAG) {
                 if (parser.name == "manifest") {
