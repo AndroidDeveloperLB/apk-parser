@@ -109,6 +109,7 @@ class XapkTestHandlerFramework3(private val context: Context) {
         } catch (e: Exception) {
             Log.e("AppLog", "XAPK Test Framework 3: Error", e)
         }
+        Log.d("AppLog", "XAPK Test Framework 3: Finished with result: $result")
         return result
     }
 

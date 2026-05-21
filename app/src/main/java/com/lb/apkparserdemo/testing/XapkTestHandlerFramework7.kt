@@ -107,6 +107,7 @@ class XapkTestHandlerFramework7(private val context: Context) {
         } finally {
             xapkChannel.close()
         }
+        Log.d("AppLog", "XAPK Test Framework 7: Finished with result: $result")
         return result
     }
 

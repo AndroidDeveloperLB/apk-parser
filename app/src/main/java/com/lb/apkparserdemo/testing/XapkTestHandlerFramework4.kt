@@ -100,6 +100,7 @@ class XapkTestHandlerFramework4(private val context: Context) {
         } finally {
             xapkFile.closeSilently()
         }
+        Log.d("AppLog", "XAPK Test Framework 4: Finished with result: $result")
         return result
     }
 

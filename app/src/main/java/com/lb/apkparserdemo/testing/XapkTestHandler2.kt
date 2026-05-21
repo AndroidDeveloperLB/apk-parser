@@ -87,6 +87,7 @@ class XapkTestHandler2(private val context: Context) {
         } catch (e: Exception) {
             Log.e("AppLog", "XAPK Test 2: Error", e)
         }
+        Log.d("AppLog", "XAPK Test 2: Finished with result: $result")
         return result
     }
 

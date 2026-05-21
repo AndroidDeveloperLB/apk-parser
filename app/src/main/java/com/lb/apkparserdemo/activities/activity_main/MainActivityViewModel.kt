@@ -53,10 +53,6 @@ private const val VALIDATE_RESOURCES = true
 private val ZIP_FILTER_TYPE: MainActivityViewModel.Companion.ZipFilterType =
 //time taken(ms): 35523 . handled 416 apps, apksCount:854 averageTime(ms):85.39183 per app, 41.59602 per APK
         MainActivityViewModel.Companion.ZipFilterType.ZipFileFilter
-//time taken(ms):  700264 . handled 416 apps, apksCount:854 averageTime(ms):1683.3269 per app, 819.98126 per APK
-//        MainActivityViewModel.Companion.ZipFilterType.ZipInputStreamFilter
-//
-//        MainActivityViewModel.Companion.ZipFilterType.ApacheZipArchiveInputStreamFilter
 //time taken(ms): 83010 . handled 416 apps, apksCount:854 averageTime(ms):199.54327 per app, 97.20141 per APK
 //MainActivityViewModel.Companion.ZipFilterType.ApacheZipFileFilter
 //        time taken(ms): 98413 . handled 416 apps, apksCount:854 averageTime(ms):236.56972 per app, 115.2377 per APK
@@ -124,8 +120,8 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
         val context = applicationContext
         val appIconSize = AppInfoUtil.getAppIconSize(context)
 
-//        testXapkParsing(deviceConfig, appIconSize)
-        testInstalledAppsApks(deviceConfig, appIconSize)
+        testXapkParsing(deviceConfig, appIconSize)
+//        testInstalledAppsApks(deviceConfig, appIconSize)
         Log.e("AppLog", "done")
         isDoneLiveData.postValue(true)
     }
@@ -156,16 +152,17 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
 //                }
         val useMemCache: Boolean = false
         val xapkFile = File(context.cacheDir, "test.xapk")
-//        copyRawToFile(context, R.raw.test, xapkFile)
+        copyRawToFile(context, R.raw.google_tasks, xapkFile)
+//        copyRawToFile(context, R.raw.chrome, xapkFile)
         var totalParsingTime = 0L
         var apksHandledSoFar = 0
         for (packageInfo in installedPackages) {
-            prepareXapkFile(packageInfo, xapkFile)
+//            prepareXapkFile(packageInfo, xapkFile)
             val stepStartTime = System.currentTimeMillis()
             val result: ApkParsingResult? = try {
                 // XAPK test
                 //2218 time taken(ms): 61754 . handled 224 apps, apksCount:245 averageTime(ms):275.6875 per app, 252.05714 per APK
-//                com.lb.apkparserdemo.testing.XapkTestHandler(context).runTest(xapkFile, deviceConfig, appIconSize)
+                com.lb.apkparserdemo.testing.XapkTestHandler(context).runTest(xapkFile, deviceConfig, appIconSize)
                 //2036 time taken(ms): 66864 . handled 224 apps, apksCount:245 averageTime(ms):298.5 per app, 272.91428 per APK
 //            com.lb.apkparserdemo.testing.XapkTestHandler2(context).runTest(xapkFile, deviceConfig, appIconSize)
                 //2244 time taken(ms): 54330 . handled 224 apps, apksCount:245 averageTime(ms):242.54465 per app, 221.7551 per APK
@@ -186,7 +183,7 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
 //time taken(ms): 59681 . handled 224 apps, apksCount:245 averageTime(ms):266.43304 per app, 243.59592 per APK
 //                time taken(ms): 148577 . handled 415 apps, apksCount:848 averageTime(ms):358.01688 per app, 175.20872 per APK
 //            com.lb.apkparserdemo.testing.XapkTestHandler7(context).runTest(xapkFile, deviceConfig, appIconSize, useMemCache)
-
+//
                 //4085 time taken(ms): 69288 . handled 224 apps, apksCount:245 averageTime(ms):309.32144 per app, 282.80817 per APK
 //            com.lb.apkparserdemo.testing.XapkTestHandlerFramework1(context).runTest(xapkFile, deviceConfig, appIconSize)
                 //4092 time taken(ms): 68775 . handled 224 apps, apksCount:245 averageTime(ms):307.03125 per app, 280.7143 per APK
@@ -218,7 +215,7 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
             apksHandledSoFar += 1 + (packageInfo.applicationInfo?.splitPublicSourceDirs?.size ?: 0)
             apkFilesHandledLiveData.postValue(apksHandledSoFar)
             appsHandledLiveData.inc()
-//            break
+            break
         }
         xapkFile.delete()
         Log.d("AppLog", "time taken(ms): $totalParsingTime . handled ${installedPackages.size} apps, apksCount:$apksHandledSoFar averageTime(ms):${totalParsingTime.toFloat() / installedPackages.size.toFloat()} per app, ${totalParsingTime.toFloat() / apksHandledSoFar.toFloat()} per APK")
