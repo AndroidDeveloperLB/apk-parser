@@ -13,3 +13,5 @@
 .externalNativeBuild
 .cxx
 /.idea/deploymentTargetSelector.xml
+/hs_err_pid*.log
+/replay_pid*.log
