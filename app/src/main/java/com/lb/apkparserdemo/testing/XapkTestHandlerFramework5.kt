@@ -87,7 +87,11 @@ class XapkTestHandlerFramework5(private val context: Context) {
 
                     if (consolidatedInfo != null) {
                         val apkIcon = ApkIconFetcher.getApkIcon(context, deviceConfig, {
-                            MultiZipFilter(matchingApkNames.map { createFilterForName(it) })
+                            MultiZipFilter(matchingApkNames.indices.map { i ->
+                                val filter = filters[i]
+                                if (filter.isSeekable) NonClosingZipFilter(filter)
+                                else createFilterForName(matchingApkNames[i])
+                            })
                         }, consolidatedInfo, appIconSize)
                         val apkMeta = consolidatedInfo.apkMetaTranslator.apkMeta
                         result = ApkParsingResult(
@@ -105,7 +109,6 @@ class XapkTestHandlerFramework5(private val context: Context) {
         } catch (e: Exception) {
             Log.e("AppLog", "XAPK Test Framework 5: Error", e)
         }
-        Log.d("AppLog", "XAPK Test Framework 5: Finished with result: $result")
         return result
     }
 

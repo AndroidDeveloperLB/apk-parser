@@ -8,6 +8,7 @@ import android.graphics.Bitmap
 import android.os.Build
 import android.util.Log
 import androidx.annotation.UiThread
+import androidx.annotation.WorkerThread
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.viewModelScope
@@ -23,6 +24,7 @@ import com.lb.apkparserdemo.apk_info.ZipFileFilter
 import com.lb.apkparserdemo.apk_info.zip.SeekableInputStreamByteChannel
 import com.lb.apkparserdemo.db.AppDatabase
 import com.lb.apkparserdemo.db.AppIconInfo
+import com.lb.apkparserdemo.testing.XapkTestHandler2
 import com.lb.apkparserdemo.utils.AppInfoUtil
 import com.lb.apkparserdemo.utils.IconStorage
 import com.lb.apkparserdemo.utils.SessionTracker
@@ -125,75 +127,96 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
         isDoneLiveData.postValue(true)
     }
 
+    @WorkerThread
     private suspend fun testXapkParsing(deviceConfig: DeviceConfig, appIconSize: Int) {
         val context = applicationContext
         val packageManager = context.packageManager
         val appsToFocusOn = HashSet<String>()
                 .also {
-                    //a lot of memory:
-//                                    it.add("com.google.android.youtube")
-//                    it.add("com.google.android.googlequicksearchbox")
-
-//                    has image file of spr file format:
+//                    Samsung issue: has image file of spr file format:
 //                    it.add("com.samsung.advp.imssettings")//ImsSettings.apk
 //                    it.add("com.android.nfc")//NfcNci.apk
 
-//                    has bmp files that can't be opened even on Windows OS:
+//                    Samsung issue: has bmp files that can't be opened even on Windows OS:
 //                    it.add("com.samsung.crane")//Crane.apk
                     //                    it.add("com.sec.android.widgetapp.easymodecontactswidget") //EasymodeContactsWidget81.apk
                 }
         val installedPackages = packageManager.getInstalledPackagesCompat(PackageManager.GET_META_DATA)
-                .filter { appsToFocusOn.isEmpty() || appsToFocusOn.contains(it.packageName) }
-//                .filter {
-//                    val size = it.applicationInfo?.splitPublicSourceDirs?.size
-//                            ?: return@filter true
-//                    size==0
-//                }
+//                .filter { appsToFocusOn.isEmpty() || appsToFocusOn.contains(it.packageName) }
+                .filter {
+//                    if (!it.applicationInfo!!.isSystemApp())
+//                        return@filter false
+                    val size = it.applicationInfo?.splitPublicSourceDirs?.size ?: 0
+                    size > 0
+                }
+//                .subList(0, 3)
         val useMemCache: Boolean = false
-        val xapkFile = File(context.cacheDir, "test.xapk")
+//        val xapkFile = File(context.cacheDir, "test.xapk")
 //        copyRawToFile(context, R.raw.test, xapkFile)
         var totalParsingTime = 0L
         var apksHandledSoFar = 0
+        Log.d("AppLog", "testing on ${installedPackages.size} apps")
+        val useUncompressedZipFiles: Boolean = false
+        for ((index, packageInfo) in installedPackages.withIndex()) {
+            val xapkFile = File(context.cacheDir, "${packageInfo.packageName}.xapk")
+//            if(packageInfo.packageName =="com.google.android.googlequicksearchbox")
+//                xapkFile.delete()
+            prepareXapkFile(packageInfo, xapkFile, useUncompressedZipFiles)
+            Log.d("AppLog", "${index}/${installedPackages.size}")
+        }
         for (packageInfo in installedPackages) {
-            prepareXapkFile(packageInfo, xapkFile)
+            val xapkFile = File(context.cacheDir, "${packageInfo.packageName}.xapk")
+//            val useUncompressedZipFiles = true
+//            prepareXapkFile(packageInfo, xapkFile, useUncompressedZipFiles)
+            Log.d("AppLog", "packageName:${packageInfo.packageName} baseApkPath:$${packageInfo.applicationInfo!!.publicSourceDir} splitApkPaths:${packageInfo.applicationInfo!!.splitPublicSourceDirs?.joinToString()}")
+
             val stepStartTime = System.currentTimeMillis()
             val result: ApkParsingResult? = try {
                 // XAPK test
-//
+//time taken(ms): 17078 . handled 51 apps, apksCount:254 averageTime(ms):334.86273 per app, 67.23622 per APK
 //                com.lb.apkparserdemo.testing.XapkTestHandler(context).runTest(xapkFile, deviceConfig, appIconSize)
+
+//time taken(ms): 60213 . handled 414 apps, apksCount:849 averageTime(ms):145.44203 per app, 70.922264 per APK
 //
-//            com.lb.apkparserdemo.testing.XapkTestHandler2(context).runTest(xapkFile, deviceConfig, appIconSize)
-//
+                XapkTestHandler2(context).runTest(xapkFile, deviceConfig, appIconSize)
+
+//time taken(ms): 61189 . handled 51 apps, apksCount:254 averageTime(ms):1199.7843 per app, 240.90158 per APK
 //                com.lb.apkparserdemo.testing.XapkTestHandler3(context).runTest(xapkFile, deviceConfig, appIconSize)
-//
-//
+
+//time taken(ms): 24201 . handled 51 apps, apksCount:254 averageTime(ms):474.52942 per app, 95.279526 per APK
 //                com.lb.apkparserdemo.testing.XapkTestHandler4(context).runTest(xapkFile, deviceConfig, appIconSize, useMemCache)
-//
-//
-//
-//            com.lb.apkparserdemo.testing.XapkTestHandler5(context).runTest(xapkFile, deviceConfig, appIconSize, useMemCache)
-//
-                com.lb.apkparserdemo.testing.XapkTestHandler6(context).runTest(xapkFile, deviceConfig, appIconSize)
-//
-//
-//
+
+//time taken(ms): 22009 . handled 51 apps, apksCount:254 averageTime(ms):431.549 per app, 86.649605 per APK
+//                        com.lb.apkparserdemo.testing.XapkTestHandler5(context).runTest(xapkFile, deviceConfig, appIconSize, useMemCache)
+
+//time taken(ms): 68289 . handled 414 apps, apksCount:849 averageTime(ms):164.94928 per app, 80.43463 per APK
+//time taken(ms): 63201 . handled 414 apps, apksCount:849 averageTime(ms):152.65942 per app, 74.441696 per APK
+//                com.lb.apkparserdemo.testing.XapkTestHandler6(context).runTest(xapkFile, deviceConfig, appIconSize)
+
+//time taken(ms): 59431 . handled 414 apps, apksCount:849 averageTime(ms):143.55315 per app, 70.001175 per APK
+//time taken(ms): 65016 . handled 414 apps, apksCount:849 averageTime(ms):157.04347 per app, 76.579506 per APK
 //            com.lb.apkparserdemo.testing.XapkTestHandler7(context).runTest(xapkFile, deviceConfig, appIconSize, useMemCache)
-//
+
+//time taken(ms): 31259 . handled 51 apps, apksCount:254 averageTime(ms):612.9216 per app, 123.06693 per APK
 //            com.lb.apkparserdemo.testing.XapkTestHandlerFramework1(context).runTest(xapkFile, deviceConfig, appIconSize)
-//
+
+//time taken(ms): 32183 . handled 51 apps, apksCount:254 averageTime(ms):631.03925 per app, 126.70473 per APK
 //            com.lb.apkparserdemo.testing.XapkTestHandlerFramework2(context).runTest(xapkFile, deviceConfig, appIconSize)
-//
+
+//time taken(ms): 32019 . handled 51 apps, apksCount:254 averageTime(ms):627.82355 per app, 126.05905 per APK
 //            com.lb.apkparserdemo.testing.XapkTestHandlerFramework3(context).runTest(xapkFile, deviceConfig, appIconSize)
-//
-//
+
+//time taken(ms): 31615 . handled 51 apps, apksCount:254 averageTime(ms):619.902 per app, 124.468506 per APK
 //            com.lb.apkparserdemo.testing.XapkTestHandlerFramework4(context).runTest(xapkFile, deviceConfig, appIconSize, useMemCache)
-//
+
+//time taken(ms): 65159 . handled 414 apps, apksCount:849 averageTime(ms):157.38889 per app, 76.74794 per APK
 //
 //            com.lb.apkparserdemo.testing.XapkTestHandlerFramework5(context).runTest(xapkFile, deviceConfig, appIconSize, useMemCache)
-//
+
+//time taken(ms): 30357 . handled 51 apps, apksCount:254 averageTime(ms):595.2353 per app, 119.51575 per APK
 //            com.lb.apkparserdemo.testing.XapkTestHandlerFramework6(context).runTest(xapkFile, deviceConfig, appIconSize)
-//
-//
+
+//time taken(ms): 18245 . handled 51 apps, apksCount:254 averageTime(ms):357.7451 per app, 71.83071 per APK
 //                com.lb.apkparserdemo.testing.XapkTestHandlerFramework7(context).runTest(xapkFile, deviceConfig, appIconSize, useMemCache)
             } catch (e: Throwable) {
                 Log.e("AppLog", "testXapkParsing error for ${packageInfo.packageName}", e)
@@ -208,7 +231,7 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
             appsHandledLiveData.inc()
 //            break
         }
-        xapkFile.delete()
+//        xapkFile.delete()
         Log.d("AppLog", "time taken(ms): $totalParsingTime . handled ${installedPackages.size} apps, apksCount:$apksHandledSoFar averageTime(ms):${totalParsingTime.toFloat() / installedPackages.size.toFloat()} per app, ${totalParsingTime.toFloat() / apksHandledSoFar.toFloat()} per APK")
     }
 
@@ -313,27 +336,39 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
         SessionTracker.addPackage(packageName)
     }
 
-    private fun prepareXapkFile(packageInfo: PackageInfo, outputFile: File) {
+    private fun prepareXapkFile(packageInfo: PackageInfo, outputFile: File, useUncompressedZipFiles: Boolean) {
+        if (outputFile.exists())
+            return
         val baseApkPath = packageInfo.applicationInfo!!.publicSourceDir
         val splitApkPaths = packageInfo.applicationInfo!!.splitPublicSourceDirs?.toList()
                 ?: emptyList()
-        Log.d("AppLog", "packageName:${packageInfo.packageName} baseApkPath:$baseApkPath splitApkPaths:${splitApkPaths.joinToString()}")
         val allApkFilePaths = listOf(baseApkPath) + splitApkPaths
 
-        ZipOutputStream(FileOutputStream(outputFile)).use { zos ->
-            for (apkPath in allApkFilePaths) {
-                val apkFile = File(apkPath)
-                val entry = ZipEntry(apkFile.name)
-                entry.method = ZipEntry.STORED
-//                entry.method = ZipEntry.DEFLATED
-                entry.size = apkFile.length()
-                entry.compressedSize = apkFile.length()
-                entry.crc = calculateCrc(apkFile)
-                zos.putNextEntry(entry)
-                apkFile.inputStream().use { it.copyTo(zos) }
-                zos.closeEntry()
+        if (useUncompressedZipFiles)
+            ZipOutputStream(FileOutputStream(outputFile)).use { zos ->
+                for (apkPath in allApkFilePaths) {
+                    val apkFile = File(apkPath)
+                    val entry = ZipEntry(apkFile.name)
+                    entry.method = ZipEntry.STORED
+                    entry.size = apkFile.length()
+                    entry.compressedSize = apkFile.length()
+                    entry.crc = calculateCrc(apkFile)
+                    zos.putNextEntry(entry)
+                    apkFile.inputStream().use { it.copyTo(zos) }
+                    zos.closeEntry()
+                }
             }
-        }
+        else
+            ZipOutputStream(FileOutputStream(outputFile)).use { zos ->
+                zos.setMethod(ZipOutputStream.DEFLATED)
+                for (apkPath in allApkFilePaths) {
+                    val apkFile = File(apkPath)
+                    val entry = ZipEntry(apkFile.name)
+                    zos.putNextEntry(entry)
+                    apkFile.inputStream().use { it.copyTo(zos) }
+                    zos.closeEntry()
+                }
+            }
     }
 
     private fun calculateCrc(file: File): Long {

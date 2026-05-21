@@ -2,17 +2,21 @@ package com.lb.apkparserdemo.testing
 
 import android.content.Context
 import android.util.Log
+import com.lb.apkparserdemo.apk_info.AbstractZipFilter
+import com.lb.apkparserdemo.apk_info.ApacheZipFileFilter
 import com.lb.apkparserdemo.apk_info.ApkIconFetcher
 import com.lb.apkparserdemo.apk_info.ApkInfo
 import com.lb.apkparserdemo.apk_info.ApkManifestParser
 import com.lb.apkparserdemo.apk_info.ApkParsingResult
 import com.lb.apkparserdemo.apk_info.MultiZipFilter
+import com.lb.apkparserdemo.apk_info.NonClosingZipFilter
 import com.lb.apkparserdemo.apk_info.ZipInputStreamFilter
+import com.lb.apkparserdemo.apk_info.zip.FileSeekableByteChannel
 import com.lb.common_utils.closeSilently
 import net.dongliu.apk.parser.bean.DeviceConfig
+import org.apache.commons.compress.archivers.zip.ZipArchiveEntry
+import org.apache.commons.compress.archivers.zip.ZipFile
 import java.io.File
-import java.util.zip.ZipEntry
-import java.util.zip.ZipFile
 import java.util.zip.ZipInputStream
 
 /**
@@ -26,12 +30,12 @@ class XapkTestHandlerFramework1(private val context: Context) {
 
         var xapkFile: ZipFile? = null
         try {
-            xapkFile = ZipFile(xapkFileOnDisk)
-            var baseApkEntry: ZipEntry? = null
+            xapkFile = ZipFile.builder().setFile(xapkFileOnDisk).get()
+            var baseApkEntry: ZipArchiveEntry? = null
             var packageName: String? = null
             var versionCode: Long? = null
-            val entries = xapkFile.entries()
-            val splitApkEntriesList = ArrayList<Pair<ZipEntry, ApkManifestParser.SimpleApkInfo>>()
+            val entries = xapkFile.entries
+            val splitApkEntriesList = ArrayList<Pair<ZipArchiveEntry, ApkManifestParser.SimpleApkInfo>>()
             while (entries.hasMoreElements()) {
                 val entry = entries.nextElement()
                 if (entry.isDirectory || !entry.name.endsWith(".apk", ignoreCase = true) || entry.name.contains("/")) {
@@ -59,19 +63,26 @@ class XapkTestHandlerFramework1(private val context: Context) {
                     .filter { it.second.packageName == packageName && it.second.versionCode == versionCode }
                     .map { it.first }
 
-            val baseApkInfo = getApkInfo(xapkFile!!, baseApkEntry, deviceConfig)
-            val splitApkInfoList = matchingSplitEntries.mapNotNull { getApkInfo(xapkFile!!, it, deviceConfig) }
+            val baseApkInfo = getApkInfo(xapkFileOnDisk, xapkFile!!, baseApkEntry, deviceConfig)
+            val splitApkInfoList = matchingSplitEntries.mapNotNull { getApkInfo(xapkFileOnDisk, xapkFile!!, it, deviceConfig) }
 
             val matchingApkEntries = matchingSplitEntries.toMutableList()
             matchingApkEntries.add(baseApkEntry)
 
-            val baseFilter = ZipInputStreamFilter(ZipInputStream(xapkFile!!.getInputStream(baseApkEntry)))
+            val filters = matchingApkEntries.map { createZipFilter(xapkFileOnDisk, xapkFile!!, it) }
+            var baseFilter: AbstractZipFilter? = null
             try {
+                baseFilter = filters.last()
+                val extraFilters = filters.dropLast(1).map { NonClosingZipFilter(it) }
                 val consolidatedInfo = ApkInfo.getConsolidatedApkInfo(deviceConfig, baseApkInfo!!,
-                        baseFilter, splitApkInfoList)
+                        NonClosingZipFilter(baseFilter), splitApkInfoList)
                 if (consolidatedInfo != null) {
                     val apkIcon = ApkIconFetcher.getApkIcon(context, deviceConfig, {
-                        MultiZipFilter(matchingApkEntries.map { ZipInputStreamFilter(ZipInputStream(xapkFile!!.getInputStream(it))) })
+                        MultiZipFilter(matchingApkEntries.indices.map { i ->
+                            val filter = filters[i]
+                            if (filter.isSeekable) NonClosingZipFilter(filter)
+                            else createZipFilter(xapkFileOnDisk, xapkFile!!, matchingApkEntries[i])
+                        })
                     }, consolidatedInfo, appIconSize)
                     val apkMeta = consolidatedInfo.apkMetaTranslator.apkMeta
                     result = ApkParsingResult(
@@ -83,26 +94,37 @@ class XapkTestHandlerFramework1(private val context: Context) {
                     )
                 }
             } finally {
-                baseFilter.closeSilently()
+                filters.forEach { it.close() }
             }
         } catch (e: Exception) {
             Log.e("AppLog", "XAPK Test Framework 1: Error", e)
         } finally {
             xapkFile.closeSilently()
         }
-        Log.d("AppLog", "XAPK Test Framework 1: Finished with result: $result")
         return result
     }
 
-    private fun getApkInfo(xapkFile: ZipFile, entry: ZipEntry, deviceConfig: DeviceConfig): ApkInfo? {
+    private fun getApkInfo(xapkFileOnDisk: File, xapkFile: ZipFile, entry: ZipArchiveEntry, deviceConfig: DeviceConfig): ApkInfo? {
         return try {
-            val filter = ZipInputStreamFilter(ZipInputStream(xapkFile.getInputStream(entry)))
+            val filter = createZipFilter(xapkFileOnDisk, xapkFile, entry)
             filter.use {
                 ApkInfo.internalGetApkInfo(deviceConfig, filter, requestParseResources = true)
             }
         } catch (_: Exception) {
             null
         }
+    }
+
+    private fun createZipFilter(xapkFileOnDisk: File, xapkFile: ZipFile, entry: ZipArchiveEntry): AbstractZipFilter {
+        if (entry.method == ZipArchiveEntry.STORED) {
+            try {
+                val channel = FileSeekableByteChannel(xapkFileOnDisk, entry.dataOffset, entry.size)
+                val innerApkFile = ZipFile.builder().setSeekableByteChannel(channel).get()
+                return ApacheZipFileFilter(context, innerApkFile, underlyingChannel = channel)
+            } catch (_: Exception) {
+            }
+        }
+        return ZipInputStreamFilter(ZipInputStream(xapkFile.getInputStream(entry)))
     }
 
 }

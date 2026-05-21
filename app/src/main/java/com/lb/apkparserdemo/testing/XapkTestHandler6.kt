@@ -87,7 +87,11 @@ class XapkTestHandler6(private val context: Context) {
 
                     if (consolidatedInfo != null) {
                         val apkIcon = ApkIconFetcher.getApkIcon(context, deviceConfig, {
-                            MultiZipFilter(matchingApkEntries.map { createApacheZipFilter(context, xapk, xapkChannel, it) })
+                            MultiZipFilter(matchingApkEntries.indices.map { i ->
+                                val filter = filters[i]
+                                if (filter.isSeekable) NonClosingZipFilter(filter)
+                                else createApacheZipFilter(context, xapk, xapkChannel, matchingApkEntries[i])
+                            })
                         }, consolidatedInfo, appIconSize)
                         val apkMeta = consolidatedInfo.apkMetaTranslator.apkMeta
                         result = ApkParsingResult(
@@ -107,7 +111,6 @@ class XapkTestHandler6(private val context: Context) {
         } finally {
             xapkChannel.close()
         }
-        Log.d("AppLog", "XAPK Test 6: Finished with result: $result")
         return result
     }
 
