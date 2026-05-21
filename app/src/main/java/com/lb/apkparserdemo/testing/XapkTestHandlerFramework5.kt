@@ -110,7 +110,6 @@ class XapkTestHandlerFramework5(private val context: Context) {
     }
 
     private fun createFilter(xapkFileOnDisk: File, xapk: ZipFile, entry: ZipArchiveEntry, useMemoryCache: Boolean): AbstractZipFilter {
-        val channel = FileSeekableByteChannel(xapkFileOnDisk, entry.dataOffset, entry.size)
         if (useMemoryCache) {
             apkMemoryCache[entry.name]?.let { cachedBytes ->
                 val channelInMemory = SeekableInMemoryByteChannel(cachedBytes)
@@ -131,11 +130,15 @@ class XapkTestHandlerFramework5(private val context: Context) {
             }
         }
 
-        return try {
-            val innerApkFile = ZipFile.builder().setSeekableByteChannel(channel).get()
-            ApacheZipFileFilter(context, innerApkFile, underlyingChannel = channel)
-        } catch (e: Exception) {
-            ZipInputStreamFilter(ZipInputStream(xapk.getInputStream(entry)))
+        if (entry.method == ZipArchiveEntry.STORED) {
+            try {
+                val channel = FileSeekableByteChannel(xapkFileOnDisk, entry.dataOffset, entry.size)
+                val innerApkFile = ZipFile.builder().setSeekableByteChannel(channel).get()
+                return ApacheZipFileFilter(context, innerApkFile, underlyingChannel = channel)
+            } catch (_: Exception) {
+            }
         }
+
+        return ZipInputStreamFilter(ZipInputStream(xapk.getInputStream(entry)))
     }
 }

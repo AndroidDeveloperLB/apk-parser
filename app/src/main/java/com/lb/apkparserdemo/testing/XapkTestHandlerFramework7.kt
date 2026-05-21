@@ -132,13 +132,15 @@ class XapkTestHandlerFramework7(private val context: Context) {
             }
         }
 
-        return try {
-            val segmentChannel = BoundedSeekableByteChannel(xapkChannel, entry.dataOffset, entry.size)
-            val innerApkFile = ZipFile.builder().setSeekableByteChannel(segmentChannel).get()
-            ApacheZipFileFilter(context, innerApkFile, underlyingChannel = segmentChannel)
-        } catch (_: Exception) {
-            val inputStream = xapkFile.getInputStream(entry)
-            ZipInputStreamFilter(ZipInputStream(inputStream))
+        if (entry.method == ZipArchiveEntry.STORED) {
+            try {
+                val segmentChannel = BoundedSeekableByteChannel(xapkChannel, entry.dataOffset, entry.size)
+                val innerApkFile = ZipFile.builder().setSeekableByteChannel(segmentChannel).get()
+                return ApacheZipFileFilter(context, innerApkFile, underlyingChannel = segmentChannel)
+            } catch (_: Exception) {
+            }
         }
+
+        return ZipInputStreamFilter(ZipInputStream(xapkFile.getInputStream(entry)))
     }
 }

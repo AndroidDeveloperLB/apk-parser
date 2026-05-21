@@ -3,6 +3,7 @@ package com.lb.apkparserdemo.testing
 import android.content.Context
 import android.util.Log
 import com.lb.apkparserdemo.apk_info.AbstractZipFilter
+import com.lb.apkparserdemo.apk_info.ApacheZipArchiveInputStreamFilter
 import com.lb.apkparserdemo.apk_info.ApacheZipFileFilter
 import com.lb.apkparserdemo.apk_info.ApkIconFetcher
 import com.lb.apkparserdemo.apk_info.ApkInfo
@@ -15,6 +16,7 @@ import com.lb.apkparserdemo.apk_info.zip.FileSeekableByteChannel
 import com.lb.common_utils.readBytesIntoByteArray
 import net.dongliu.apk.parser.bean.DeviceConfig
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry
+import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream
 import org.apache.commons.compress.archivers.zip.ZipFile
 import org.apache.commons.compress.utils.SeekableInMemoryByteChannel
 import java.io.File
@@ -116,9 +118,16 @@ class XapkTestHandler5(private val context: Context) {
                 }
             }
         }
-        val channel = FileSeekableByteChannel(xapkFileOnDisk, entry.dataOffset, entry.size)
-        val apkFile = ZipFile.builder().setSeekableByteChannel(channel).get()
-        return ApacheZipFileFilter(context, apkFile, underlyingChannel = channel)
+
+        if (entry.method == ZipArchiveEntry.STORED) {
+            try {
+                val channel = FileSeekableByteChannel(xapkFileOnDisk, entry.dataOffset, entry.size)
+                val apkFile = ZipFile.builder().setSeekableByteChannel(channel).get()
+                return ApacheZipFileFilter(context, apkFile, underlyingChannel = channel)
+            } catch (_: Exception) {
+            }
+        }
+        return ApacheZipArchiveInputStreamFilter(ZipArchiveInputStream(xapk.getInputStream(entry)))
     }
 
 }

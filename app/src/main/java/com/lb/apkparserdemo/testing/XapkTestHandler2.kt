@@ -2,6 +2,8 @@ package com.lb.apkparserdemo.testing
 
 import android.content.Context
 import android.util.Log
+import com.lb.apkparserdemo.apk_info.AbstractZipFilter
+import com.lb.apkparserdemo.apk_info.ApacheZipArchiveInputStreamFilter
 import com.lb.apkparserdemo.apk_info.ApacheZipFileFilter
 import com.lb.apkparserdemo.apk_info.ApkIconFetcher
 import com.lb.apkparserdemo.apk_info.ApkInfo
@@ -12,6 +14,7 @@ import com.lb.apkparserdemo.apk_info.NonClosingZipFilter
 import com.lb.apkparserdemo.apk_info.zip.FileSeekableByteChannel
 import net.dongliu.apk.parser.bean.DeviceConfig
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry
+import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream
 import org.apache.commons.compress.archivers.zip.ZipFile
 import java.io.File
 
@@ -61,7 +64,7 @@ class XapkTestHandler2(private val context: Context) {
                 splitApkEntriesList.forEach { matchingApkEntries.add(it.first) }
                 matchingApkEntries.add(baseApkEntry)
 
-                val filters = matchingApkEntries.map { createApacheZipFilter(context, xapkFileOnDisk, it) }
+                val filters = matchingApkEntries.map { createApacheZipFilter(context, xapkFileOnDisk, xapk, it) }
                 try {
                     val baseFilter = filters.last()
                     val extraFilters = filters.dropLast(1).map { NonClosingZipFilter(it) }
@@ -69,7 +72,7 @@ class XapkTestHandler2(private val context: Context) {
 
                     if (consolidatedInfo != null) {
                         val apkIcon = ApkIconFetcher.getApkIcon(context, deviceConfig, {
-                            MultiZipFilter(matchingApkEntries.map { createApacheZipFilter(context, xapkFileOnDisk, it) })
+                            MultiZipFilter(matchingApkEntries.map { createApacheZipFilter(context, xapkFileOnDisk, xapk, it) })
                         }, consolidatedInfo, appIconSize)
                         val apkMeta = consolidatedInfo.apkMetaTranslator.apkMeta
                         result = ApkParsingResult(
@@ -91,10 +94,16 @@ class XapkTestHandler2(private val context: Context) {
         return result
     }
 
-    private fun createApacheZipFilter(context: Context, xapkFileOnDisk: File, entry: ZipArchiveEntry): ApacheZipFileFilter {
-        val channel = FileSeekableByteChannel(xapkFileOnDisk, entry.dataOffset, entry.size)
-        val apkFile = ZipFile.builder().setSeekableByteChannel(channel).get()
-        return ApacheZipFileFilter(context, apkFile, underlyingChannel = channel)
+    private fun createApacheZipFilter(context: Context, xapkFileOnDisk: File, xapk: ZipFile, entry: ZipArchiveEntry): AbstractZipFilter {
+        if (entry.method == ZipArchiveEntry.STORED) {
+            try {
+                val channel = FileSeekableByteChannel(xapkFileOnDisk, entry.dataOffset, entry.size)
+                val apkFile = ZipFile.builder().setSeekableByteChannel(channel).get()
+                return ApacheZipFileFilter(context, apkFile, underlyingChannel = channel)
+            } catch (_: Exception) {
+            }
+        }
+        return ApacheZipArchiveInputStreamFilter(ZipArchiveInputStream(xapk.getInputStream(entry)))
     }
 
 }

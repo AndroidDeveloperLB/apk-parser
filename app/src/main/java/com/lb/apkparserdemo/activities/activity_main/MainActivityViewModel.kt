@@ -23,7 +23,6 @@ import com.lb.apkparserdemo.apk_info.ZipFileFilter
 import com.lb.apkparserdemo.apk_info.zip.SeekableInputStreamByteChannel
 import com.lb.apkparserdemo.db.AppDatabase
 import com.lb.apkparserdemo.db.AppIconInfo
-import com.lb.apkparserdemo.testing.XapkTestHandler6
 import com.lb.apkparserdemo.utils.AppInfoUtil
 import com.lb.apkparserdemo.utils.IconStorage
 import com.lb.apkparserdemo.utils.SessionTracker
@@ -152,58 +151,50 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
 //                }
         val useMemCache: Boolean = false
         val xapkFile = File(context.cacheDir, "test.xapk")
-        copyRawToFile(context, R.raw.google_tasks, xapkFile)
-//        copyRawToFile(context, R.raw.chrome, xapkFile)
+//        copyRawToFile(context, R.raw.test, xapkFile)
         var totalParsingTime = 0L
         var apksHandledSoFar = 0
         for (packageInfo in installedPackages) {
-//            prepareXapkFile(packageInfo, xapkFile)
+            prepareXapkFile(packageInfo, xapkFile)
             val stepStartTime = System.currentTimeMillis()
             val result: ApkParsingResult? = try {
                 // XAPK test
-                //2218 time taken(ms): 61754 . handled 224 apps, apksCount:245 averageTime(ms):275.6875 per app, 252.05714 per APK
-                com.lb.apkparserdemo.testing.XapkTestHandler(context).runTest(xapkFile, deviceConfig, appIconSize)
-                //2036 time taken(ms): 66864 . handled 224 apps, apksCount:245 averageTime(ms):298.5 per app, 272.91428 per APK
+//
+//                com.lb.apkparserdemo.testing.XapkTestHandler(context).runTest(xapkFile, deviceConfig, appIconSize)
+//
 //            com.lb.apkparserdemo.testing.XapkTestHandler2(context).runTest(xapkFile, deviceConfig, appIconSize)
-                //2244 time taken(ms): 54330 . handled 224 apps, apksCount:245 averageTime(ms):242.54465 per app, 221.7551 per APK
+//
 //                com.lb.apkparserdemo.testing.XapkTestHandler3(context).runTest(xapkFile, deviceConfig, appIconSize)
-                //  2042   without memcache, 1710    with memcache
-//                time taken(ms): 67660 . handled 224 apps, apksCount:245 averageTime(ms):302.05356 per app, 276.16327 per APK
-//time taken(ms): 62793 . handled 224 apps, apksCount:245 averageTime(ms):280.3259 per app, 256.29797 per APK
+//
+//
 //                com.lb.apkparserdemo.testing.XapkTestHandler4(context).runTest(xapkFile, deviceConfig, appIconSize, useMemCache)
-                // 1968   without memcache,  1729    with memcache
-//                time taken(ms): 67053 . handled 224 apps, apksCount:245 averageTime(ms):299.34375 per app, 273.6857 per APK
-//time taken(ms): 62721 . handled 224 apps, apksCount:245 averageTime(ms):280.00446 per app, 256.0041 per APK
+//
+//
+//
 //            com.lb.apkparserdemo.testing.XapkTestHandler5(context).runTest(xapkFile, deviceConfig, appIconSize, useMemCache)
-                // time taken(ms): 37436 . handled 224 apps, apksCount:245 averageTime(ms):167.125 per app, 152.8 per APK
-//                time taken(ms): 57490 . handled 415 apps, apksCount:848 averageTime(ms):138.53012 per app, 67.794815 per APK
-                XapkTestHandler6(context).runTest(xapkFile, deviceConfig, appIconSize)
-                //  2293 without memcache,  1683    with memcache
-//                time taken(ms): 61024 . handled 224 apps, apksCount:245 averageTime(ms):272.42856 per app, 249.07755 per APK
-//time taken(ms): 59681 . handled 224 apps, apksCount:245 averageTime(ms):266.43304 per app, 243.59592 per APK
-//                time taken(ms): 148577 . handled 415 apps, apksCount:848 averageTime(ms):358.01688 per app, 175.20872 per APK
+//
+                com.lb.apkparserdemo.testing.XapkTestHandler6(context).runTest(xapkFile, deviceConfig, appIconSize)
+//
+//
+//
 //            com.lb.apkparserdemo.testing.XapkTestHandler7(context).runTest(xapkFile, deviceConfig, appIconSize, useMemCache)
 //
-                //4085 time taken(ms): 69288 . handled 224 apps, apksCount:245 averageTime(ms):309.32144 per app, 282.80817 per APK
 //            com.lb.apkparserdemo.testing.XapkTestHandlerFramework1(context).runTest(xapkFile, deviceConfig, appIconSize)
-                //4092 time taken(ms): 68775 . handled 224 apps, apksCount:245 averageTime(ms):307.03125 per app, 280.7143 per APK
+//
 //            com.lb.apkparserdemo.testing.XapkTestHandlerFramework2(context).runTest(xapkFile, deviceConfig, appIconSize)
-                //4088 time taken(ms): 69418 . handled 224 apps, apksCount:245 averageTime(ms):309.9018 per app, 283.33878 per APK
+//
 //            com.lb.apkparserdemo.testing.XapkTestHandlerFramework3(context).runTest(xapkFile, deviceConfig, appIconSize)
-                //  4162  without memcache,  1439    with memcache
-//                 time taken(ms): 67375 . handled 224 apps, apksCount:245 averageTime(ms):300.78125 per app, 275.0 per APK
-//time taken(ms): 65055 . handled 224 apps, apksCount:245 averageTime(ms):290.4241 per app, 265.5306 per APK
+//
+//
 //            com.lb.apkparserdemo.testing.XapkTestHandlerFramework4(context).runTest(xapkFile, deviceConfig, appIconSize, useMemCache)
-                //   1996  without memcache, 1702     with memcache
-//                time taken(ms): 67274 . handled 224 apps, apksCount:245 averageTime(ms):300.33035 per app, 274.58777 per APK
-//time taken(ms): 63762 . handled 224 apps, apksCount:245 averageTime(ms):284.6518 per app, 260.25305 per APK
+//
+//
 //            com.lb.apkparserdemo.testing.XapkTestHandlerFramework5(context).runTest(xapkFile, deviceConfig, appIconSize, useMemCache)
-                //1750 time taken(ms): 62696 . handled 224 apps, apksCount:245 averageTime(ms):279.89285 per app, 255.90204 per APK
+//
 //            com.lb.apkparserdemo.testing.XapkTestHandlerFramework6(context).runTest(xapkFile, deviceConfig, appIconSize)
-                // 1985    without memcache,   1748   with memcache
-//                time taken(ms): 60809 . handled 224 apps, apksCount:245 averageTime(ms):271.46875 per app, 248.2 per APK
-//time taken(ms): 55884 . handled 224 apps, apksCount:245 averageTime(ms):249.48215 per app, 228.09796 per APK
-//                XapkTestHandlerFramework7(context).runTest(xapkFile, deviceConfig, appIconSize, useMemCache)
+//
+//
+//                com.lb.apkparserdemo.testing.XapkTestHandlerFramework7(context).runTest(xapkFile, deviceConfig, appIconSize, useMemCache)
             } catch (e: Throwable) {
                 Log.e("AppLog", "testXapkParsing error for ${packageInfo.packageName}", e)
                 null
@@ -215,7 +206,7 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
             apksHandledSoFar += 1 + (packageInfo.applicationInfo?.splitPublicSourceDirs?.size ?: 0)
             apkFilesHandledLiveData.postValue(apksHandledSoFar)
             appsHandledLiveData.inc()
-            break
+//            break
         }
         xapkFile.delete()
         Log.d("AppLog", "time taken(ms): $totalParsingTime . handled ${installedPackages.size} apps, apksCount:$apksHandledSoFar averageTime(ms):${totalParsingTime.toFloat() / installedPackages.size.toFloat()} per app, ${totalParsingTime.toFloat() / apksHandledSoFar.toFloat()} per APK")
@@ -334,6 +325,7 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
                 val apkFile = File(apkPath)
                 val entry = ZipEntry(apkFile.name)
                 entry.method = ZipEntry.STORED
+//                entry.method = ZipEntry.DEFLATED
                 entry.size = apkFile.length()
                 entry.compressedSize = apkFile.length()
                 entry.crc = calculateCrc(apkFile)
