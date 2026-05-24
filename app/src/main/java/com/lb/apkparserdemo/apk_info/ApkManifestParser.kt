@@ -4,7 +4,6 @@ import android.content.Context
 import android.net.Uri
 import android.os.Build
 import androidx.annotation.WorkerThread
-import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream
 import org.xmlpull.v1.XmlPullParser
 import java.io.ByteArrayOutputStream
 import java.io.File
@@ -157,14 +156,12 @@ object ApkManifestParser {
     }
 
     fun findAndParseManifest(apkFileInputStream: InputStream, requestFetchingMinSdkVersion: Boolean = false): SimpleApkInfo? {
-        // Switching to Apache ZipArchiveInputStream for speed
-        val zipIn = ZipArchiveInputStream(apkFileInputStream)
-        var entry = zipIn.nextEntry
-        while (entry != null) {
+        val zipIn = java.util.zip.ZipInputStream(apkFileInputStream)
+        while (true) {
+            val entry = zipIn.nextEntry ?: break
             if (entry.name == "AndroidManifest.xml") {
                 return parseManifestInputStream(zipIn, entry.size, requestFetchingMinSdkVersion)
             }
-            entry = zipIn.nextEntry
         }
         return null
     }

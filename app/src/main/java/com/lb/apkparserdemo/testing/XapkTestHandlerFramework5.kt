@@ -33,77 +33,153 @@ class XapkTestHandlerFramework5(private val context: Context) {
         var result: ApkParsingResult? = null
 
         try {
-            ZipFile.builder().setFile(xapkFileOnDisk).get().use { xapk ->
-                var baseApkName: String? = null
-                var packageName: String? = null
-                var versionCode: Long? = null
-                val splitApkNamesList = ArrayList<Pair<String, ApkManifestParser.SimpleApkInfo>>()
+            val xapk = try {
+                ZipFile.builder().setFile(xapkFileOnDisk).get()
+            } catch (e: Throwable) {
+                null
+            }
 
-                val entries = xapk.entries
-                while (entries.hasMoreElements()) {
-                    val entry = entries.nextElement()
-                    if (entry.isDirectory || !entry.name.endsWith(".apk", ignoreCase = true) || entry.name.contains("/")) {
-                        continue
-                    }
+            if (xapk != null) {
+                xapk.use { xapkFile ->
+                    var baseApkName: String? = null
+                    var packageName: String? = null
+                    var versionCode: Long? = null
+                    val splitApkNamesList = ArrayList<Pair<String, ApkManifestParser.SimpleApkInfo>>()
 
-                    val apkInfo = xapk.getInputStream(entry).use {
-                        ApkManifestParser.findAndParseManifest(it)
-                    } ?: continue
-                    if (!apkInfo.isSplit) {
-                        baseApkName = entry.name
-                        packageName = apkInfo.packageName
-                        versionCode = apkInfo.versionCode
-                        splitApkNamesList.removeAll {
-                            it.second.packageName != packageName || it.second.versionCode != versionCode
-                        }
-                    } else {
-                        if ((packageName != null && apkInfo.packageName != packageName) || (versionCode != null && apkInfo.versionCode != versionCode))
+                    val entries = xapkFile.entries
+                    while (entries.hasMoreElements()) {
+                        val entry = entries.nextElement()
+                        if (entry.isDirectory || !entry.name.endsWith(".apk", ignoreCase = true) || entry.name.contains("/")) {
                             continue
-                        splitApkNamesList.add(entry.name to apkInfo)
+                        }
+
+                        val apkInfo = xapkFile.getInputStream(entry).use {
+                            ApkManifestParser.findAndParseManifest(it)
+                        } ?: continue
+                        if (!apkInfo.isSplit) {
+                            baseApkName = entry.name
+                            packageName = apkInfo.packageName
+                            versionCode = apkInfo.versionCode
+                            splitApkNamesList.removeAll {
+                                it.second.packageName != packageName || it.second.versionCode != versionCode
+                            }
+                        } else {
+                            if ((packageName != null && apkInfo.packageName != packageName) || (versionCode != null && apkInfo.versionCode != versionCode))
+                                continue
+                            splitApkNamesList.add(entry.name to apkInfo)
+                        }
+                    }
+
+                    if (baseApkName == null || packageName == null || versionCode == null) {
+                        Log.e("AppLog", "XAPK Test Framework 5: Failed to find base APK")
+                        return null
+                    }
+
+                    val matchingApkNames = splitApkNamesList
+                            .filter { it.second.packageName == packageName && it.second.versionCode == versionCode }
+                            .map { it.first }
+                            .toMutableList()
+                    matchingApkNames.add(baseApkName!!)
+
+                    val createFilterForName = { entryName: String ->
+                        val entry = xapkFile.getEntry(entryName)
+                        createFilter(xapkFileOnDisk, xapkFile, entry, useMemoryCache)
+                    }
+
+                    val filters = matchingApkNames.map { createFilterForName(it) }
+                    try {
+                        val baseFilter = filters.last() // baseApkName was added last
+                        val extraFilters = filters.dropLast(1).map { NonClosingZipFilter(it) }
+                        val consolidatedInfo = ApkInfo.internalGetApkInfo(deviceConfig, NonClosingZipFilter(baseFilter), extraFilters, requestParseResources = true)
+
+                        if (consolidatedInfo != null) {
+                            val apkIcon = ApkIconFetcher.getApkIcon(context, deviceConfig, {
+                                MultiZipFilter(matchingApkNames.indices.map { i ->
+                                    val filter = filters[i]
+                                    if (filter.isSeekable) NonClosingZipFilter(filter)
+                                    else createFilterForName(matchingApkNames[i])
+                                })
+                            }, consolidatedInfo, appIconSize)
+                            val apkMeta = consolidatedInfo.apkMetaTranslator.apkMeta
+                            result = ApkParsingResult(
+                                    packageName = apkMeta.packageName,
+                                    versionCode = apkMeta.versionCode,
+                                    versionName = apkMeta.versionName,
+                                    label = apkMeta.label,
+                                    icon = apkIcon
+                            )
+                        }
+                    } finally {
+                        filters.forEach { it.close() }
                     }
                 }
-
-                if (baseApkName == null || packageName == null || versionCode == null) {
-                    Log.e("AppLog", "XAPK Test Framework 5: Failed to find base APK")
-                    return null
-                }
-
-                val matchingApkNames = splitApkNamesList
-                        .filter { it.second.packageName == packageName && it.second.versionCode == versionCode }
-                        .map { it.first }
-                        .toMutableList()
-                matchingApkNames.add(baseApkName!!)
-
-                val createFilterForName = { entryName: String ->
-                    val entry = xapk.getEntry(entryName)
-                    createFilter(xapkFileOnDisk, xapk, entry, useMemoryCache)
-                }
-
-                val filters = matchingApkNames.map { createFilterForName(it) }
-                try {
-                    val baseFilter = filters.last() // baseApkName was added last
-                    val extraFilters = filters.dropLast(1).map { NonClosingZipFilter(it) }
-                    val consolidatedInfo = ApkInfo.internalGetApkInfo(deviceConfig, NonClosingZipFilter(baseFilter), extraFilters, requestParseResources = true)
-
-                    if (consolidatedInfo != null) {
-                        val apkIcon = ApkIconFetcher.getApkIcon(context, deviceConfig, {
-                            MultiZipFilter(matchingApkNames.indices.map { i ->
-                                val filter = filters[i]
-                                if (filter.isSeekable) NonClosingZipFilter(filter)
-                                else createFilterForName(matchingApkNames[i])
-                            })
-                        }, consolidatedInfo, appIconSize)
-                        val apkMeta = consolidatedInfo.apkMetaTranslator.apkMeta
-                        result = ApkParsingResult(
-                                packageName = apkMeta.packageName,
-                                versionCode = apkMeta.versionCode,
-                                versionName = apkMeta.versionName,
-                                label = apkMeta.label,
-                                icon = apkIcon
-                        )
+            } else {
+                Log.w("AppLog", "XAPK Test Framework 5: Fast path failed, using slow path")
+                java.io.FileInputStream(xapkFileOnDisk).use { fis ->
+                    ZipInputStream(fis).use { zis ->
+                        var baseApkName: String? = null
+                        var packageName: String? = null
+                        var versionCode: Long? = null
+                        val splitApkNamesList = ArrayList<Pair<String, ApkManifestParser.SimpleApkInfo>>()
+                        while (true) {
+                            val entry = zis.nextEntry ?: break
+                            if (entry.isDirectory || !entry.name.endsWith(".apk", ignoreCase = true) || entry.name.contains("/")) {
+                                continue
+                            }
+                            val apkInfo = ApkManifestParser.findAndParseManifest(zis) ?: continue
+                            if (!apkInfo.isSplit) {
+                                baseApkName = entry.name
+                                packageName = apkInfo.packageName
+                                versionCode = apkInfo.versionCode
+                                splitApkNamesList.removeAll {
+                                    it.second.packageName != packageName || it.second.versionCode != versionCode
+                                }
+                            } else {
+                                if ((packageName != null && apkInfo.packageName != packageName) || (versionCode != null && apkInfo.versionCode != versionCode))
+                                    continue
+                                splitApkNamesList.add(Pair(entry.name, apkInfo))
+                            }
+                        }
+                        if (baseApkName == null || packageName == null) {
+                            Log.e("AppLog", "XAPK Test Framework 5 (Slow): Failed to find base APK")
+                            return null
+                        }
+                        val matchingApkNames = ArrayList<String>(splitApkNamesList.size + 1)
+                        splitApkNamesList.forEach { matchingApkNames.add(it.first) }
+                        matchingApkNames.add(baseApkName)
+                        val createSlowFilter = { name: String ->
+                            val stream = java.io.FileInputStream(xapkFileOnDisk).let { ins ->
+                                val outerZis = ZipInputStream(ins)
+                                var e = outerZis.nextEntry
+                                while (e != null && e.name != name) {
+                                    e = outerZis.nextEntry
+                                }
+                                ZipInputStream(outerZis)
+                            }
+                            ZipInputStreamFilter(stream)
+                        }
+                        val filters = matchingApkNames.map { createSlowFilter(it) }
+                        try {
+                            val baseFilter = filters.last()
+                            val extraFilters = filters.dropLast(1).map { NonClosingZipFilter(it) }
+                            val consolidatedInfo = ApkInfo.internalGetApkInfo(deviceConfig, NonClosingZipFilter(baseFilter), extraFilters, requestParseResources = true)
+                            if (consolidatedInfo != null) {
+                                val apkIcon = ApkIconFetcher.getApkIcon(context, deviceConfig, {
+                                    MultiZipFilter(matchingApkNames.map { createSlowFilter(it) })
+                                }, consolidatedInfo, appIconSize)
+                                val apkMeta = consolidatedInfo.apkMetaTranslator.apkMeta
+                                result = ApkParsingResult(
+                                        packageName = apkMeta.packageName,
+                                        versionCode = apkMeta.versionCode,
+                                        versionName = apkMeta.versionName,
+                                        label = apkMeta.label,
+                                        icon = apkIcon
+                                )
+                            }
+                        } finally {
+                            filters.forEach { it.close() }
+                        }
                     }
-                } finally {
-                    filters.forEach { it.close() }
                 }
             }
         } catch (e: Exception) {
@@ -116,8 +192,14 @@ class XapkTestHandlerFramework5(private val context: Context) {
         if (useMemoryCache) {
             apkMemoryCache[entry.name]?.let { cachedBytes ->
                 val channelInMemory = SeekableInMemoryByteChannel(cachedBytes)
-                val apkFile = ZipFile.builder().setSeekableByteChannel(channelInMemory).get()
-                return ApacheZipFileFilter(context, apkFile, underlyingChannel = channelInMemory)
+                val apkFile = try {
+                    ZipFile.builder().setSeekableByteChannel(channelInMemory).get()
+                } catch (e: Throwable) {
+                    null
+                }
+                if (apkFile != null) {
+                    return ApacheZipFileFilter(context, apkFile, underlyingChannel = channelInMemory)
+                }
             }
             val size = entry.size
             if (size > 0 && size < 10 * 1024 * 1024 && MemoryUtils.isEnoughMemoryForApkParsing(size)) {
@@ -126,9 +208,15 @@ class XapkTestHandlerFramework5(private val context: Context) {
                     xapk.getInputStream(entry).use { it.readBytesIntoByteArray(bytes) }
                     apkMemoryCache[entry.name] = bytes
                     val channelInMemory = SeekableInMemoryByteChannel(bytes)
-                    val apkFile = ZipFile.builder().setSeekableByteChannel(channelInMemory).get()
-                    return ApacheZipFileFilter(context, apkFile, underlyingChannel = channelInMemory)
-                } catch (_: Throwable) {
+                    val apkFile = try {
+                        ZipFile.builder().setSeekableByteChannel(channelInMemory).get()
+                    } catch (e: Throwable) {
+                        null
+                    }
+                    if (apkFile != null) {
+                        return ApacheZipFileFilter(context, apkFile, underlyingChannel = channelInMemory)
+                    }
+                } catch (e: Throwable) {
                 }
             }
         }
@@ -136,9 +224,15 @@ class XapkTestHandlerFramework5(private val context: Context) {
         if (entry.method == ZipArchiveEntry.STORED) {
             try {
                 val channel = FileSeekableByteChannel(xapkFileOnDisk, entry.dataOffset, entry.size)
-                val innerApkFile = ZipFile.builder().setSeekableByteChannel(channel).get()
-                return ApacheZipFileFilter(context, innerApkFile, underlyingChannel = channel)
-            } catch (_: Exception) {
+                val innerApkFile = try {
+                    ZipFile.builder().setSeekableByteChannel(channel).get()
+                } catch (e: Throwable) {
+                    null
+                }
+                if (innerApkFile != null) {
+                    return ApacheZipFileFilter(context, innerApkFile, underlyingChannel = channel)
+                }
+            } catch (e: Throwable) {
             }
         }
 

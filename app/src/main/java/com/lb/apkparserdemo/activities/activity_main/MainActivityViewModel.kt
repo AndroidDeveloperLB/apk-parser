@@ -143,12 +143,12 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
                 }
         val installedPackages = packageManager.getInstalledPackagesCompat(PackageManager.GET_META_DATA)
 //                .filter { appsToFocusOn.isEmpty() || appsToFocusOn.contains(it.packageName) }
-                .filter {
+//                .filter {
 //                    if (!it.applicationInfo!!.isSystemApp())
 //                        return@filter false
-                    val size = it.applicationInfo?.splitPublicSourceDirs?.size ?: 0
-                    size > 0
-                }
+//                    val size = it.applicationInfo?.splitPublicSourceDirs?.size ?: 0
+//                    size > 0
+//                }
 //                .subList(0, 3)
         val useMemCache: Boolean = false
 //        val xapkFile = File(context.cacheDir, "test.xapk")
@@ -156,7 +156,7 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
         var totalParsingTime = 0L
         var apksHandledSoFar = 0
         Log.d("AppLog", "testing on ${installedPackages.size} apps")
-        val useUncompressedZipFiles: Boolean = false
+        val useUncompressedZipFiles: Boolean = true
         for ((index, packageInfo) in installedPackages.withIndex()) {
             val xapkFile = File(context.cacheDir, "${packageInfo.packageName}.xapk")
 //            if(packageInfo.packageName =="com.google.android.googlequicksearchbox")
@@ -177,7 +177,7 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
 
 //
 //                XapkTestHandler2(context).runTest(xapkFile, deviceConfig, appIconSize)
-
+//
 //                com.lb.apkparserdemo.testing.XapkTestHandler3(context).runTest(xapkFile, deviceConfig, appIconSize)
 
 //                com.lb.apkparserdemo.testing.XapkTestHandler4(context).runTest(xapkFile, deviceConfig, appIconSize, useMemCache)
