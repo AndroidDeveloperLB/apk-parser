@@ -1,6 +1,7 @@
 package com.lb.apkparserdemo.testing
 
 import android.content.Context
+import android.os.Build
 import android.util.Log
 import com.lb.apkparserdemo.apk_info.AbstractZipFilter
 import com.lb.apkparserdemo.apk_info.ApacheZipFileFilter
@@ -12,6 +13,7 @@ import com.lb.apkparserdemo.apk_info.MultiZipFilter
 import com.lb.apkparserdemo.apk_info.NonClosingZipFilter
 import com.lb.apkparserdemo.apk_info.ZipInputStreamFilter
 import com.lb.apkparserdemo.apk_info.zip.FileSeekableByteChannel
+import com.lb.common_utils.closeSilently
 import net.dongliu.apk.parser.bean.DeviceConfig
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry
 import org.apache.commons.compress.archivers.zip.ZipFile
@@ -24,32 +26,30 @@ import java.util.zip.ZipInputStream
  */
 class XapkTestHandlerFramework3(private val context: Context) {
 
-    fun runTest(xapkFileOnDisk: File, deviceConfig: DeviceConfig, appIconSize: Int): ApkParsingResult? {
+    fun runTest(xapkFileOnDisk: File, deviceConfig: DeviceConfig, appIconSize: Int, preferApacheApiWhenPossible: Boolean = true): ApkParsingResult? {
         Log.d("AppLog", "XAPK Test Framework 3: Started")
         var result: ApkParsingResult? = null
 
+        var xapkFile: ZipFile? = null
         try {
-            var packageName: String? = null
-            var versionCode: Long? = null
-            val splitApkEntriesList = ArrayList<Pair<ZipArchiveEntry, ApkManifestParser.SimpleApkInfo>>()
-            var baseApkEntry: ZipArchiveEntry? = null
+            val useApacheApi = Build.VERSION.SDK_INT >= 26 && preferApacheApiWhenPossible
+            if (useApacheApi) {
+                xapkFile = ZipFile.builder().setFile(xapkFileOnDisk).get()
 
-            val xapk = try {
-                ZipFile.builder().setFile(xapkFileOnDisk).get()
-            } catch (e: Throwable) {
-                null
-            }
+                var packageName: String? = null
+                var versionCode: Long? = null
+                val splitApkEntriesList = ArrayList<Pair<ZipArchiveEntry, ApkManifestParser.SimpleApkInfo>>()
+                var baseApkEntry: ZipArchiveEntry? = null
 
-            if (xapk != null) {
-                xapk.use { xapkFile ->
-                    val entries = xapkFile.entries
+                xapkFile.use { xf ->
+                    val entries = xf.entries
                     while (entries.hasMoreElements()) {
                         val entry = entries.nextElement()
                         if (entry.isDirectory || !entry.name.endsWith(".apk", ignoreCase = true) || entry.name.contains("/")) {
                             continue
                         }
-                        val apkInfo = xapkFile.getInputStream(entry).use {
-                            ApkManifestParser.findAndParseManifest(it)
+                        val apkInfo = xf.getInputStream(entry).use {
+                            ApkManifestParser.findAndParseManifest(it, preferApacheApiWhenPossible = true)
                         } ?: continue
                         if (!apkInfo.isSplit) {
                             baseApkEntry = entry
@@ -74,13 +74,13 @@ class XapkTestHandlerFramework3(private val context: Context) {
                             .filter { it.second.packageName == packageName && it.second.versionCode == versionCode }
                             .map { it.first }
 
-                    val baseApkInfo = getApkInfo(xapkFileOnDisk, xapkFile, baseApkEntry!!, deviceConfig)
-                    val splitApkInfoList = matchingSplitEntries.mapNotNull { getApkInfo(xapkFileOnDisk, xapkFile, it, deviceConfig) }
+                    val baseApkInfo = getApkInfo(xapkFileOnDisk, xf, baseApkEntry!!, deviceConfig, preferApacheApiWhenPossible = true)
+                    val splitApkInfoList = matchingSplitEntries.mapNotNull { getApkInfo(xapkFileOnDisk, xf, it, deviceConfig, preferApacheApiWhenPossible = true) }
 
                     val matchingApkEntries = matchingSplitEntries.toMutableList()
                     matchingApkEntries.add(baseApkEntry!!)
 
-                    val filters = matchingApkEntries.map { createZipFilter(xapkFileOnDisk, xapkFile, it) }
+                    val filters = matchingApkEntries.map { createZipFilter(xapkFileOnDisk, xf, it, preferApacheApiWhenPossible = true) }
                     try {
                         val baseFilter = filters.last()
                         val consolidatedInfo = ApkInfo.getConsolidatedApkInfo(deviceConfig, baseApkInfo!!,
@@ -90,7 +90,7 @@ class XapkTestHandlerFramework3(private val context: Context) {
                                 MultiZipFilter(matchingApkEntries.indices.map { i ->
                                     val filter = filters[i]
                                     if (filter.isSeekable) NonClosingZipFilter(filter)
-                                    else createZipFilter(xapkFileOnDisk, xapkFile, matchingApkEntries[i])
+                                    else createZipFilter(xapkFileOnDisk, xf, matchingApkEntries[i], preferApacheApiWhenPossible = true)
                                 })
                             }, consolidatedInfo, appIconSize)
                             val apkMeta = consolidatedInfo.apkMetaTranslator.apkMeta
@@ -119,7 +119,7 @@ class XapkTestHandlerFramework3(private val context: Context) {
                             if (entry.isDirectory || !entry.name.endsWith(".apk", ignoreCase = true) || entry.name.contains("/")) {
                                 continue
                             }
-                            val apkInfo = ApkManifestParser.findAndParseManifest(zis) ?: continue
+                            val apkInfo = ApkManifestParser.findAndParseManifest(zis, preferApacheApiWhenPossible = false) ?: continue
                             if (!apkInfo.isSplit) {
                                 baseApkName = entry.name
                                 packageNameSlow = apkInfo.packageName
@@ -176,13 +176,15 @@ class XapkTestHandlerFramework3(private val context: Context) {
             }
         } catch (e: Exception) {
             Log.e("AppLog", "XAPK Test Framework 3: Error", e)
+        } finally {
+            xapkFile.closeSilently()
         }
         return result
     }
 
-    private fun getApkInfo(xapkFileOnDisk: File, xapk: ZipFile, entry: ZipArchiveEntry, deviceConfig: DeviceConfig): ApkInfo? {
+    private fun getApkInfo(xapkFileOnDisk: File, xapk: ZipFile, entry: ZipArchiveEntry, deviceConfig: DeviceConfig, preferApacheApiWhenPossible: Boolean): ApkInfo? {
         return try {
-            val filter = createZipFilter(xapkFileOnDisk, xapk, entry)
+            val filter = createZipFilter(xapkFileOnDisk, xapk, entry, preferApacheApiWhenPossible)
             filter.use {
                 ApkInfo.internalGetApkInfo(deviceConfig, filter, requestParseResources = true)
             }
@@ -191,18 +193,13 @@ class XapkTestHandlerFramework3(private val context: Context) {
         }
     }
 
-    private fun createZipFilter(xapkFileOnDisk: File, xapk: ZipFile, entry: ZipArchiveEntry): AbstractZipFilter {
-        if (entry.method == ZipArchiveEntry.STORED) {
+    private fun createZipFilter(xapkFileOnDisk: File, xapk: ZipFile, entry: ZipArchiveEntry, preferApacheApiWhenPossible: Boolean): AbstractZipFilter {
+        val useApacheApi = Build.VERSION.SDK_INT >= 26 && preferApacheApiWhenPossible
+        if (useApacheApi && entry.method == ZipArchiveEntry.STORED) {
             try {
                 val channel = FileSeekableByteChannel(xapkFileOnDisk, entry.dataOffset, entry.size)
-                val innerApkFile = try {
-                    ZipFile.builder().setSeekableByteChannel(channel).get()
-                } catch (e: Throwable) {
-                    null
-                }
-                if (innerApkFile != null) {
-                    return ApacheZipFileFilter(context, innerApkFile, underlyingChannel = channel)
-                }
+                val innerApkFile = ZipFile.builder().setSeekableByteChannel(channel).get()
+                return ApacheZipFileFilter(context, innerApkFile, underlyingChannel = channel)
             } catch (_: Exception) {
             }
         }

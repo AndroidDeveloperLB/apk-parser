@@ -1,6 +1,7 @@
 package com.lb.apkparserdemo.testing
 
 import android.content.Context
+import android.os.Build
 import android.graphics.Bitmap
 import android.util.Log
 import com.lb.apkparserdemo.apk_info.AbstractZipFilter
@@ -30,19 +31,16 @@ import java.util.zip.ZipInputStream
 class XapkTestHandlerFramework4(private val context: Context) {
     private val apkMemoryCache = HashMap<String, ByteArray>()
 
-    fun runTest(xapkFileOnDisk: File, deviceConfig: DeviceConfig, appIconSize: Int, useMemoryCache: Boolean): ApkParsingResult? {
+    fun runTest(xapkFileOnDisk: File, deviceConfig: DeviceConfig, appIconSize: Int, useMemoryCache: Boolean, preferApacheApiWhenPossible: Boolean = true): ApkParsingResult? {
         Log.d("AppLog", "XAPK Test Framework 4: Started. useMemoryCache:$useMemoryCache")
         var result: ApkParsingResult? = null
 
         var xapkFile: ZipFile? = null
         try {
-            xapkFile = try {
-                ZipFile.builder().setFile(xapkFileOnDisk).get()
-            } catch (e: Throwable) {
-                null
-            }
+            val useApacheApi = Build.VERSION.SDK_INT >= 26 && preferApacheApiWhenPossible
+            if (useApacheApi) {
+                xapkFile = ZipFile.builder().setFile(xapkFileOnDisk).get()
 
-            if (xapkFile != null) {
                 var baseApkEntry: ZipArchiveEntry? = null
                 var packageName: String? = null
                 var versionCode: Long? = null
@@ -54,7 +52,7 @@ class XapkTestHandlerFramework4(private val context: Context) {
                         continue
                     }
                     val apkInfo = xapkFile.getInputStream(entry).use {
-                        ApkManifestParser.findAndParseManifest(it)
+                        ApkManifestParser.findAndParseManifest(it, preferApacheApiWhenPossible = true)
                     } ?: continue
                     if (!apkInfo.isSplit) {
                         baseApkEntry = entry
@@ -78,13 +76,13 @@ class XapkTestHandlerFramework4(private val context: Context) {
                         .filter { it.second.packageName == packageName && it.second.versionCode == versionCode }
                         .map { it.first }
 
-                val baseApkInfo = getApkInfo(context, xapkFileOnDisk, xapkFile, baseApkEntry, deviceConfig, useMemoryCache)
-                val splitApkInfoList = matchingSplitEntries.mapNotNull { getApkInfo(context, xapkFileOnDisk, xapkFile, it, deviceConfig, useMemoryCache) }
+                val baseApkInfo = getApkInfo(context, xapkFileOnDisk, xapkFile, baseApkEntry, deviceConfig, useMemoryCache, preferApacheApiWhenPossible = true)
+                val splitApkInfoList = matchingSplitEntries.mapNotNull { getApkInfo(context, xapkFileOnDisk, xapkFile, it, deviceConfig, useMemoryCache, preferApacheApiWhenPossible = true) }
 
                 val matchingApkEntries = matchingSplitEntries.toMutableList()
                 matchingApkEntries.add(baseApkEntry)
 
-                val filters = matchingApkEntries.map { createZipFilter(context, xapkFileOnDisk, xapkFile, it, useMemoryCache) }
+                val filters = matchingApkEntries.map { createZipFilter(context, xapkFileOnDisk, xapkFile, it, useMemoryCache, preferApacheApiWhenPossible = true) }
                 var baseFilter: AbstractZipFilter? = null
                 try {
                     baseFilter = filters.last()
@@ -96,7 +94,7 @@ class XapkTestHandlerFramework4(private val context: Context) {
                             MultiZipFilter(matchingApkEntries.indices.map { i ->
                                 val filter = filters[i]
                                 if (filter.isSeekable) NonClosingZipFilter(filter)
-                                else createZipFilter(context, xapkFileOnDisk, xapkFile, matchingApkEntries[i], useMemoryCache)
+                                else createZipFilter(context, xapkFileOnDisk, xapkFile, matchingApkEntries[i], useMemoryCache, preferApacheApiWhenPossible = true)
                             })
                         }, consolidatedInfo, appIconSize)
                         val apkMeta = consolidatedInfo.apkMetaTranslator.apkMeta
@@ -124,7 +122,7 @@ class XapkTestHandlerFramework4(private val context: Context) {
                             if (entry.isDirectory || !entry.name.endsWith(".apk", ignoreCase = true) || entry.name.contains("/")) {
                                 continue
                             }
-                            val apkInfo = ApkManifestParser.findAndParseManifest(zis) ?: continue
+                            val apkInfo = ApkManifestParser.findAndParseManifest(zis, preferApacheApiWhenPossible = false) ?: continue
                             if (!apkInfo.isSplit) {
                                 baseApkName = entry.name
                                 packageName = apkInfo.packageName
@@ -187,9 +185,9 @@ class XapkTestHandlerFramework4(private val context: Context) {
         return result
     }
 
-    private fun getApkInfo(context: Context, xapkFileOnDisk: File, xapkFile: ZipFile, entry: ZipArchiveEntry, deviceConfig: DeviceConfig, useMemoryCache: Boolean): ApkInfo? {
+    private fun getApkInfo(context: Context, xapkFileOnDisk: File, xapkFile: ZipFile, entry: ZipArchiveEntry, deviceConfig: DeviceConfig, useMemoryCache: Boolean, preferApacheApiWhenPossible: Boolean): ApkInfo? {
         return try {
-            val filter = createZipFilter(context, xapkFileOnDisk, xapkFile, entry, useMemoryCache)
+            val filter = createZipFilter(context, xapkFileOnDisk, xapkFile, entry, useMemoryCache, preferApacheApiWhenPossible)
             filter.use {
                 ApkInfo.internalGetApkInfo(deviceConfig, filter, requestParseResources = true)
             }
@@ -198,8 +196,9 @@ class XapkTestHandlerFramework4(private val context: Context) {
         }
     }
 
-    private fun createZipFilter(context: Context, xapkFileOnDisk: File, xapkFile: ZipFile, entry: ZipArchiveEntry, useMemoryCache: Boolean): AbstractZipFilter {
-        if (useMemoryCache) {
+    private fun createZipFilter(context: Context, xapkFileOnDisk: File, xapkFile: ZipFile, entry: ZipArchiveEntry, useMemoryCache: Boolean, preferApacheApiWhenPossible: Boolean): AbstractZipFilter {
+        val useApacheApi = Build.VERSION.SDK_INT >= 26 && preferApacheApiWhenPossible
+        if (useApacheApi && useMemoryCache) {
             apkMemoryCache[entry.name]?.let { cachedBytes ->
                 val channel = SeekableInMemoryByteChannel(cachedBytes)
                 val apkFile = try {
@@ -229,7 +228,7 @@ class XapkTestHandlerFramework4(private val context: Context) {
             }
         }
 
-        if (entry.method == ZipArchiveEntry.STORED) {
+        if (useApacheApi && entry.method == ZipArchiveEntry.STORED) {
             try {
                 val channel = FileSeekableByteChannel(xapkFileOnDisk, entry.dataOffset, entry.size)
                 val innerApkFile = try {

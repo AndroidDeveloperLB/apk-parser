@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.Uri
 import android.os.Build
 import androidx.annotation.WorkerThread
+import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream
 import org.xmlpull.v1.XmlPullParser
 import java.io.ByteArrayOutputStream
 import java.io.File
@@ -13,6 +14,8 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicReference
+import java.util.zip.ZipInputStream
+
 /**
  * Light-weight parser for extracting basic information from an APK's AndroidManifest.xml
  * without needing to parse the entire APK or its resource table.
@@ -155,19 +158,31 @@ object ApkManifestParser {
         }
     }
 
-    fun findAndParseManifest(apkFileInputStream: InputStream, requestFetchingMinSdkVersion: Boolean = false): SimpleApkInfo? {
-        val zipIn = java.util.zip.ZipInputStream(apkFileInputStream)
-        while (true) {
-            val entry = zipIn.nextEntry ?: break
-            if (entry.name == "AndroidManifest.xml") {
-                return parseManifestInputStream(zipIn, entry.size, requestFetchingMinSdkVersion)
+    fun findAndParseManifest(apkFileInputStream: InputStream, requestFetchingMinSdkVersion: Boolean = false, preferApacheApiWhenPossible: Boolean = false): SimpleApkInfo? {
+        val useApache = preferApacheApiWhenPossible && Build.VERSION.SDK_INT >= 26
+        if (useApache) {
+            val zipIn = ZipArchiveInputStream(apkFileInputStream)
+            var entry = zipIn.nextEntry
+            while (entry != null) {
+                if (entry.name == "AndroidManifest.xml") {
+                    return parseManifestInputStream(zipIn, entry.size, requestFetchingMinSdkVersion)
+                }
+                entry = zipIn.nextEntry
+            }
+        } else {
+            val zipIn = ZipInputStream(apkFileInputStream)
+            while (true) {
+                val entry = zipIn.nextEntry ?: break
+                if (entry.name == "AndroidManifest.xml") {
+                    return parseManifestInputStream(zipIn, entry.size, requestFetchingMinSdkVersion)
+                }
             }
         }
         return null
     }
 
     @WorkerThread
-    fun parseUri(context: Context, uri: Uri, requestFetchingMinSdkVersion: Boolean = false): SimpleApkInfo? {
+    fun parseUri(context: Context, uri: Uri, requestFetchingMinSdkVersion: Boolean = false, preferApacheApiWhenPossible: Boolean = false): SimpleApkInfo? {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.BAKLAVA) {
             val result = AtomicReference<SimpleApkInfo?>(null)
             val countDownLatch = CountDownLatch(1)
@@ -184,14 +199,14 @@ object ApkManifestParser {
         }
         return try {
             context.contentResolver.openInputStream(uri)
-                    ?.use { findAndParseManifest(it, requestFetchingMinSdkVersion) }
+                    ?.use { findAndParseManifest(it, requestFetchingMinSdkVersion, preferApacheApiWhenPossible) }
         } catch (e: Exception) {
             null
         }
     }
 
     @WorkerThread
-    fun parseFile(context: Context, file: File, requestFetchingMinSdkVersion: Boolean = false): SimpleApkInfo? {
+    fun parseFile(context: Context, file: File, requestFetchingMinSdkVersion: Boolean = false, preferApacheApiWhenPossible: Boolean = false): SimpleApkInfo? {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
             val result = AtomicReference<SimpleApkInfo?>(null)
             val countDownLatch = CountDownLatch(1)
@@ -204,7 +219,7 @@ object ApkManifestParser {
             return result.get()
         }
         return try {
-            FileInputStream(file).use { findAndParseManifest(it, requestFetchingMinSdkVersion) }
+            FileInputStream(file).use { findAndParseManifest(it, requestFetchingMinSdkVersion, preferApacheApiWhenPossible) }
         } catch (e: Exception) {
             null
         }
