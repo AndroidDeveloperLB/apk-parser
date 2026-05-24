@@ -173,50 +173,33 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
             val stepStartTime = System.currentTimeMillis()
             val result: ApkParsingResult? = try {
                 // XAPK test
-//time taken(ms): 17078 . handled 51 apps, apksCount:254 averageTime(ms):334.86273 per app, 67.23622 per APK
 //                com.lb.apkparserdemo.testing.XapkTestHandler(context).runTest(xapkFile, deviceConfig, appIconSize)
 
-//time taken(ms): 60213 . handled 414 apps, apksCount:849 averageTime(ms):145.44203 per app, 70.922264 per APK
 //
-                XapkTestHandler2(context).runTest(xapkFile, deviceConfig, appIconSize)
+//                XapkTestHandler2(context).runTest(xapkFile, deviceConfig, appIconSize)
 
-//time taken(ms): 61189 . handled 51 apps, apksCount:254 averageTime(ms):1199.7843 per app, 240.90158 per APK
 //                com.lb.apkparserdemo.testing.XapkTestHandler3(context).runTest(xapkFile, deviceConfig, appIconSize)
 
-//time taken(ms): 24201 . handled 51 apps, apksCount:254 averageTime(ms):474.52942 per app, 95.279526 per APK
 //                com.lb.apkparserdemo.testing.XapkTestHandler4(context).runTest(xapkFile, deviceConfig, appIconSize, useMemCache)
 
-//time taken(ms): 22009 . handled 51 apps, apksCount:254 averageTime(ms):431.549 per app, 86.649605 per APK
 //                        com.lb.apkparserdemo.testing.XapkTestHandler5(context).runTest(xapkFile, deviceConfig, appIconSize, useMemCache)
 
-//time taken(ms): 68289 . handled 414 apps, apksCount:849 averageTime(ms):164.94928 per app, 80.43463 per APK
-//time taken(ms): 63201 . handled 414 apps, apksCount:849 averageTime(ms):152.65942 per app, 74.441696 per APK
-//                com.lb.apkparserdemo.testing.XapkTestHandler6(context).runTest(xapkFile, deviceConfig, appIconSize)
+                com.lb.apkparserdemo.testing.XapkTestHandler6(context).runTest(xapkFile, deviceConfig, appIconSize)
 
-//time taken(ms): 59431 . handled 414 apps, apksCount:849 averageTime(ms):143.55315 per app, 70.001175 per APK
-//time taken(ms): 65016 . handled 414 apps, apksCount:849 averageTime(ms):157.04347 per app, 76.579506 per APK
 //            com.lb.apkparserdemo.testing.XapkTestHandler7(context).runTest(xapkFile, deviceConfig, appIconSize, useMemCache)
 
-//time taken(ms): 31259 . handled 51 apps, apksCount:254 averageTime(ms):612.9216 per app, 123.06693 per APK
 //            com.lb.apkparserdemo.testing.XapkTestHandlerFramework1(context).runTest(xapkFile, deviceConfig, appIconSize)
 
-//time taken(ms): 32183 . handled 51 apps, apksCount:254 averageTime(ms):631.03925 per app, 126.70473 per APK
 //            com.lb.apkparserdemo.testing.XapkTestHandlerFramework2(context).runTest(xapkFile, deviceConfig, appIconSize)
 
-//time taken(ms): 32019 . handled 51 apps, apksCount:254 averageTime(ms):627.82355 per app, 126.05905 per APK
 //            com.lb.apkparserdemo.testing.XapkTestHandlerFramework3(context).runTest(xapkFile, deviceConfig, appIconSize)
 
-//time taken(ms): 31615 . handled 51 apps, apksCount:254 averageTime(ms):619.902 per app, 124.468506 per APK
 //            com.lb.apkparserdemo.testing.XapkTestHandlerFramework4(context).runTest(xapkFile, deviceConfig, appIconSize, useMemCache)
 
-//time taken(ms): 65159 . handled 414 apps, apksCount:849 averageTime(ms):157.38889 per app, 76.74794 per APK
-//
 //            com.lb.apkparserdemo.testing.XapkTestHandlerFramework5(context).runTest(xapkFile, deviceConfig, appIconSize, useMemCache)
 
-//time taken(ms): 30357 . handled 51 apps, apksCount:254 averageTime(ms):595.2353 per app, 119.51575 per APK
 //            com.lb.apkparserdemo.testing.XapkTestHandlerFramework6(context).runTest(xapkFile, deviceConfig, appIconSize)
 
-//time taken(ms): 18245 . handled 51 apps, apksCount:254 averageTime(ms):357.7451 per app, 71.83071 per APK
 //                com.lb.apkparserdemo.testing.XapkTestHandlerFramework7(context).runTest(xapkFile, deviceConfig, appIconSize, useMemCache)
             } catch (e: Throwable) {
                 Log.e("AppLog", "testXapkParsing error for ${packageInfo.packageName}", e)
