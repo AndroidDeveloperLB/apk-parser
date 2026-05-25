@@ -4,6 +4,7 @@ import android.content.Context
 import android.os.Build
 import android.util.Log
 import com.lb.apkparserdemo.apk_info.AbstractZipFilter
+import com.lb.apkparserdemo.apk_info.ApacheZipArchiveInputStreamFilter
 import com.lb.apkparserdemo.apk_info.ApacheZipFileFilter
 import com.lb.apkparserdemo.apk_info.ApkIconFetcher
 import com.lb.apkparserdemo.apk_info.ApkInfo
@@ -15,6 +16,7 @@ import com.lb.apkparserdemo.apk_info.ZipInputStreamFilter
 import com.lb.apkparserdemo.apk_info.zip.FileSeekableByteChannel
 import net.dongliu.apk.parser.bean.DeviceConfig
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry
+import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream
 import org.apache.commons.compress.archivers.zip.ZipFile
 import java.io.File
 import java.util.zip.ZipInputStream
@@ -96,7 +98,7 @@ class XapkTestHandler2(private val context: Context) {
                     }
                 }
             } else {
-                Log.w("AppLog", "XAPK Test 2: Fast path failed, using slow path")
+//                Log.w("AppLog", "XAPK Test 2: Fast path failed, using slow path")
                 java.io.FileInputStream(xapkFileOnDisk).use { fis ->
                     ZipInputStream(fis).use { zis ->
                         var baseApkName: String? = null
@@ -172,13 +174,16 @@ class XapkTestHandler2(private val context: Context) {
 
     private fun createApacheZipFilter(context: Context, xapkFileOnDisk: File, xapk: ZipFile, entry: ZipArchiveEntry, preferApacheApiWhenPossible: Boolean): AbstractZipFilter {
         val useApacheApi = Build.VERSION.SDK_INT >= 26 && preferApacheApiWhenPossible
-        if (useApacheApi && entry.method == ZipArchiveEntry.STORED) {
-            try {
-                val channel = FileSeekableByteChannel(xapkFileOnDisk, entry.dataOffset, entry.size)
-                val apkFile = ZipFile.builder().setSeekableByteChannel(channel).get()
-                return ApacheZipFileFilter(context, apkFile, underlyingChannel = channel)
-            } catch (e: Throwable) {
+        if (useApacheApi) {
+            if (entry.method == ZipArchiveEntry.STORED) {
+                try {
+                    val channel = FileSeekableByteChannel(xapkFileOnDisk, entry.dataOffset, entry.size)
+                    val apkFile = ZipFile.builder().setSeekableByteChannel(channel).get()
+                    return ApacheZipFileFilter(context, apkFile, underlyingChannel = channel)
+                } catch (e: Throwable) {
+                }
             }
+            return ApacheZipArchiveInputStreamFilter(ZipArchiveInputStream(xapk.getInputStream(entry)))
         }
         return ZipInputStreamFilter(ZipInputStream(xapk.getInputStream(entry)))
     }

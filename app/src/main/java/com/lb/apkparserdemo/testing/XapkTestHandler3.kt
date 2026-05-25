@@ -4,6 +4,7 @@ import android.content.Context
 import android.os.Build
 import android.util.Log
 import com.lb.apkparserdemo.apk_info.AbstractZipFilter
+import com.lb.apkparserdemo.apk_info.ApacheZipArchiveInputStreamFilter
 import com.lb.apkparserdemo.apk_info.ApkIconFetcher
 import com.lb.apkparserdemo.apk_info.ApkInfo
 import com.lb.apkparserdemo.apk_info.ApkManifestParser
@@ -13,6 +14,7 @@ import com.lb.apkparserdemo.apk_info.NonClosingZipFilter
 import com.lb.apkparserdemo.apk_info.ZipInputStreamFilter
 import net.dongliu.apk.parser.bean.DeviceConfig
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry
+import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream
 import org.apache.commons.compress.archivers.zip.ZipFile
 import java.io.File
 import java.util.zip.ZipInputStream
@@ -90,7 +92,7 @@ class XapkTestHandler3(private val context: Context) {
                     }
                 }
             } else {
-                Log.w("AppLog", "XAPK Test 3: Fast path failed, using slow path")
+//                Log.w("AppLog", "XAPK Test 3: Fast path failed, using slow path")
                 java.io.FileInputStream(xapkFileOnDisk).use { fis ->
                     ZipInputStream(fis).use { zis ->
                         var baseApkNameSlow: String? = null
@@ -165,10 +167,11 @@ class XapkTestHandler3(private val context: Context) {
     }
 
     private fun createZipFilter(xapkFile: ZipFile, entry: ZipArchiveEntry, preferApacheApiWhenPossible: Boolean): AbstractZipFilter {
-        // XapkTestHandler3 originally uses ZipInputStream for entries.
-        // We'll maintain that but accept the parameter for signature consistency.
-        val inputStream = xapkFile.getInputStream(entry)
-        return ZipInputStreamFilter(ZipInputStream(inputStream))
+        val useApacheApi = Build.VERSION.SDK_INT >= 26 && preferApacheApiWhenPossible
+        if (useApacheApi) {
+            return ApacheZipArchiveInputStreamFilter(ZipArchiveInputStream(xapkFile.getInputStream(entry)))
+        }
+        return ZipInputStreamFilter(ZipInputStream(xapkFile.getInputStream(entry)))
     }
 
 }

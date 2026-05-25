@@ -4,6 +4,7 @@ import android.content.Context
 import android.os.Build
 import android.util.Log
 import com.lb.apkparserdemo.apk_info.AbstractZipFilter
+import com.lb.apkparserdemo.apk_info.ApacheZipArchiveInputStreamFilter
 import com.lb.apkparserdemo.apk_info.ApacheZipFileFilter
 import com.lb.apkparserdemo.apk_info.ApkIconFetcher
 import com.lb.apkparserdemo.apk_info.ApkInfo
@@ -17,6 +18,7 @@ import com.lb.apkparserdemo.apk_info.zip.FileSeekableByteChannel
 import com.lb.common_utils.readBytesIntoByteArray
 import net.dongliu.apk.parser.bean.DeviceConfig
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry
+import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream
 import org.apache.commons.compress.archivers.zip.ZipFile
 import org.apache.commons.compress.utils.SeekableInMemoryByteChannel
 import java.io.File
@@ -100,7 +102,7 @@ class XapkTestHandler5(private val context: Context) {
                     }
                 }
             } else {
-                Log.w("AppLog", "XAPK Test 5: Fast path failed, using slow path")
+//                Log.w("AppLog", "XAPK Test 5: Fast path failed, using slow path")
                 java.io.FileInputStream(xapkFileOnDisk).use { fis ->
                     ZipInputStream(fis).use { zis ->
                         var baseApkName: String? = null
@@ -176,25 +178,42 @@ class XapkTestHandler5(private val context: Context) {
 
     private fun createZipFilter(context: Context, xapkFileOnDisk: File, xapk: ZipFile, entry: ZipArchiveEntry, useMemoryCache: Boolean, preferApacheApiWhenPossible: Boolean): AbstractZipFilter {
         val useApacheApi = Build.VERSION.SDK_INT >= 26 && preferApacheApiWhenPossible
-        if (useApacheApi && useMemoryCache) {
-            apkMemoryCache[entry.name]?.let { cachedBytes ->
-                val channel = SeekableInMemoryByteChannel(cachedBytes)
-                val apkFile = try {
-                    ZipFile.builder().setSeekableByteChannel(channel).get()
-                } catch (e: Throwable) {
-                    null
+        if (useApacheApi) {
+            if (useMemoryCache) {
+                apkMemoryCache[entry.name]?.let { cachedBytes ->
+                    val channel = SeekableInMemoryByteChannel(cachedBytes)
+                    val apkFile = try {
+                        ZipFile.builder().setSeekableByteChannel(channel).get()
+                    } catch (e: Throwable) {
+                        null
+                    }
+                    if (apkFile != null) {
+                        return ApacheZipFileFilter(context, apkFile, underlyingChannel = channel)
+                    }
                 }
-                if (apkFile != null) {
-                    return ApacheZipFileFilter(context, apkFile, underlyingChannel = channel)
+                val size = entry.size
+                if (size > 0 && size < 10 * 1024 * 1024 && MemoryUtils.isEnoughMemoryForApkParsing(size)) {
+                    try {
+                        val bytes = ByteArray(size.toInt())
+                        xapk.getInputStream(entry).use { it.readBytesIntoByteArray(bytes) }
+                        apkMemoryCache[entry.name] = bytes
+                        val channel = SeekableInMemoryByteChannel(bytes)
+                        val apkFile = try {
+                            ZipFile.builder().setSeekableByteChannel(channel).get()
+                        } catch (e: Throwable) {
+                            null
+                        }
+                        if (apkFile != null) {
+                            return ApacheZipFileFilter(context, apkFile, underlyingChannel = channel)
+                        }
+                    } catch (e: Throwable) {
+                    }
                 }
             }
-            val size = entry.size
-            if (size > 0 && size < 10 * 1024 * 1024 && MemoryUtils.isEnoughMemoryForApkParsing(size)) {
+
+            if (entry.method == ZipArchiveEntry.STORED) {
                 try {
-                    val bytes = ByteArray(size.toInt())
-                    xapk.getInputStream(entry).use { it.readBytesIntoByteArray(bytes) }
-                    apkMemoryCache[entry.name] = bytes
-                    val channel = SeekableInMemoryByteChannel(bytes)
+                    val channel = FileSeekableByteChannel(xapkFileOnDisk, entry.dataOffset, entry.size)
                     val apkFile = try {
                         ZipFile.builder().setSeekableByteChannel(channel).get()
                     } catch (e: Throwable) {
@@ -206,21 +225,7 @@ class XapkTestHandler5(private val context: Context) {
                 } catch (e: Throwable) {
                 }
             }
-        }
-
-        if (useApacheApi && entry.method == ZipArchiveEntry.STORED) {
-            try {
-                val channel = FileSeekableByteChannel(xapkFileOnDisk, entry.dataOffset, entry.size)
-                val apkFile = try {
-                    ZipFile.builder().setSeekableByteChannel(channel).get()
-                } catch (e: Throwable) {
-                    null
-                }
-                if (apkFile != null) {
-                    return ApacheZipFileFilter(context, apkFile, underlyingChannel = channel)
-                }
-            } catch (e: Throwable) {
-            }
+            return ApacheZipArchiveInputStreamFilter(ZipArchiveInputStream(xapk.getInputStream(entry)))
         }
         return ZipInputStreamFilter(ZipInputStream(xapk.getInputStream(entry)))
     }
