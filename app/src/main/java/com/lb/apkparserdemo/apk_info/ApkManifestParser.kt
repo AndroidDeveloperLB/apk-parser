@@ -158,7 +158,7 @@ object ApkManifestParser {
         }
     }
 
-    fun findAndParseManifest(apkFileInputStream: InputStream, requestFetchingMinSdkVersion: Boolean = false, preferApacheApiWhenPossible: Boolean = false): SimpleApkInfo? {
+    fun findAndParseManifest(apkFileInputStream: InputStream, requestFetchingMinSdkVersion: Boolean = false, preferApacheApiWhenPossible: Boolean = true): SimpleApkInfo? {
         val useApache = preferApacheApiWhenPossible && Build.VERSION.SDK_INT >= 26
         if (useApache) {
             val zipIn = ZipArchiveInputStream(apkFileInputStream)
@@ -182,7 +182,7 @@ object ApkManifestParser {
     }
 
     @WorkerThread
-    fun parseUri(context: Context, uri: Uri, requestFetchingMinSdkVersion: Boolean = false, preferApacheApiWhenPossible: Boolean = false): SimpleApkInfo? {
+    fun parseUri(context: Context, uri: Uri, requestFetchingMinSdkVersion: Boolean = false, preferApacheApiWhenPossible: Boolean = true): SimpleApkInfo? {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.BAKLAVA) {
             val result = AtomicReference<SimpleApkInfo?>(null)
             val countDownLatch = CountDownLatch(1)
@@ -206,7 +206,7 @@ object ApkManifestParser {
     }
 
     @WorkerThread
-    fun parseFile(context: Context, file: File, requestFetchingMinSdkVersion: Boolean = false, preferApacheApiWhenPossible: Boolean = false): SimpleApkInfo? {
+    fun parseFile(context: Context, file: File, requestFetchingMinSdkVersion: Boolean = false, preferApacheApiWhenPossible: Boolean = true): SimpleApkInfo? {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
             val result = AtomicReference<SimpleApkInfo?>(null)
             val countDownLatch = CountDownLatch(1)
