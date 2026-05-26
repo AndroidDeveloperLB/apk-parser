@@ -3,6 +3,7 @@ package com.lb.apkparserdemo.apk_info
 import android.app.ActivityManager
 import android.content.Context
 import java.io.BufferedInputStream
+import java.io.FilterInputStream
 import java.io.InputStream
 
 /**
@@ -12,9 +13,6 @@ import java.io.InputStream
 object MemoryUtils {
     /**
      * Checks if there is enough Java heap memory to allocate the requested size.
-     *
-     * @param expectedByteCountNeeded Requested size to be allocated in bytes.
-     * @return true if there is enough memory to allocate the requested size while maintaining a safety buffer.
      */
     @JvmStatic
     fun isEnoughMemoryForApkParsing(expectedByteCountNeeded: Long): Boolean {
@@ -27,32 +25,20 @@ object MemoryUtils {
         return remainingMemoryAfterAllocation >= 20 * 1024 * 1024 && usedMemory + expectedByteCountNeeded <= maxMemory * 0.9
     }
 
-    /**
-     * Checks if there's enough physical RAM for a native allocation (Direct ByteBuffer).
-     * Since native memory isn't strictly limited by the Java heap size, we check the device's overall memory state.
-     */
     @JvmStatic
     fun isEnoughNativeMemory(context: Context, expectedByteCountNeeded: Long): Boolean {
         val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
         val memoryInfo = ActivityManager.MemoryInfo()
         activityManager.getMemoryInfo(memoryInfo)
-
-        // Ensure we are not exceeding the available physical RAM and not pushing the system into low memory.
         val availableRam = memoryInfo.availMem
         if (expectedByteCountNeeded > availableRam) return false
-
         val remainingAfter = availableRam - expectedByteCountNeeded
-        // Ensure we stay at least 50MB above the system's low-memory threshold for overall stability.
         return !memoryInfo.lowMemory && remainingAfter > (memoryInfo.threshold + 50 * 1024 * 1024)
     }
 
     /**
-     * Checks if a ZIP file (or stream) contains entries that will trigger the
-     * "only DEFLATED entries can have EXT descriptor" exception on Android API < 26.
-     *
-     * It scans the Local File Headers for entries where:
-     * 1. Method is STORED (0)
-     * 2. General Purpose Bit Flag has bit 3 set (0x08)
+     * Checks if a ZIP contains entries that trigger the "only DEFLATED entries can have EXT descriptor"
+     * exception on Android API < 26.
      */
     @JvmStatic
     fun hasProblematicZipEntries(inputStream: InputStream): Boolean {
@@ -63,19 +49,13 @@ object MemoryUtils {
                 bis.mark(4)
                 val sig = ByteArray(4)
                 if (bis.read(sig) != 4) break
-                if (sig[0] != 'P'.toByte() || sig[1] != 'K'.toByte()) break
-
-                if (sig[2] == 3.toByte() && sig[3] == 4.toByte()) { // Local File Header
+                if (sig[0] == 'P'.toByte() && sig[1] == 'K'.toByte() && sig[2] == 3.toByte() && sig[3] == 4.toByte()) {
                     if (bis.read(header, 4, 26) != 26) break
                     val flag = (header[6].toInt() and 0xFF) or ((header[7].toInt() and 0xFF) shl 8)
                     val method = (header[8].toInt() and 0xFF) or ((header[9].toInt() and 0xFF) shl 8)
-
                     if (method == 0 && (flag and 0x08) != 0) return true
-
-                    // To avoid complex scanning, we just check the first few headers.
-                    // Usually if one entry is problematic, others are too.
-                } else if (sig[2] == 1.toByte() && sig[3] == 2.toByte()) { // Central Directory
-                    break
+                } else if (sig[0] == 'P'.toByte() && sig[1] == 'K'.toByte() && sig[2] == 1.toByte() && sig[3] == 2.toByte()) {
+                    break // Central Directory reached
                 }
             }
         } catch (_: Exception) {
@@ -84,29 +64,44 @@ object MemoryUtils {
     }
 
     /**
-     * Fixes the General Purpose Bit Flag of STORED entries in a ZIP byte array.
-     * This allows [java.util.zip.ZipInputStream] on API 24/25 to parse files that
-     * would otherwise throw "only DEFLATED entries can have EXT descriptor".
-     *
-     * It scans for the "PK\x03\x04" signature and if the method is STORED, it unsets bit 3.
+     * A wrapper [InputStream] that unsets the "Data Descriptor" flag (bit 3) for STORED entries
+     * on-the-fly. This prevents [java.util.zip.ZipInputStream] from throwing an exception on API 24/25.
      */
+    class ZipPatchInputStream(inputStream: InputStream) : FilterInputStream(if (inputStream is BufferedInputStream) inputStream else BufferedInputStream(inputStream)) {
+        override fun read(b: ByteArray, off: Int, len: Int): Int {
+            val bytesRead = super.read(b, off, len)
+            if (bytesRead >= 30) {
+                var i = 0
+                while (i <= bytesRead - 30) {
+                    if (b[off + i] == 'P'.toByte() && b[off + i + 1] == 'K'.toByte() &&
+                            b[off + i + 2] == 3.toByte() && b[off + i + 3] == 4.toByte()) {
+                        val flagPos = off + i + 6
+                        val methodPos = off + i + 8
+                        val method = (b[methodPos].toInt() and 0xFF) or ((b[methodPos + 1].toInt() and 0xFF) shl 8)
+                        if (method == 0) { // STORED
+                            // Clear bit 3 (0x08) of flag
+                            b[flagPos] = (b[flagPos].toInt() and 0xF7).toByte()
+                        }
+                        i += 30
+                    } else i++
+                }
+            }
+            return bytesRead
+        }
+    }
+
     @JvmStatic
     fun patchZipBytesForOldAndroid(bytes: ByteArray) {
         var i = 0
-        while (i < bytes.size - 30) {
+        while (i <= bytes.size - 30) {
             if (bytes[i] == 'P'.toByte() && bytes[i + 1] == 'K'.toByte() &&
                     bytes[i + 2] == 3.toByte() && bytes[i + 3] == 4.toByte()) {
-                
                 val method = (bytes[i + 8].toInt() and 0xFF) or ((bytes[i + 9].toInt() and 0xFF) shl 8)
-                if (method == 0) { // STORED
-                    // Clear bit 3 (0x08) of General Purpose Bit Flag (offset 6)
+                if (method == 0) {
                     bytes[i + 6] = (bytes[i + 6].toInt() and 0xF7).toByte()
                 }
-                // Move forward to avoid redundant checks
                 i += 30
-            } else {
-                i++
-            }
+            } else i++
         }
     }
 }
