@@ -198,7 +198,7 @@ class XapkTestHandler6(private val context: Context) {
         } finally {
             xapkChannel.close()
         }
-        Log.d("AppLog", "XAPK Test 6: Finished with result: $result")
+//        Log.d("AppLog", "XAPK Test 6: Finished with result: $result")
         return result
     }
 

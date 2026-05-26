@@ -25,8 +25,11 @@ import com.lb.apkparserdemo.apk_info.ZipFileFilter
 import com.lb.apkparserdemo.apk_info.zip.SeekableInputStreamByteChannel
 import com.lb.apkparserdemo.db.AppDatabase
 import com.lb.apkparserdemo.db.AppIconInfo
+import com.lb.apkparserdemo.testing.XapkTestHandler
 import com.lb.apkparserdemo.testing.XapkTestHandler2
+import com.lb.apkparserdemo.testing.XapkTestHandler5
 import com.lb.apkparserdemo.testing.XapkTestHandler6
+import com.lb.apkparserdemo.testing.XapkTestHandler7
 import com.lb.apkparserdemo.testing.XapkTestHandlerExperimental
 import com.lb.apkparserdemo.utils.AppInfoUtil
 import com.lb.apkparserdemo.utils.IconStorage
@@ -155,14 +158,14 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
 //                .subList(0, 3)
         val useMemCache: Boolean = false
         val preferApacheApi: Boolean = true
-        val useUncompressedZipFiles: Boolean = true
-        File(context.cacheDir, "test.xapk").let { xapkFile ->
-            copyRawToFile(context, R.raw.test, xapkFile)
-            FileInputStream(xapkFile).use {
-                Log.d("AppLog", "isProblematic?${MemoryUtils.hasProblematicZipEntries(it)}")
-            }
-            val apkParsingResult =
-            XapkTestHandlerExperimental(context).runTestOnFile(xapkFile,deviceConfig, appIconSize)
+        val useUncompressedZipFiles: Boolean = false
+//        File(context.cacheDir, "test.xapk").let { xapkFile ->
+//            copyRawToFile(context, R.raw.test, xapkFile)
+//            FileInputStream(xapkFile).use {
+//                Log.d("AppLog", "isProblematic?${MemoryUtils.hasProblematicZipEntries(it)}")
+//            }
+//            val apkParsingResult =
+//            XapkTestHandlerExperimental(context).runTestOnFile(xapkFile,deviceConfig, appIconSize)
 //                            XapkTestHandler(context).runTest(xapkFile, deviceConfig, appIconSize, preferApacheApi)
 //                XapkTestHandler2(context).runTest(xapkFile, deviceConfig, appIconSize, preferApacheApi)
 //                XapkTestHandler3(context).runTest(xapkFile, deviceConfig, appIconSize, preferApacheApi)
@@ -178,9 +181,9 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
 //            XapkTestHandlerFramework6(context).runTest(xapkFile, deviceConfig, appIconSize, preferApacheApi)
 //                XapkTestHandlerFramework7(context).runTest(xapkFile, deviceConfig, appIconSize, useMemCache, preferApacheApi)
 //
-            Log.d("AppLog", "result:$apkParsingResult")
-            return
-        }
+//            Log.d("AppLog", "result:$apkParsingResult")
+//            return
+//        }
 
         var totalParsingTime = 0L
         var apksHandledSoFar = 0
@@ -200,9 +203,9 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
             val result: ApkParsingResult? = try {
                 // XAPK test
 //uncompressed:
-// apache: time taken(ms): 191825 . handled 416 apps, apksCount:845 averageTime(ms):461.1178 per app, 227.01184 per APK
-// no apache
-//                time taken(ms): 2579 . handled 101 apps, apksCount:101 averageTime(ms):25.534653 per app, 25.534653 per APK
+// apache: time taken(ms): 217507 . handled 416 apps, apksCount:845 averageTime(ms):522.8534 per app, 257.40472 per APK
+// no apache time taken(ms): 18020 . handled 416 apps, apksCount:845 averageTime(ms):43.317307 per app, 21.325443 per APK
+//
 //compressed:
 // apache:
 // no apache
@@ -220,9 +223,15 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
 //               XapkTestHandler4(context).runTest(xapkFile, deviceConfig, appIconSize, useMemCache, preferApacheApi)
 
 //               XapkTestHandler5(context).runTest(xapkFile, deviceConfig, appIconSize, useMemCache, preferApacheApi)
-//                uncompressed time taken(ms): 19301 . handled 101 apps, apksCount:101 averageTime(ms):191.09901 per app, 191.09901 per APK
-//                time taken(ms): 58088 . handled 416 apps, apksCount:845 averageTime(ms):139.63461 per app, 68.743195 per APK
-//              compressed  time taken(ms): 35444 . handled 101 apps, apksCount:101 averageTime(ms):350.9307 per app, 350.9307 per APK
+
+
+                //uncompressed:
+// apache:time taken(ms): 72451 . handled 416 apps, apksCount:845 averageTime(ms):174.16106 per app, 85.74083 per APK
+// no apache
+//
+//compressed:
+// apache:
+// no apache
 //               XapkTestHandler6(context).runTest(xapkFile, deviceConfig, appIconSize, preferApacheApi)
 
 //           XapkTestHandler7(context).runTest(xapkFile, deviceConfig, appIconSize, useMemCache, preferApacheApi)
@@ -245,7 +254,7 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
                 null
             }
             val singleTestTime = System.currentTimeMillis() - stepStartTime
-            Log.d("AppLog", "testXapkParsing time taken(ms): $singleTestTime result:$result")
+//            Log.d("AppLog", "testXapkParsing time taken(ms): $singleTestTime result:$result")
             totalParsingTime += singleTestTime
             handleParsingResult(packageInfo, result, appIconSize)
             apksHandledSoFar += 1 + (packageInfo.applicationInfo?.splitPublicSourceDirs?.size ?: 0)
