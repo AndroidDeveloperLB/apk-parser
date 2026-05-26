@@ -155,13 +155,13 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
         val useMemCache: Boolean = false
         val preferApacheApi: Boolean = true
         val useUncompressedZipFiles: Boolean = false
-        File(context.cacheDir, "test.xapk").let { xapkFile ->
-            copyRawToFile(context, R.raw.test, xapkFile)
+//        File(context.cacheDir, "test.xapk").let { xapkFile ->
+//            copyRawToFile(context, R.raw.test, xapkFile)
 //            FileInputStream(xapkFile).use {
 //                Log.d("AppLog", "isProblematic?${MemoryUtils.hasProblematicZipEntries(it)}")
 //            }
-            val apkParsingResult =
-                    XapkTestHandlerExperimental(context).runTestMinimalMemory(xapkFile,deviceConfig, appIconSize)
+//            val apkParsingResult =
+//                    XapkTestHandlerExperimental(context).runTestMinimalMemory(xapkFile,deviceConfig, appIconSize)
 //            XapkTestHandlerExperimental(context).runTestOnFile(xapkFile,deviceConfig, appIconSize)
 //                            com.lb.apkparserdemo.testing.XapkTestHandler(context).runTest(xapkFile, deviceConfig, appIconSize, preferApacheApi)
 //                XapkTestHandler2(context).runTest(xapkFile, deviceConfig, appIconSize, preferApacheApi)
@@ -178,9 +178,9 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
 //            com.lb.apkparserdemo.testing.XapkTestHandlerFramework6(context).runTest(xapkFile, deviceConfig, appIconSize, preferApacheApi)
 //                com.lb.apkparserdemo.testing.XapkTestHandlerFramework7(context).runTest(xapkFile, deviceConfig, appIconSize, useMemCache, preferApacheApi)
 
-            Log.d("AppLog", "result:$apkParsingResult")
-            return
-        }
+//            Log.d("AppLog", "result:$apkParsingResult")
+//            return
+//        }
 
         var totalParsingTime = 0L
         var apksHandledSoFar = 0
