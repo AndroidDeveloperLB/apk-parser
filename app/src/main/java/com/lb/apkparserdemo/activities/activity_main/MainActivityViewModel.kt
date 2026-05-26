@@ -18,6 +18,7 @@ import com.lb.apkparserdemo.apk_info.ApacheZipFileFilter
 import com.lb.apkparserdemo.apk_info.ApkIconFetcher
 import com.lb.apkparserdemo.apk_info.ApkInfo
 import com.lb.apkparserdemo.apk_info.ApkParsingResult
+import com.lb.apkparserdemo.apk_info.MemoryUtils
 import com.lb.apkparserdemo.apk_info.MultiZipFilter
 import com.lb.apkparserdemo.apk_info.NonClosingZipFilter
 import com.lb.apkparserdemo.apk_info.ZipFileFilter
@@ -25,6 +26,7 @@ import com.lb.apkparserdemo.apk_info.zip.SeekableInputStreamByteChannel
 import com.lb.apkparserdemo.db.AppDatabase
 import com.lb.apkparserdemo.db.AppIconInfo
 import com.lb.apkparserdemo.testing.XapkTestHandler2
+import com.lb.apkparserdemo.testing.XapkTestHandlerExperimental
 import com.lb.apkparserdemo.utils.AppInfoUtil
 import com.lb.apkparserdemo.utils.IconStorage
 import com.lb.apkparserdemo.utils.SessionTracker
@@ -153,8 +155,33 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
         val useMemCache: Boolean = false
         val preferApacheApi: Boolean = true
         val useUncompressedZipFiles: Boolean = false
-//        val xapkFile = File(context.cacheDir, "test.xapk")
-//        copyRawToFile(context, R.raw.test, xapkFile)
+        File(context.cacheDir, "test.xapk").let { xapkFile ->
+            copyRawToFile(context, R.raw.test, xapkFile)
+//            FileInputStream(xapkFile).use {
+//                Log.d("AppLog", "isProblematic?${MemoryUtils.hasProblematicZipEntries(it)}")
+//            }
+            val apkParsingResult =
+//                    XapkTestHandlerExperimental(context).runTestMemory(xapkFile,deviceConfig, appIconSize)
+            XapkTestHandlerExperimental(context).runTestOnFile(xapkFile,deviceConfig, appIconSize)
+//                            com.lb.apkparserdemo.testing.XapkTestHandler(context).runTest(xapkFile, deviceConfig, appIconSize, preferApacheApi)
+//                XapkTestHandler2(context).runTest(xapkFile, deviceConfig, appIconSize, preferApacheApi)
+//                com.lb.apkparserdemo.testing.XapkTestHandler3(context).runTest(xapkFile, deviceConfig, appIconSize, preferApacheApi)
+//                com.lb.apkparserdemo.testing.XapkTestHandler4(context).runTest(xapkFile, deviceConfig, appIconSize, useMemCache, preferApacheApi)
+//                com.lb.apkparserdemo.testing.XapkTestHandler5(context).runTest(xapkFile, deviceConfig, appIconSize, useMemCache, preferApacheApi)
+//                    com.lb.apkparserdemo.testing.XapkTestHandler6(context).runTest(xapkFile, deviceConfig, appIconSize, preferApacheApi)
+//            com.lb.apkparserdemo.testing.XapkTestHandler7(context).runTest(xapkFile, deviceConfig, appIconSize, useMemCache, preferApacheApi)
+//            com.lb.apkparserdemo.testing.XapkTestHandlerFramework1(context).runTest(xapkFile, deviceConfig, appIconSize, preferApacheApi)
+//            com.lb.apkparserdemo.testing.XapkTestHandlerFramework2(context).runTest(xapkFile, deviceConfig, appIconSize, preferApacheApi)
+//            com.lb.apkparserdemo.testing.XapkTestHandlerFramework3(context).runTest(xapkFile, deviceConfig, appIconSize, preferApacheApi)
+//            com.lb.apkparserdemo.testing.XapkTestHandlerFramework4(context).runTest(xapkFile, deviceConfig, appIconSize, useMemCache, preferApacheApi)
+//            com.lb.apkparserdemo.testing.XapkTestHandlerFramework5(context).runTest(xapkFile, deviceConfig, appIconSize, useMemCache, preferApacheApi)
+//            com.lb.apkparserdemo.testing.XapkTestHandlerFramework6(context).runTest(xapkFile, deviceConfig, appIconSize, preferApacheApi)
+//                com.lb.apkparserdemo.testing.XapkTestHandlerFramework7(context).runTest(xapkFile, deviceConfig, appIconSize, useMemCache, preferApacheApi)
+
+            Log.d("AppLog", "result:$apkParsingResult")
+            return
+        }
+
         var totalParsingTime = 0L
         var apksHandledSoFar = 0
         Log.d("AppLog", "testing on ${installedPackages.size} apps")
@@ -234,7 +261,7 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
 //24:time taken(ms): 29066 . handled 99 apps, apksCount:99 averageTime(ms):293.59595 per app, 293.59595 per APK
 //34 apache time taken(ms): 128561 . handled 224 apps, apksCount:245 averageTime(ms):573.93304 per app, 524.7388 per APK
 //34 no apache time taken(ms): 293738 . handled 224 apps, apksCount:245 averageTime(ms):1311.3303 per app, 1198.9307 per APK
-//pixel6 apache:
+//pixel6 apache: time taken(ms): 735058 . handled 416 apps, apksCount:845 averageTime(ms):1766.9663 per app, 869.8911 per APK
 //pixel6 no apache:
                 com.lb.apkparserdemo.testing.XapkTestHandler6(context).runTest(xapkFile, deviceConfig, appIconSize, preferApacheApi)
 
