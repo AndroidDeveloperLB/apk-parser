@@ -142,6 +142,35 @@ class SeekableZipFilter(
         return result
     }
 
+    fun getChannelForEntry(name: String): SeekableByteChannel? {
+        val info = index[name] ?: return null
+        if (info.method != 0) return null // Only STORED supported for random access
+        val dataOffset = getDataOffset(info) ?: return null
+        return BoundedSeekableByteChannel(channel, dataOffset, info.uncompressedSize)
+    }
+
+    fun getInputStreamForEntry(name: String): InputStream? {
+        val info = index[name] ?: return null
+        val dataOffset = getDataOffset(info) ?: return null
+        val boundedChannel = BoundedSeekableByteChannel(channel, dataOffset, info.compressedSize)
+        val rawStream = java.nio.channels.Channels.newInputStream(boundedChannel)
+        return if (info.method == 0) rawStream else java.util.zip.InflaterInputStream(rawStream, java.util.zip.Inflater(true))
+    }
+
+    private fun getDataOffset(info: ZipEntryInfo): Long? {
+        return try {
+            channel.position(info.localHeaderOffset + 26)
+            val lenBuffer = ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN)
+            channel.read(lenBuffer)
+            lenBuffer.flip()
+            val nameLen = lenBuffer.short.toInt() and 0xFFFF
+            val extraLen = lenBuffer.short.toInt() and 0xFFFF
+            info.localHeaderOffset + 30 + nameLen + extraLen
+        } catch (_: Exception) {
+            null
+        }
+    }
+
     private fun getBytesForEntry(name: String): ByteArray? = index[name]?.let { getBytesForEntry(it) }
 
     private fun getBytesForEntry(info: ZipEntryInfo): ByteArray? {
