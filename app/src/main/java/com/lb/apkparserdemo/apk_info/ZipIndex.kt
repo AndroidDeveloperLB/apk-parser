@@ -2,7 +2,6 @@ package com.lb.apkparserdemo.apk_info
 
 import android.content.Context
 import com.lb.apkparserdemo.apk_info.zip.BoundedSeekableByteChannel
-import com.lb.common_utils.readBytesIntoByteArray
 import java.io.*
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
@@ -40,6 +39,7 @@ object ZipIndexer {
             channel.read(scanBuffer)
             val bytes = scanBuffer.array()
             var eocdPos = -1L
+            // Scan backwards for signature 0x06054b50
             for (i in bytes.size - 22 downTo 0) {
                 if (bytes[i] == 0x50.toByte() && bytes[i+1] == 0x4b.toByte() && 
                     bytes[i+2] == 0x05.toByte() && bytes[i+3] == 0x06.toByte()) {
@@ -144,7 +144,7 @@ class SeekableZipFilter(
 
     fun getChannelForEntry(name: String): SeekableByteChannel? {
         val info = index[name] ?: return null
-        if (info.method != 0) return null // Only STORED supported for random access
+        if (info.method != 0) return null // Only STORED supported for direct sub-channel
         val dataOffset = getDataOffset(info) ?: return null
         return BoundedSeekableByteChannel(channel, dataOffset, info.uncompressedSize)
     }
@@ -156,6 +156,8 @@ class SeekableZipFilter(
         val rawStream = java.nio.channels.Channels.newInputStream(boundedChannel)
         return if (info.method == 0) rawStream else java.util.zip.InflaterInputStream(rawStream, java.util.zip.Inflater(true))
     }
+
+    fun getEntryInfo(name: String): ZipEntryInfo? = index[name]
 
     private fun getDataOffset(info: ZipEntryInfo): Long? {
         return try {
@@ -175,15 +177,8 @@ class SeekableZipFilter(
 
     private fun getBytesForEntry(info: ZipEntryInfo): ByteArray? {
         return try {
-            // Find start of data by skipping Local File Header
-            channel.position(info.localHeaderOffset + 26)
-            val lenBuffer = ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN)
-            channel.read(lenBuffer)
-            lenBuffer.flip()
-            val nameLen = lenBuffer.short.toInt() and 0xFFFF
-            val extraLen = lenBuffer.short.toInt() and 0xFFFF
-            
-            channel.position(info.localHeaderOffset + 30 + nameLen + extraLen)
+            val dataOffset = getDataOffset(info) ?: return null
+            channel.position(dataOffset)
             
             if (info.method == 0) { // STORED
                 val bytes = ByteArray(info.uncompressedSize.toInt())
@@ -203,6 +198,6 @@ class SeekableZipFilter(
     }
 
     override fun close() {
-        // We don't close the channel as it's usually owned by the caller
+        // We don't close the parent channel
     }
 }

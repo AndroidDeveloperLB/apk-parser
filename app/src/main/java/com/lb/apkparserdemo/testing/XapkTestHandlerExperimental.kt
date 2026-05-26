@@ -28,7 +28,9 @@ class XapkTestHandlerExperimental(private val context: Context) {
         return if (useApache) {
             runTestWithApacheZip(FileSeekableByteChannel(xapkFileOnDisk), deviceConfig, appIconSize)
         } else {
-            runTestWithCustomIndexer(FileSeekableByteChannel(xapkFileOnDisk), deviceConfig, appIconSize)
+            runTestMinimalMemory(xapkFileOnDisk.length(), deviceConfig, appIconSize) {
+                FileInputStream(xapkFileOnDisk)
+            }
         }
     }
 
@@ -36,14 +38,11 @@ class XapkTestHandlerExperimental(private val context: Context) {
      * Low-memory workaround for streams (URIs).
      * Builds an index of the ZIP first to avoid sequential header bugs.
      */
-    fun runTestMinimalMemory(xapkFileOnDisk: File, deviceConfig: DeviceConfig, appIconSize: Int): ApkParsingResult? {
+    fun runTestMinimalMemory(fileSize: Long, deviceConfig: DeviceConfig, appIconSize: Int, inputStreamProvider: () -> InputStream): ApkParsingResult? {
         Log.d("AppLog", "XAPK Experimental: Started Minimal Memory Path")
-        val fileSize = xapkFileOnDisk.length()
-
         val xapkChannel = object : SeekableInputStreamByteChannel(fileSize) {
-            override fun getNewInputStream(): InputStream = FileInputStream(xapkFileOnDisk)
+            override fun getNewInputStream(): InputStream = inputStreamProvider()
         }
-
         return try {
             runTestWithCustomIndexer(xapkChannel, deviceConfig, appIconSize)
         } finally {
@@ -52,7 +51,7 @@ class XapkTestHandlerExperimental(private val context: Context) {
     }
 
     private fun runTestWithCustomIndexer(channel: SeekableByteChannel, deviceConfig: DeviceConfig, appIconSize: Int): ApkParsingResult? {
-//        Log.d("AppLog", "XAPK Experimental: Using Custom Indexer Path")
+        Log.d("AppLog", "XAPK Experimental: Using Custom Indexer Path")
         var result: ApkParsingResult? = null
         try {
             val index = ZipIndexer.createIndex(channel)
@@ -61,6 +60,12 @@ class XapkTestHandlerExperimental(private val context: Context) {
             var baseApkName: String? = null
             var packageName: String? = null
             val splitApkNamesList = mutableListOf<String>()
+            
+            // Check if it's a single APK renamed to XAPK or a merged XAPK
+            if (index.containsKey("AndroidManifest.xml")) {
+                Log.d("AppLog", "XAPK Experimental: Single APK detected (already indexed)")
+                return parseConsolidated(deviceConfig, xapkFilter, emptyList(), appIconSize) { xapkFilter }
+            }
 
             // Find APK names and parse manifests using the index
             for (name in xapkFilter.allEntryNames) {
@@ -83,26 +88,9 @@ class XapkTestHandlerExperimental(private val context: Context) {
             if (baseApkName == null || packageName == null) return null
             val matchingApkNames = (splitApkNamesList + baseApkName).toMutableList()
 
-            // Helper to create robust nested filters
-            val createFilter = { name: String ->
-                createFilterForInnerApk(xapkFilter, name)!!
-            }
-
-            val filters = matchingApkNames.map { createFilter(it) }
-            try {
-                val baseFilter = filters.last()
-                val extraFilters = filters.dropLast(1).map { NonClosingZipFilter(it) }
-                val consolidatedInfo = ApkInfo.internalGetApkInfo(deviceConfig, NonClosingZipFilter(baseFilter), extraFilters, requestParseResources = true)
-
-                if (consolidatedInfo != null) {
-                    val apkIcon = ApkIconFetcher.getApkIcon(context, deviceConfig, {
-                        MultiZipFilter(matchingApkNames.map { createFilter(it) })
-                    }, consolidatedInfo, appIconSize)
-                    val apkMeta = consolidatedInfo.apkMetaTranslator.apkMeta
-                    result = ApkParsingResult(apkMeta.packageName, apkMeta.versionCode, apkMeta.versionName, apkMeta.label, apkIcon)
-                }
-            } finally {
-                filters.forEach { it.close() }
+            result = parseConsolidated(deviceConfig, createFilterForInnerApk(xapkFilter, baseApkName)!!, 
+                splitApkNamesList.map { createFilterForInnerApk(xapkFilter, it)!! }, appIconSize) {
+                MultiZipFilter(matchingApkNames.map { createFilterForInnerApk(xapkFilter, it)!! })
             }
         } catch (e: Exception) {
             Log.e("AppLog", "XAPK Experimental: Custom Indexer error", e)
@@ -110,14 +98,44 @@ class XapkTestHandlerExperimental(private val context: Context) {
         return result
     }
 
+    private fun parseConsolidated(
+        deviceConfig: DeviceConfig,
+        baseFilter: AbstractZipFilter,
+        extraFilters: List<AbstractZipFilter>,
+        appIconSize: Int,
+        multiFilterGenerator: () -> AbstractZipFilter
+    ): ApkParsingResult? {
+        try {
+            val consolidatedInfo = ApkInfo.internalGetApkInfo(deviceConfig, NonClosingZipFilter(baseFilter), extraFilters.map { NonClosingZipFilter(it) }, requestParseResources = true)
+            if (consolidatedInfo != null) {
+                val apkIcon = ApkIconFetcher.getApkIcon(context, deviceConfig, {
+                    multiFilterGenerator()
+                }, consolidatedInfo, appIconSize)
+                val apkMeta = consolidatedInfo.apkMetaTranslator.apkMeta
+                return ApkParsingResult(apkMeta.packageName, apkMeta.versionCode, apkMeta.versionName, apkMeta.label, apkIcon)
+            }
+        } finally {
+            baseFilter.close()
+            extraFilters.forEach { it.close() }
+        }
+        return null
+    }
+
     private fun createFilterForInnerApk(xapkFilter: SeekableZipFilter, name: String): AbstractZipFilter? {
-        val innerChannel = xapkFilter.getChannelForEntry(name)
-        return if (innerChannel != null) {
+        val entryInfo = xapkFilter.getEntryInfo(name) ?: return null
+        return if (entryInfo.method == 0) { // STORED
+            val innerChannel = xapkFilter.getChannelForEntry(name) ?: return null
             val innerIndex = ZipIndexer.createIndex(innerChannel)
             SeekableZipFilter(context, innerChannel, innerIndex)
         } else {
-            val innerStream = xapkFilter.getInputStreamForEntry(name) ?: return null
-            ApacheZipArchiveInputStreamFilter(ZipArchiveInputStream(innerStream))
+            // Case: Inner APK is DEFLATED.
+            // On API < 26, Apache ZipFile is broken. We use a nested seekable stream channel.
+            // This channel allows "seeking" by re-creating the stream from the XAPK and skipping.
+            val innerChannel = object : SeekableInputStreamByteChannel(entryInfo.uncompressedSize) {
+                override fun getNewInputStream(): InputStream = xapkFilter.getInputStreamForEntry(name)!!
+            }
+            val innerIndex = ZipIndexer.createIndex(innerChannel)
+            SeekableZipFilter(context, innerChannel, innerIndex)
         }
     }
 

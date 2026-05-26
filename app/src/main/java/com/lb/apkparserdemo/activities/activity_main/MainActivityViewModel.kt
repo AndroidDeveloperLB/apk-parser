@@ -162,8 +162,7 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
                 Log.d("AppLog", "isProblematic?${MemoryUtils.hasProblematicZipEntries(it)}")
             }
             val apkParsingResult =
-                    XapkTestHandlerExperimental(context).runTestMinimalMemory(xapkFile,deviceConfig, appIconSize)
-//            XapkTestHandlerExperimental(context).runTestOnFile(xapkFile,deviceConfig, appIconSize)
+            XapkTestHandlerExperimental(context).runTestOnFile(xapkFile,deviceConfig, appIconSize)
 //                            XapkTestHandler(context).runTest(xapkFile, deviceConfig, appIconSize, preferApacheApi)
 //                XapkTestHandler2(context).runTest(xapkFile, deviceConfig, appIconSize, preferApacheApi)
 //                XapkTestHandler3(context).runTest(xapkFile, deviceConfig, appIconSize, preferApacheApi)
