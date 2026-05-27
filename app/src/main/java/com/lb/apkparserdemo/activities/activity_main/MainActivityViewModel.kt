@@ -127,8 +127,8 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
         val context = applicationContext
         val appIconSize = AppInfoUtil.getAppIconSize(context)
 
-        testXapkParsing(deviceConfig, appIconSize)
-//        testInstalledAppsApks(deviceConfig, appIconSize)
+//        testXapkParsing(deviceConfig, appIconSize)
+        testInstalledAppsApks(deviceConfig, appIconSize)
         Log.e("AppLog", "done")
         isDoneLiveData.postValue(true)
     }
@@ -158,7 +158,7 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
 //                .subList(0, 3)
         val useMemCache: Boolean = false
         val preferApacheApi: Boolean = true
-        val useUncompressedZipFiles: Boolean = false
+        val useUncompressedZipFiles: Boolean = true
 //        File(context.cacheDir, "test.xapk").let { xapkFile ->
 //            copyRawToFile(context, R.raw.test, xapkFile)
 //            FileInputStream(xapkFile).use {
