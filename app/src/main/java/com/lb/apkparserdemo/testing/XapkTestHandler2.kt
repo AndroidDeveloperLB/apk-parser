@@ -31,7 +31,7 @@ class XapkTestHandler2(private val context: Context) {
         Log.d("AppLog", "XAPK Test 2: Started")
         var result: ApkParsingResult? = null
         try {
-            val useApacheApi = Build.VERSION.SDK_INT >= 26 && preferApacheApiWhenPossible
+            val useApacheApi = Build.VERSION.SDK_INT >=  Build.VERSION_CODES.O && preferApacheApiWhenPossible
             if (useApacheApi) {
                 val xapk = ZipFile.builder().setFile(xapkFileOnDisk).get()
                 xapk.use { xapkFile ->
@@ -173,7 +173,7 @@ class XapkTestHandler2(private val context: Context) {
     }
 
     private fun createApacheZipFilter(context: Context, xapkFileOnDisk: File, xapk: ZipFile, entry: ZipArchiveEntry, preferApacheApiWhenPossible: Boolean): AbstractZipFilter {
-        val useApacheApi = Build.VERSION.SDK_INT >= 26 && preferApacheApiWhenPossible
+        val useApacheApi = Build.VERSION.SDK_INT >=  Build.VERSION_CODES.O && preferApacheApiWhenPossible
         if (useApacheApi) {
             if (entry.method == ZipArchiveEntry.STORED) {
                 try {

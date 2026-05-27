@@ -190,7 +190,7 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
         Log.d("AppLog", "testing on ${installedPackages.size} apps")
         for ((index, packageInfo) in installedPackages.withIndex()) {
             val xapkFile = File(context.cacheDir, "${packageInfo.packageName}.xapk")
-//            if(packageInfo.packageName =="com.google.android.googlequicksearchbox")
+//            if(packageInfo.packageName ==" ")
 //                xapkFile.delete()
             prepareXapkFile(packageInfo, xapkFile, useUncompressedZipFiles)
             Log.d("AppLog", "${index}/${installedPackages.size}")
@@ -202,17 +202,7 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
             val stepStartTime = System.currentTimeMillis()
             val result: ApkParsingResult? = try {
                 // XAPK test
-//uncompressed:
-// apache: time taken(ms): 217507 . handled 416 apps, apksCount:845 averageTime(ms):522.8534 per app, 257.40472 per APK
-// no apache time taken(ms): 18020 . handled 416 apps, apksCount:845 averageTime(ms):43.317307 per app, 21.325443 per APK
-//
-//compressed:
-// apache:
-// no apache
-                XapkTestHandlerExperimental(context).runTestOnFile(xapkFile,deviceConfig, appIconSize,preferApacheApi)
-
-//time taken(ms): 2648 . handled 101 apps, apksCount:101 averageTime(ms):26.217821 per app, 26.217821 per APK
-//                XapkTestHandlerExperimental(context).runTestMinimalMemory(xapkFile,deviceConfig, appIconSize)
+                XapkTestHandlerExperimental(context).runTestOnFile(xapkFile, deviceConfig, appIconSize, preferApacheApi)
 
 //            XapkTestHandler(context).runTest(xapkFile, deviceConfig, appIconSize, preferApacheApi)
 
@@ -224,14 +214,6 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
 
 //               XapkTestHandler5(context).runTest(xapkFile, deviceConfig, appIconSize, useMemCache, preferApacheApi)
 
-
-                //uncompressed:
-// apache:time taken(ms): 72451 . handled 416 apps, apksCount:845 averageTime(ms):174.16106 per app, 85.74083 per APK
-// no apache
-//
-//compressed:
-// apache:
-// no apache
 //               XapkTestHandler6(context).runTest(xapkFile, deviceConfig, appIconSize, preferApacheApi)
 
 //           XapkTestHandler7(context).runTest(xapkFile, deviceConfig, appIconSize, useMemCache, preferApacheApi)

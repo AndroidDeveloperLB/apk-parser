@@ -24,7 +24,7 @@ class XapkTestHandlerExperimental(private val context: Context) {
      * Fastest available method for local files.
      */
     fun runTestOnFile(xapkFileOnDisk: File, deviceConfig: DeviceConfig, appIconSize: Int, preferApacheApiWhenPossible: Boolean = true): ApkParsingResult? {
-        val useApache = Build.VERSION.SDK_INT >= 26 && preferApacheApiWhenPossible
+        val useApache = Build.VERSION.SDK_INT >=  Build.VERSION_CODES.O && preferApacheApiWhenPossible
         return if (useApache) {
             runTestWithApacheZip(FileSeekableByteChannel(xapkFileOnDisk), deviceConfig, appIconSize)
         } else {
@@ -60,7 +60,7 @@ class XapkTestHandlerExperimental(private val context: Context) {
             var baseApkName: String? = null
             var packageName: String? = null
             val splitApkNamesList = mutableListOf<String>()
-            
+
             // Check if it's a single APK renamed to XAPK or a merged XAPK
             if (index.containsKey("AndroidManifest.xml")) {
                 Log.d("AppLog", "XAPK Experimental: Single APK detected (already indexed)")
@@ -88,7 +88,7 @@ class XapkTestHandlerExperimental(private val context: Context) {
             if (baseApkName == null || packageName == null) return null
             val matchingApkNames = (splitApkNamesList + baseApkName).toMutableList()
 
-            result = parseConsolidated(deviceConfig, createFilterForInnerApk(xapkFilter, baseApkName)!!, 
+            result = parseConsolidated(deviceConfig, createFilterForInnerApk(xapkFilter, baseApkName)!!,
                 splitApkNamesList.map { createFilterForInnerApk(xapkFilter, it)!! }, appIconSize) {
                 MultiZipFilter(matchingApkNames.map { createFilterForInnerApk(xapkFilter, it)!! })
             }

@@ -46,7 +46,7 @@ class XapkTestHandler6(private val context: Context) {
         val xapkChannel = channelProvider()
         var result: ApkParsingResult? = null
         try {
-            val useApacheApi = Build.VERSION.SDK_INT >= 26 && preferApacheApiWhenPossible
+            val useApacheApi = Build.VERSION.SDK_INT >=  Build.VERSION_CODES.O && preferApacheApiWhenPossible
             if (useApacheApi) {
                 val xapk = ZipFile.builder().setSeekableByteChannel(xapkChannel).get()
                 xapk.use { xapkFile ->
@@ -203,7 +203,7 @@ class XapkTestHandler6(private val context: Context) {
     }
 
     private fun createApacheZipFilter(context: Context, xapk: ZipFile, xapkChannel: SeekableByteChannel, entry: ZipArchiveEntry, preferApacheApiWhenPossible: Boolean): AbstractZipFilter {
-        val useApacheApi = Build.VERSION.SDK_INT >= 26 && preferApacheApiWhenPossible
+        val useApacheApi = Build.VERSION.SDK_INT >=  Build.VERSION_CODES.O && preferApacheApiWhenPossible
         if (useApacheApi) {
             if (entry.method == ZipArchiveEntry.STORED) {
                 try {

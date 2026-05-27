@@ -35,7 +35,7 @@ class XapkTestHandler5(private val context: Context) {
         Log.d("AppLog", "XAPK Test 5: Started. useMemoryCache:$useMemoryCache")
         var result: ApkParsingResult? = null
         try {
-            val useApacheApi = Build.VERSION.SDK_INT >= 26 && preferApacheApiWhenPossible
+            val useApacheApi = Build.VERSION.SDK_INT >=  Build.VERSION_CODES.O && preferApacheApiWhenPossible
             if (useApacheApi) {
                 val xapk = ZipFile.builder().setFile(xapkFileOnDisk).get()
                 xapk.use { xapkFile ->
@@ -177,7 +177,7 @@ class XapkTestHandler5(private val context: Context) {
     }
 
     private fun createZipFilter(context: Context, xapkFileOnDisk: File, xapk: ZipFile, entry: ZipArchiveEntry, useMemoryCache: Boolean, preferApacheApiWhenPossible: Boolean): AbstractZipFilter {
-        val useApacheApi = Build.VERSION.SDK_INT >= 26 && preferApacheApiWhenPossible
+        val useApacheApi = Build.VERSION.SDK_INT >=  Build.VERSION_CODES.O && preferApacheApiWhenPossible
         if (useApacheApi) {
             if (useMemoryCache) {
                 apkMemoryCache[entry.name]?.let { cachedBytes ->

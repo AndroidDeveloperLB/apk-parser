@@ -159,7 +159,7 @@ object ApkManifestParser {
     }
 
     fun findAndParseManifest(apkFileInputStream: InputStream, requestFetchingMinSdkVersion: Boolean = false, preferApacheApiWhenPossible: Boolean = true): SimpleApkInfo? {
-        val useApache = preferApacheApiWhenPossible && Build.VERSION.SDK_INT >= 26
+        val useApache = preferApacheApiWhenPossible && Build.VERSION.SDK_INT >=  Build.VERSION_CODES.O
         if (useApache) {
             val zipIn = ZipArchiveInputStream(apkFileInputStream)
             var entry = zipIn.nextEntry

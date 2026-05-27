@@ -42,7 +42,7 @@ object MemoryUtils {
      */
     @JvmStatic
     fun hasProblematicZipEntries(inputStream: InputStream): Boolean {
-        val bis = if (inputStream is BufferedInputStream) inputStream else BufferedInputStream(inputStream)
+        val bis = inputStream as? BufferedInputStream ?: BufferedInputStream(inputStream)
         val header = ByteArray(30)
         try {
             while (true) {
@@ -63,45 +63,4 @@ object MemoryUtils {
         return false
     }
 
-    /**
-     * A wrapper [InputStream] that unsets the "Data Descriptor" flag (bit 3) for STORED entries
-     * on-the-fly. This prevents [java.util.zip.ZipInputStream] from throwing an exception on API 24/25.
-     */
-    class ZipPatchInputStream(inputStream: InputStream) : FilterInputStream(if (inputStream is BufferedInputStream) inputStream else BufferedInputStream(inputStream)) {
-        override fun read(b: ByteArray, off: Int, len: Int): Int {
-            val bytesRead = super.read(b, off, len)
-            if (bytesRead >= 30) {
-                var i = 0
-                while (i <= bytesRead - 30) {
-                    if (b[off + i] == 'P'.toByte() && b[off + i + 1] == 'K'.toByte() &&
-                            b[off + i + 2] == 3.toByte() && b[off + i + 3] == 4.toByte()) {
-                        val flagPos = off + i + 6
-                        val methodPos = off + i + 8
-                        val method = (b[methodPos].toInt() and 0xFF) or ((b[methodPos + 1].toInt() and 0xFF) shl 8)
-                        if (method == 0) { // STORED
-                            // Clear bit 3 (0x08) of flag
-                            b[flagPos] = (b[flagPos].toInt() and 0xF7).toByte()
-                        }
-                        i += 30
-                    } else i++
-                }
-            }
-            return bytesRead
-        }
-    }
-
-    @JvmStatic
-    fun patchZipBytesForOldAndroid(bytes: ByteArray) {
-        var i = 0
-        while (i <= bytes.size - 30) {
-            if (bytes[i] == 'P'.toByte() && bytes[i + 1] == 'K'.toByte() &&
-                    bytes[i + 2] == 3.toByte() && bytes[i + 3] == 4.toByte()) {
-                val method = (bytes[i + 8].toInt() and 0xFF) or ((bytes[i + 9].toInt() and 0xFF) shl 8)
-                if (method == 0) {
-                    bytes[i + 6] = (bytes[i + 6].toInt() and 0xF7).toByte()
-                }
-                i += 30
-            } else i++
-        }
-    }
 }

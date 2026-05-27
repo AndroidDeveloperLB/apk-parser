@@ -48,7 +48,7 @@ class XapkTestHandlerFramework7(private val context: Context) {
 
         var xapkFile: ZipFile? = null
         try {
-            val useApacheApi = Build.VERSION.SDK_INT >= 26 && preferApacheApiWhenPossible
+            val useApacheApi = Build.VERSION.SDK_INT >=  Build.VERSION_CODES.O && preferApacheApiWhenPossible
             if (useApacheApi) {
                 xapkFile = ZipFile.builder().setSeekableByteChannel(xapkChannel).get()
                 xapkFile!!.use { xf ->
@@ -202,7 +202,7 @@ class XapkTestHandlerFramework7(private val context: Context) {
     }
 
     private fun createZipFilter(context: Context, xapkFile: ZipFile, xapkChannel: SeekableByteChannel, entry: ZipArchiveEntry, useMemoryCache: Boolean, preferApacheApiWhenPossible: Boolean): AbstractZipFilter {
-        val useApacheApi = Build.VERSION.SDK_INT >= 26 && preferApacheApiWhenPossible
+        val useApacheApi = Build.VERSION.SDK_INT >=  Build.VERSION_CODES.O && preferApacheApiWhenPossible
         if (useApacheApi) {
             if (useMemoryCache) {
                 apkMemoryCache[entry.name]?.let { cachedBytes ->
