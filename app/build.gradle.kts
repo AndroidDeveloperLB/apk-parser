@@ -56,7 +56,7 @@ dependencies {
 // https://mvnrepository.com/artifact/com.android.tools/desugar_jdk_libs_nio https://github.com/google/desugar_jdk_libs/blob/master/CHANGELOG.md  https://developer.android.com/studio/write/java8-support https://android-developers.googleblog.com/2023/02/api-desugaring-supporting-android-13-and-java-nio.html
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs_nio:2.1.5")
     //  https://github.com/AndroidDeveloperLB/CommonUtils  https://jitpack.io/#AndroidDeveloperLB/CommonUtils/
-    implementation("com.github.AndroidDeveloperLB:CommonUtils:41")
+    implementation("com.github.AndroidDeveloperLB:CommonUtils:42")
     //    https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-core
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0")
     //    https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-android

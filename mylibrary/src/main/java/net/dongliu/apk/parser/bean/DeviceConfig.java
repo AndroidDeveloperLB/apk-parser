@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import java.util.Locale;
+import java.util.Objects;
 
 /**
  * Encapsulates device configuration for resource resolution.
@@ -60,6 +61,18 @@ public class DeviceConfig {
 
     public int getUiMode() {
         return uiMode;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof DeviceConfig other))
+            return false;
+        return mcc == other.mcc && mnc == other.mnc && density == other.density && uiMode == other.uiMode && Objects.equals(locale, other.locale);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(locale, mcc, mnc, density, uiMode);
     }
 
     @NonNull
