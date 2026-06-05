@@ -217,7 +217,7 @@ public abstract class ResourceValue {
         private boolean isBetterThan(ResourceTable.Resource candidate, ResourceTable.Resource current, @Nullable DeviceConfig requestedConfig) {
             if (current == null) return true;
 
-            if (requestedConfig != null && requestedConfig.getMcc() != 0) {
+            if (requestedConfig != null && requestedConfig.mcc != 0) {
                 if (candidate.type.config.getMcc() != current.type.config.getMcc()) {
                     return candidate.type.config.getMcc() != 0;
                 }
@@ -237,8 +237,8 @@ public abstract class ResourceValue {
                 return candidate.type.config.getSdkVersion() > current.type.config.getSdkVersion();
             }
 
-            if (requestedConfig != null && requestedConfig.getUiMode() != 0) {
-                int reqNight = requestedConfig.getUiMode() & 0x30; // UI_MODE_NIGHT_MASK
+            if (requestedConfig != null && requestedConfig.uiMode != 0) {
+                int reqNight = requestedConfig.uiMode & 0x30; // UI_MODE_NIGHT_MASK
                 int candNight = candidate.type.config.getUiMode() & 0x30;
                 int curNight = current.type.config.getUiMode() & 0x30;
                 if (candNight != curNight) {
@@ -247,8 +247,8 @@ public abstract class ResourceValue {
                 }
             }
 
-            if (requestedConfig != null && requestedConfig.getDensity() > 0) {
-                int reqDensity = requestedConfig.getDensity();
+            if (requestedConfig != null && requestedConfig.density > 0) {
+                int reqDensity = requestedConfig.density;
                 int candDensity = candidate.type.density;
                 int curDensity = current.type.density;
 

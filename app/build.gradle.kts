@@ -47,7 +47,7 @@ tasks.withType<KotlinJvmCompile>().configureEach {
 }
 
 dependencies {
-    implementation("androidx.core:core-ktx:1.18.0")
+    implementation("androidx.core:core-ktx:1.19.0")
     implementation("com.google.android.material:material:1.14.0")
     implementation("androidx.constraintlayout:constraintlayout:2.2.1")
     implementation(project(":mylibrary"))

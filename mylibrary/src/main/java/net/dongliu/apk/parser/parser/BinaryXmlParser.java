@@ -71,7 +71,7 @@ public class BinaryXmlParser {
         this.resourceTable = resourceTable;
         this.xmlStreamer = xmlStreamer;
         this.config = config;
-        this.locale = config != null ? config.getLocale() : null;
+        this.locale = config != null ? config.locale : null;
     }
 
     public BinaryXmlParser(final @NonNull ByteBuffer buffer, final @NonNull ResourceTable resourceTable, final @NonNull XmlStreamer xmlStreamer
