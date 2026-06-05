@@ -422,7 +422,7 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
                         .filter { appsToFocusOn.isEmpty() || appsToFocusOn.contains(it.packageName) }
 
         var endTime = System.currentTimeMillis()
-        Log.d("AppLog", "time taken: ${endTime - startTime}. total apps to process: ${installedPackages.size}")
+        Log.d("AppLog", "time taken to get simple data about installed apps using framework: ${endTime - startTime}. total apps to process: ${installedPackages.size}")
         startTime = endTime
         var apksHandledSoFar = 0
         for ((index, packageInfo) in installedPackages.withIndex()) {
@@ -607,8 +607,40 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
             appsHandledLiveData.inc()
         }
         endTime = System.currentTimeMillis()
-        Log.d("AppLog", "time taken(ms): ${endTime - startTime} . handled ${installedPackages.size} apps, apksCount:$apksHandledSoFar averageTime(ms):${(endTime - startTime).toFloat() / installedPackages.size.toFloat()} per app, ${(endTime - startTime).toFloat() / apksHandledSoFar.toFloat()} per APK")
-        Log.d("AppLog", "Final stats: labelErrors=${wrongLabelErrorsLiveData.value}, iconErrors=${failedGettingAppIconErrorsLiveData.value}, parsingErrors=${parsingErrorsLiveData.value}")
+        Log.e("AppLog", "time taken(ms): ${endTime - startTime} . handled ${installedPackages.size} apps, apksCount:$apksHandledSoFar averageTime(ms):${(endTime - startTime).toFloat() / installedPackages.size.toFloat()} per app, ${(endTime - startTime).toFloat() / apksHandledSoFar.toFloat()} per APK")
+        Log.e("AppLog", "Final stats: labelErrors=${wrongLabelErrorsLiveData.value}, iconErrors=${failedGettingAppIconErrorsLiveData.value}, parsingErrors=${parsingErrorsLiveData.value}")
+//        val frameworkStartTime = System.currentTimeMillis()
+//        for (packageInfo in installedPackages) {
+//            val appStartTime = System.currentTimeMillis()
+//            val label=packageInfo.applicationInfo!!.loadLabel(packageManager)
+//            val frameworkIcon = try {
+//                val baseApkPathForIcon = packageInfo.applicationInfo!!.publicSourceDir
+//                val archiveInfo = packageManager.getPackageArchiveInfo(baseApkPathForIcon, 0)
+//                val cleanAppInfo = archiveInfo?.applicationInfo
+//                        ?: packageInfo.applicationInfo!!
+//                cleanAppInfo.sourceDir = baseApkPathForIcon
+//                cleanAppInfo.publicSourceDir = baseApkPathForIcon
+//
+//                val appResources = packageManager.getResourcesForApplication(cleanAppInfo)
+//                val iconResId = cleanAppInfo.icon
+//
+//                val drawable = if (iconResId != 0) {
+//                    try {
+//                        ResourcesCompat.getDrawableForDensity(appResources, iconResId, densityDpi, null)
+//                    } catch (_: Exception) {
+//                        packageManager.getApplicationIcon(packageInfo.applicationInfo!!)
+//                    }
+//                } else packageManager.getApplicationIcon(packageInfo.applicationInfo!!)
+//
+//                drawable?.toBitmap(appIconSize, appIconSize)
+//            } catch (_: Exception) {
+//                null
+//            }
+//            val appEndTime = System.currentTimeMillis()
+//            Log.d("AppLog", "Framework fetch for ${packageInfo.packageName} took ${appEndTime - appStartTime}ms frameworkIcon:${frameworkIcon?.width}x${frameworkIcon?.height} label:$label")
+//        }
+//        val frameworkTotalTime = System.currentTimeMillis() - frameworkStartTime
+//        Log.d("AppLog", "Framework total time for ${installedPackages.size} apps: ${frameworkTotalTime}ms, average: ${if (installedPackages.isEmpty()) 0f else frameworkTotalTime.toFloat() / installedPackages.size}ms per app")
     }
 
     companion object {
