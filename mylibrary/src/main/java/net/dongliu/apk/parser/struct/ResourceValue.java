@@ -9,7 +9,9 @@ import net.dongliu.apk.parser.struct.resource.ResourceTable;
 import net.dongliu.apk.parser.struct.xml.Attribute;
 import net.dongliu.apk.parser.utils.Locales;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Resource entity, contains the resource id, should retrieve the value from resource table, or string pool if it is a string resource.
@@ -32,6 +34,14 @@ public abstract class ResourceValue {
      */
     @Nullable
     public abstract String toStringValue(ResourceTable resourceTable, @Nullable DeviceConfig config);
+
+    /**
+     * Internal overload with visited Set for cycle detection.
+     */
+    @Nullable
+    public String toStringValue(ResourceTable resourceTable, @Nullable DeviceConfig config, Set<Long> visited) {
+        return toStringValue(resourceTable, config);
+    }
 
     @NonNull
     public static ResourceValue decimal(final int value) {
@@ -99,6 +109,7 @@ public abstract class ResourceValue {
             super(value);
         }
 
+        @NonNull
         @Override
         public String toStringValue(final ResourceTable resourceTable, @Nullable final DeviceConfig config) {
             return String.valueOf(this.value);
@@ -111,6 +122,7 @@ public abstract class ResourceValue {
             super(value);
         }
 
+        @NonNull
         @Override
         public String toStringValue(final ResourceTable resourceTable, @Nullable final DeviceConfig config) {
             return "0x" + Integer.toHexString(this.value);
@@ -123,6 +135,7 @@ public abstract class ResourceValue {
             super(value);
         }
 
+        @NonNull
         @Override
         public String toStringValue(final ResourceTable resourceTable, @Nullable final DeviceConfig config) {
             return String.valueOf(this.value != 0);
@@ -168,50 +181,67 @@ public abstract class ResourceValue {
         @Override
         @Nullable
         public String toStringValue(final @Nullable ResourceTable resourceTable, @Nullable final DeviceConfig config) {
+            return toStringValue(resourceTable, config, new HashSet<>());
+        }
+
+        @Override
+        @Nullable
+        public String toStringValue(final @Nullable ResourceTable resourceTable, @Nullable final DeviceConfig config, Set<Long> visited) {
             final long resourceId = this.getReferenceResourceId();
-            // android system styles.
-            if (resourceId > AndroidConstants.SYS_STYLE_ID_START && resourceId < AndroidConstants.SYS_STYLE_ID_END) {
-                String style = ResourceTable.sysStyle.get((int) resourceId);
-                if (style != null) {
-                    return "@android:style/" + style;
-                }
-            }
-            final String raw = "resourceId:0x" + Long.toHexString(resourceId);
-            if (resourceTable == null) {
-                return raw;
-            }
-            final List<ResourceTable.Resource> resources = resourceTable.getResourcesById(resourceId);
-            if (resources.isEmpty()) {
-                // If it's a platform resource that wasn't in our table, we can't resolve it.
-                if ((resourceId >> 24) == 0x01) {
-                    return raw;
-                }
-                return null;
+
+            // Cycle detection: Stop processing if we've already seen this ID in the current branch
+            if (!visited.add(resourceId)) {
+                return "resourceId:0x" + Long.toHexString(resourceId);
             }
 
-            ResourceTable.Resource selectedResource = null;
-            int currentMaxScore = 0; // Start at 0 to only accept positive matches
-
-            // Search for the best match
-            for (final ResourceTable.Resource resource : resources) {
-                final int matchScore = Locales.match(config, resource);
-
-                if (matchScore > currentMaxScore) {
-                    selectedResource = resource;
-                    currentMaxScore = matchScore;
-                } else if (matchScore > 0 && matchScore == currentMaxScore) {
-                    // Tie-breaker: pick the more specific configuration
-                    if (isBetterThan(resource, selectedResource, config)) {
-                        selectedResource = resource;
+            try {
+                // android system styles.
+                if (resourceId > AndroidConstants.SYS_STYLE_ID_START && resourceId < AndroidConstants.SYS_STYLE_ID_END) {
+                    String style = ResourceTable.sysStyle.get((int) resourceId);
+                    if (style != null) {
+                        return "@android:style/" + style;
                     }
                 }
-            }
+                final String raw = "resourceId:0x" + Long.toHexString(resourceId);
+                if (resourceTable == null) {
+                    return raw;
+                }
+                final List<ResourceTable.Resource> resources = resourceTable.getResourcesById(resourceId);
+                if (resources.isEmpty()) {
+                    // If it's a platform resource that wasn't in our table, we can resolve it.
+                    if ((resourceId >> 24) == 0x01) {
+                        return raw;
+                    }
+                    return null;
+                }
 
-            // Recurse to get the value of the selected entry
-            if (selectedResource != null) {
-                return selectedResource.resourceEntry.toStringValue(resourceTable, config);
+                ResourceTable.Resource selectedResource = null;
+                int currentMaxScore = 0; // Start at 0 to only accept positive matches
+
+                // Search for the best match
+                for (final ResourceTable.Resource resource : resources) {
+                    final int matchScore = Locales.match(config, resource);
+
+                    if (matchScore > currentMaxScore) {
+                        selectedResource = resource;
+                        currentMaxScore = matchScore;
+                    } else if (matchScore > 0 && matchScore == currentMaxScore) {
+                        // Tie-breaker: pick the more specific configuration
+                        if (isBetterThan(resource, selectedResource, config)) {
+                            selectedResource = resource;
+                        }
+                    }
+                }
+
+                // Recurse to get the value of the selected entry
+                if (selectedResource != null) {
+                    return selectedResource.resourceEntry.toStringValue(resourceTable, config, visited);
+                }
+                return null;
+            } finally {
+                // Remove the resourceId as we exit the branch to allow sibling paths to resolve it
+                visited.remove(resourceId);
             }
-            return null;
         }
 
         private boolean isBetterThan(ResourceTable.Resource candidate, ResourceTable.Resource current, @Nullable DeviceConfig requestedConfig) {
@@ -292,6 +322,7 @@ public abstract class ResourceValue {
             super(-1);
         }
 
+        @NonNull
         @Override
         public String toStringValue(final ResourceTable resourceTable, @Nullable final DeviceConfig config) {
             return "";
@@ -306,6 +337,7 @@ public abstract class ResourceValue {
             this.len = len;
         }
 
+        @NonNull
         @Override
         public String toStringValue(final ResourceTable resourceTable, @Nullable final DeviceConfig config) {
             final StringBuilder sb = new StringBuilder();
@@ -336,6 +368,7 @@ public abstract class ResourceValue {
             super(value);
         }
 
+        @NonNull
         @Override
         public String toStringValue(final ResourceTable resourceTable, @Nullable final DeviceConfig config) {
             final short unit = (short) (this.value & 0xf);
@@ -358,6 +391,7 @@ public abstract class ResourceValue {
             super(value);
         }
 
+        @NonNull
         @Override
         public String toStringValue(final ResourceTable resourceTable, @Nullable final DeviceConfig config) {
             final short type = (short) (this.value & 0xf);
@@ -378,6 +412,7 @@ public abstract class ResourceValue {
             this.dataType = dataType;
         }
 
+        @NonNull
         @Override
         public String toStringValue(final ResourceTable resourceTable, @Nullable final DeviceConfig config) {
             return "{" + this.dataType + ":" + (this.value & 0xFFFFFFFFL) + "}";
@@ -389,6 +424,7 @@ public abstract class ResourceValue {
             super(value);
         }
 
+        @NonNull
         @Override
         public String toStringValue(final ResourceTable resourceTable, @Nullable final DeviceConfig config) {
             return "?" + Attribute.getString(this.value & 0xFFFFFFFFL);
@@ -400,6 +436,7 @@ public abstract class ResourceValue {
             super(value);
         }
 
+        @NonNull
         @Override
         public String toStringValue(final ResourceTable resourceTable, @Nullable final DeviceConfig config) {
             return String.valueOf(Float.intBitsToFloat(this.value));

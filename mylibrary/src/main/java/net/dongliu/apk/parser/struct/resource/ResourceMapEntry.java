@@ -7,6 +7,8 @@ import net.dongliu.apk.parser.bean.DeviceConfig;
 import net.dongliu.apk.parser.struct.ResourceValue;
 
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * @author dongliu.
@@ -39,9 +41,18 @@ public class ResourceMapEntry extends ResourceEntry {
     @Nullable
     @Override
     public String toStringValue(final ResourceTable resourceTable, @Nullable final DeviceConfig config) {
+        return toStringValue(resourceTable, config, new HashSet<>());
+    }
+
+    /**
+     * get value as string, preventing loop cycles.
+     */
+    @Nullable
+    @Override
+    public String toStringValue(final ResourceTable resourceTable, @Nullable final DeviceConfig config, Set<Long> visited) {
         if (this.parent != 0 && resourceTable != null) {
 //            android.util.Log.d("AppLog", "label fetching: ResourceMapEntry " + this.key + " follows parent alias 0x" + Long.toHexString(this.parent));
-            String resolvedParent = ResourceValue.reference((int) this.parent).toStringValue(resourceTable, config);
+            String resolvedParent = ResourceValue.reference((int) this.parent).toStringValue(resourceTable, config, visited);
             if (resolvedParent != null && !resolvedParent.startsWith("resourceId:0x")) {
                 return resolvedParent;
             }
@@ -50,7 +61,7 @@ public class ResourceMapEntry extends ResourceEntry {
         for (ResourceTableMap map : this.resourceTableMaps) {
             final ResourceValue resValue = map.getResValue();
             if (resValue != null) {
-                String val = resValue.toStringValue(resourceTable, config);
+                String val = resValue.toStringValue(resourceTable, config, visited);
                 if (val != null) return val;
             }
             if (map.getData() != null) return map.getData();

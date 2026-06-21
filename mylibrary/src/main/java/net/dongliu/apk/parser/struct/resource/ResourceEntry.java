@@ -6,7 +6,9 @@ import androidx.annotation.Nullable;
 import net.dongliu.apk.parser.bean.DeviceConfig;
 import net.dongliu.apk.parser.struct.ResourceValue;
 
+import java.util.HashSet;
 import java.util.Locale;
+import java.util.Set;
 
 /**
  * A Resource entry specifies the key (name) of the Resource.
@@ -71,9 +73,17 @@ public class ResourceEntry {
      */
     @Nullable
     public String toStringValue(final ResourceTable resourceTable, @Nullable final DeviceConfig config) {
+        return toStringValue(resourceTable, config, new HashSet<>());
+    }
+
+    /**
+     * get value as string, preventing loop cycles.
+     */
+    @Nullable
+    public String toStringValue(final ResourceTable resourceTable, @Nullable final DeviceConfig config, Set<Long> visited) {
         final ResourceValue value = this.value;
         if (value != null) {
-            return value.toStringValue(resourceTable, config);
+            return value.toStringValue(resourceTable, config, visited);
         } else {
             return null;
         }
