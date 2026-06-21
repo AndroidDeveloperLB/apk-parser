@@ -5,7 +5,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 plugins {
     id("com.android.application")
     id("com.google.devtools.ksp") version "2.3.6"
-    id("org.jetbrains.kotlin.plugin.compose") version "2.3.21"
+    id("org.jetbrains.kotlin.plugin.compose") version "2.4.0"
 }
 
 extensions.configure<ApplicationExtension> {
@@ -62,7 +62,7 @@ dependencies {
     //    https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-android
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.11.0")
     //    https://developer.android.com/jetpack/androidx/releases/lifecycle#declaring_dependencies
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.10.0")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.11.0")
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.10.0")
     implementation("androidx.lifecycle:lifecycle-common-java8:2.10.0")
     implementation("androidx.lifecycle:lifecycle-process:2.10.0")

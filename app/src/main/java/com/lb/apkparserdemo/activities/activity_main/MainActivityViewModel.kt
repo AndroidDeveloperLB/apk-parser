@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.graphics.drawable.Drawable
 import android.os.Build
 import android.util.Log
 import androidx.annotation.UiThread
@@ -420,7 +421,12 @@ class MainActivityViewModel(application: Application) : BaseViewModel(applicatio
         val installedPackages =
                 packageManager.getInstalledPackagesCompat(PackageManager.GET_META_DATA)
                         .filter { appsToFocusOn.isEmpty() || appsToFocusOn.contains(it.packageName) }
-
+//        for (packageInfo in installedPackages) {
+//            val label = packageInfo.applicationInfo!!.loadLabel(packageManager)
+//            val frameworkIcon =
+//                    packageManager.getApplicationIcon(packageInfo.applicationInfo!!).toBitmap()
+//            Log.d("AppLog", "packageName:${packageInfo.packageName} label:$label frameworkIcon:${frameworkIcon.width}x${frameworkIcon.height}")
+//        }
         var endTime = System.currentTimeMillis()
         Log.d("AppLog", "time taken to get simple data about installed apps using framework: ${endTime - startTime}. total apps to process: ${installedPackages.size}")
         startTime = endTime
