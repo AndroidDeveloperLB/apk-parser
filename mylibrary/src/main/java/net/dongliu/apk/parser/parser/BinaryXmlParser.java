@@ -42,7 +42,7 @@ import java.util.Set;
 public class BinaryXmlParser {
 
     /**
-     * By default the data buffer Chunks is buffer little-endian byte order both at runtime and when stored buffer
+     * By default, the data buffer Chunks is buffer little-endian byte order both at runtime and when stored buffer
      * files.
      */
     private StringPool stringPool;
